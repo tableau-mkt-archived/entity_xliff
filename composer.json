@@ -3,12 +3,8 @@
     "psr-4": {"EntityXliff\\": "src/"}
   },
   "require": {
-    "tableau-mkt/eggs-n-cereal": "dev-master"
+    "tableau-mkt/eggs-n-cereal": "0.0.1"
   },
   "minimum-stability": "dev",
-  "prefer-stable": true,
-  "repositories": [{
-    "type": "vcs",
-    "url":  "git@github.com:tableau-mkt/eggs-n-cereal.git"
-  }]
+  "prefer-stable": true
 }
