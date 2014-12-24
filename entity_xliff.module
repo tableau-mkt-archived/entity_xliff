@@ -4,3 +4,73 @@
  * @file
  * Module hooks and functions for the Entity XLIFF module.
  */
+
+use EntityXliff\Drupal\Translatable\NodeTranslatable;
+
+/**
+ * Implements hook_menu().
+ *
+ * Currently, only node serialization/unserialization is supported.
+ * @todo Support all types of entities.
+ */
+function entity_xliff_menu() {
+  // Local action to import/export a node via XLIFF.
+  $menu['node/%node/xliff'] = array(
+    'title' => 'XLIFF',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'entity_xliff.admin.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('entity_xliff_actions', 'node', 1),
+    'access arguments' => array('administer entity xliff'),
+    'weight' => 10,
+  );
+
+  // Callback to render a node as an XLIFF file.
+  $menu['node/%node/as.xlf'] = array(
+    'title' => 'Node XLIFF',
+    'type' => MENU_CALLBACK,
+    'file' => 'entity_xliff.pages.inc',
+    'delivery callback' => 'entity_xliff_deliver_xlf',
+    'page callback' => 'entity_xliff_to_xlf',
+    'page arguments' => array('node', 1),
+    'access arguments' => array('administer entity xliff'),
+  );
+
+  return $menu;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function entity_xliff_permission() {
+  return array(
+    'administer entity xliff' => array(
+      'title' => t('Administer Entity XLIFF'),
+      'description' => t('Import and export any entity via XLIFF. Note: this includes entities to which a user may not have otherwise had access.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Gets a TranslatableInterface instance given an entity wrapper.
+ *
+ * @param \EntityDrupalWrapper $wrapper
+ *   Used when instantiating the translatable.
+ *
+ * @return EggsCereal\Interfaces\TranslatableInterface|null
+ *   Returns a translatable object compatible with Eggs'n'Cereal's Translatable
+ *   interface. If none is known, NULL is returned.
+ *
+ * @todo This should eventually be hook-driven, so modules declaring custom
+ * entity types that we aren't aware of can provide their own implementations.
+ * This should also feed into the EntityTranslatableBase class itself.
+ */
+function entity_xliff_get_translatable($wrapper) {
+  switch ($wrapper->type()) {
+    case 'node':
+      return new NodeTranslatable($wrapper);
+  }
+
+  return NULL;
+}
