@@ -1,0 +1,14 @@
+{
+  "autoload": {
+    "psr-4": {"EntityXliff\\": "src/"}
+  },
+  "require": {
+    "tableau-mkt/eggs-n-cereal": "dev-master"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "repositories": [{
+    "type": "vcs",
+    "url":  "git@github.com:tableau-mkt/eggs-n-cereal.git"
+  }]
+}
