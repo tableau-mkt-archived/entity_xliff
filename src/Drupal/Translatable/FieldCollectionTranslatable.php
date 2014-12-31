@@ -23,16 +23,16 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
       // Handling for content translation. Entity field translation should be
       // taken care of by the parent.
-      if (!$this->moduleExists('entity_translation')) {
+      if (!$this->drupal->moduleExists('entity_translation')) {
         $target = $this->entity->raw();
         if (!is_object($target) && !empty($target)) {
-          $target = $this->entityLoad('field_collection_item', array((int) $target));
+          $target = $this->drupal->entityLoad('field_collection_item', array((int) $target));
           $target = reset($target);
         }
 
         // Pull the parent/host entity.
         if ($rawHost = $this->getHostEntity($target)) {
-          $host = $this->entityMetadataWrapper($target->hostEntityType(), $rawHost);
+          $host = $this->drupal->entityMetadataWrapper($target->hostEntityType(), $rawHost);
         }
         else {
           $host = $this->getParent($this->entity);
@@ -55,7 +55,7 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
           $target->default_revision = TRUE;
         }
 
-        $this->targetEntities[$targetLanguage] = $this->entityMetadataWrapper('field_collection_item', $target);
+        $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('field_collection_item', $target);
       }
       else {
         $this->targetEntities[$targetLanguage] = parent::getTargetEntity($targetLanguage);
@@ -80,40 +80,12 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
   public function getHostEntity(\FieldCollectionItemEntity $fieldCollection) {
     // Pull the parent/host entity with the maximum user privilege possible.
     $tempUser = clone $GLOBALS['user'];
-    $this->drupalSaveSession(FALSE);
-    $GLOBALS['user'] = user_load(1);
+    $this->drupal->saveSession(FALSE);
+    $GLOBALS['user'] = $this->drupal->userLoad(1);
     $rawHost = $fieldCollection->hostEntity();
     $GLOBALS['user'] = $tempUser;
-    $this->drupalSaveSession(TRUE);
+    $this->drupal->saveSession(TRUE);
     return $rawHost;
-  }
-
-  /**
-   * OO wrapper around module_exists().
-   *
-   * @param string $module
-   *   The name of the module (without the .module extension).
-   *
-   * @return bool
-   *   TRUE if the module is both installed and enabled, FALSE otherwise.
-   */
-  protected function moduleExists($module) {
-    return module_exists($module);
-  }
-
-  /**
-   * OO wrapper around drupal_save_session().
-   * @param bool $status
-   */
-  protected function drupalSaveSession($status = NULL) {
-    return drupal_save_session($status);
-  }
-
-  /**
-   * OO wrapper around entity_load().
-   */
-  protected function entityLoad($entity_type, $ids = FALSE, $conditions = array(), $reset = FALSE) {
-    return entity_load($entity_type, $ids, $conditions, $reset);
   }
 
 }

@@ -7,6 +7,9 @@
 
 namespace EntityXliff\Drupal\Translatable;
 
+use EntityXliff\Drupal\Utils\DrupalHandler;
+
+
 /**
  * Class NodeTranslatable
  * @package EntityXliff\Drupal\Translatable
@@ -30,24 +33,25 @@ class NodeTranslatable extends EntityTranslatableBase {
    *   translation is in use. If no translation set is provided, a default will
    *   be provided by translation_node_get_translations().
    */
-  public function __construct(\EntityDrupalWrapper $entityWrapper, array $entityInfo = array(), array $translationSet = array()) {
-    parent::__construct($entityWrapper, $entityInfo);
+  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, array $entityInfo = array(), array $translationSet = array()) {
+    parent::__construct($entityWrapper, $handler, $entityInfo);
 
     // Handle content translation for nodes.
-    $this->drupalStaticReset('translation_node_get_translations');
+    $this->drupal->staticReset('translation_node_get_translations');
     if ($entityWrapper->language->value() === 'en') {
       $this->tset = $translationSet ?: $this->nodeGetTranslations((int) $entityWrapper->getIdentifier());
     }
     else {
       $raw = $entityWrapper->raw();
       if (!is_object($raw)) {
-        $raw = $this->nodeLoad((int) $raw);
+        $raw = $this->drupal->nodeLoad((int) $raw);
       }
       $this->tset = $translationSet ?: $this->nodeGetTranslations((int) $raw->tnid);
     }
   }
 
   /**
+   * @param \EntityDrupalWrapper $wrapper
    * @return array
    */
   public function getTranslatableFields(\EntityDrupalWrapper $wrapper = NULL) {
@@ -55,7 +59,7 @@ class NodeTranslatable extends EntityTranslatableBase {
     $type = $wrapper->type();
 
     // Only add the title property if we're using content translation.
-    if ($type === 'node' && !$this->moduleExists('entity_translation')) {
+    if ($type === 'node' && !$this->drupal->moduleExists('entity_translation')) {
       $fields[] = 'title';
     }
 
@@ -69,10 +73,10 @@ class NodeTranslatable extends EntityTranslatableBase {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
       // Handling for content translation. Entity field translation should be
       // taken care of by the parent. @todo check if that assumption is legit.
-      if (!$this->moduleExists('entity_translation')) {
+      if (!$this->drupal->moduleExists('entity_translation')) {
         // If a translation already exists, use it!
         if (isset($this->tset[$targetLanguage]->nid)) {
-          $target = $this->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
+          $target = $this->drupal->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
 
           // Do not mark this node as a new revision. This is necessary in
           // cases where this node happens to reference a field collection...
@@ -85,7 +89,7 @@ class NodeTranslatable extends EntityTranslatableBase {
 
           $target = $this->entity->raw();
           if (!is_object($target) && !empty($target)) {
-            $target = $this->nodeLoad((int) $target, NULL, TRUE);
+            $target = $this->drupal->nodeLoad((int) $target, NULL, TRUE);
           }
           $target->translation_source = clone $target;
 
@@ -95,7 +99,7 @@ class NodeTranslatable extends EntityTranslatableBase {
           $target->language = $targetLanguage;
         }
 
-        $this->targetEntities[$targetLanguage] = $this->entityMetadataWrapper('node', $target);
+        $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('node', $target);
       }
       else {
         $this->targetEntities[$targetLanguage] = parent::getTargetEntity($targetLanguage);
@@ -114,13 +118,13 @@ class NodeTranslatable extends EntityTranslatableBase {
    */
   protected function initializeContentTranslation() {
     $nid = (int) $this->entity->getIdentifier();
-    $source = $this->nodeLoad($nid, NULL, TRUE);
-    if ($source->language === LANGUAGE_NONE || empty($source->tnid)) {
+    $source = $this->drupal->nodeLoad($nid, NULL, TRUE);
+    if ($source->language === DrupalHandler::LANGUAGE_NONE || empty($source->tnid)) {
       $source->tnid = $nid;
       $source->language = 'en';
-      $this->nodeSave($source);
-      $this->entity = $this->entityMetadataWrapper('node', $source);
-      $this->drupalStaticReset('translation_node_get_translations');
+      $this->drupal->nodeSave($source);
+      $this->entity = $this->drupal->entityMetadataWrapper('node', $source);
+      $this->drupal->staticReset('translation_node_get_translations');
     }
   }
 
@@ -135,60 +139,12 @@ class NodeTranslatable extends EntityTranslatableBase {
     // a translation set happens to be unpublished, we still want to know about
     // it so we can update/override it (rather than creating a new one).
     $tempUser = clone $GLOBALS['user'];
-    $this->drupalSaveSession(FALSE);
-    $GLOBALS['user'] = user_load(1);
-    $tset = translation_node_get_translations($tnid);
+    $this->drupal->saveSession(FALSE);
+    $GLOBALS['user'] = $this->drupal->userLoad(1);
+    $tset = $this->drupal->translationNodeGetTranslations($tnid);
     $GLOBALS['user'] = $tempUser;
-    $this->drupalSaveSession(TRUE);
+    $this->drupal->saveSession(TRUE);
     return $tset;
-  }
-
-  /**
-   * OO wrapper around node_load().
-   * @param null $nid
-   * @param null $vid
-   * @param bool $reset
-   */
-  protected function nodeLoad($nid = NULL, $vid = NULL, $reset = FALSE) {
-    return node_load($nid, $vid, $reset);
-  }
-
-  /**
-   * OO wrapper around node_save().
-   * @param $node
-   * @throws \Exception
-   */
-  protected function nodeSave($node) {
-    node_save($node);
-  }
-
-  /**
-   * OO wrapper around module_exists().
-   *
-   * @param string $module
-   *   The name of the module (without the .module extension).
-   *
-   * @return bool
-   *   TRUE if the module is both installed and enabled, FALSE otherwise.
-   */
-  protected function moduleExists($module) {
-    return module_exists($module);
-  }
-
-  /**
-   * OO wrapper around drupal_static_rest().
-   * @param string $name
-   */
-  protected function drupalStaticReset($name = NULL) {
-    drupal_static_reset($name);
-  }
-
-  /**
-   * OO wrapper around drupal_save_session().
-   * @param bool $status
-   */
-  protected function drupalSaveSession($status = NULL) {
-    return drupal_save_session($status);
   }
 
 }
