@@ -9,6 +9,7 @@ namespace EntityXliff\Drupal\Translatable;
 
 use EggsCereal\Interfaces\TranslatableInterface;
 use EggsCereal\Utils\Data;
+use EntityXliff\Drupal\Utils\DrupalHandler;
 
 
 /**
@@ -20,6 +21,11 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    * @var \EntityDrupalWrapper
    */
   protected $entity;
+
+  /**
+   * @var DrupalHandler
+   */
+  protected $drupal;
 
   /**
    * @var array
@@ -102,15 +108,25 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    * @param \EntityDrupalWrapper $entityWrapper
    *   Metadata wrapper for the entity we wish to translate.
    *
+   * @param DrupalHandler $handler
+   *   (Optional) Inject the utility Drupal handler.
+   *
    * @param array $entityInfo
    *   (Optional) Inject entity info.
    */
-  public function __construct(\EntityDrupalWrapper $entityWrapper, array $entityInfo = array()) {
+  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, array $entityInfo = array()) {
+    // If no Drupal Handler was provided, instantiate it manually.
+    if ($handler === NULL) {
+      $handler = new DrupalHandler();
+    }
+
+    // If no entity info was provided, pull it manually.
     if ($entityInfo === array()) {
-      $entityInfo = $this->entityGetInfo();
+      $entityInfo = $handler->entityGetInfo();
     }
 
     $this->entity = $entityWrapper;
+    $this->drupal = $handler;
     $this->entityInfo = $entityInfo;
   }
 
@@ -212,7 +228,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
       $this->setItem($key, $values, $targetLang);
       return;
     }
-    foreach ($this->elementChildren($translation) as $item) {
+    foreach ($this->drupal->elementChildren($translation) as $item) {
       $this->addTranslatedDataRecursive($translation[$item], array_merge($key, array($item)), $targetLang);
     }
   }
@@ -257,8 +273,8 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
 
   /**
-   * @param $entityType
-   * @param $bundle
+   * @param \EntityDrupalWrapper $wrapper
+   * @return array
    */
   public function getTranslatableFields(\EntityDrupalWrapper $wrapper = NULL) {
     $fields = array();
@@ -277,12 +293,12 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityDrupalWrapper $wrapper
-   * @param $field
+   * @param string $field
    * @param string $type
-   * @param null $value
+   * @param mixed $value
    * @return array
    */
-  public function getFieldFromEntity(\EntityMetadataWrapper $wrapper, $field, $type = '', $value = NULL) {
+  public function getFieldFromEntity(\EntityDrupalWrapper $wrapper, $field, $type = '', $value = NULL) {
     $response = array();
     $info = $wrapper->getPropertyInfo();
     $fieldInfo = $info[$field];
@@ -315,9 +331,9 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
       }
     }
     else {
-      $this->watchdog('entity xliff', 'Could not pull translatable data. Unknown field type %type.', array(
+      $this->drupal->watchdog('entity xliff', 'Could not pull translatable data. Unknown field type %type.', array(
         '%type' => $type,
-      ), WATCHDOG_WARNING);
+      ), DrupalHandler::WATCHDOG_WARNING);
     }
 
     return $response;
@@ -325,7 +341,8 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param $field
+   * @param string $field
+   * @param string $value
    * @return string
    */
   protected function getScalarValueFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
@@ -342,7 +359,8 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param $field
+   * @param string $field
+   * @param array $value
    * @return mixed
    */
   protected function getFormattedValueFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
@@ -420,7 +438,8 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param $field
+   * @param string $field
+   * @param array $value
    */
   protected function getFieldItemLinkFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
     if ($value) {
@@ -446,6 +465,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    * @param \EntityMetadataWrapper $wrapper
    * @param $field
    * @param null $value
+   * @return array
    */
   protected function getFieldItemFileFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
     return array();
@@ -457,10 +477,11 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    */
   protected function setFieldItemFileFromEntity(\EntityMetadataWrapper $wrapper, $value = NULL) {}
 
-    /**
+  /**
    * @param \EntityMetadataWrapper $wrapper
    * @param $field
    * @param null $value
+   * @return array
    */
   protected function getFieldItemImageFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
     $response = array();
@@ -517,12 +538,12 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    */
   protected function getEntityFromEntity(\EntityDrupalWrapper $wrapper, $type, $field, $value = NULL) {
     if ($value) {
-      $entity = $this->entityMetadataWrapper($type, $value);
+      $entity = $this->drupal->entityMetadataWrapper($type, $value);
       return $this->getData($entity);
     }
     else {
       if ($identifier = $wrapper->{$field}->getIdentifier()) {
-        $entity = $this->entityMetadataWrapper($type, $identifier);
+        $entity = $this->drupal->entityMetadataWrapper($type, $identifier);
         return $this->getData($entity);
       }
       else {
@@ -532,7 +553,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   }
 
   /**
-   * @param \EntityMetadataWrapper $wrapper
+   * @param \EntityDrupalWrapper $wrapper
    * @param array $parents
    * @param $value
    * @param $targetLang
@@ -626,7 +647,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
       }
       $parentDataParents[] = '#text';
       $parentData = array();
-      $this->drupalArraySetNestedValue($parentData, $parentDataParents, $value);
+      $this->drupal->arraySetNestedValue($parentData, $parentDataParents, $value);
 
       // Set the data.
       $parentTranslatable->setData($parentData, $targetLang, FALSE);
@@ -669,9 +690,9 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
     }
     else {
       // Otherwise, register the unknown entity.
-      $this->watchdog('entity xliff', 'Could not update entity reference. Unknown entity type %type.', array(
+      $this->drupal->watchdog('entity xliff', 'Could not update entity reference. Unknown entity type %type.', array(
         '%type' => $parentType,
-      ), WATCHDOG_WARNING);
+      ), DrupalHandler::WATCHDOG_WARNING);
     }
   }
 
@@ -707,9 +728,9 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    * @param \EntityDrupalWrapper $wrapper
    *   The entity wrapper to compare.
    *
-   * @param bool $target
-   *   (Optional) If TRUE, then the comparison is made against the targetEntity.
-   *   Defaults to FALSE (meaning the comparison is against "this" entity).
+   * @param string $targetLang
+   *   (Optional) If provided, the target entity will be pulled via the
+   * getTargetEntity method.
    *
    * @return bool
    *   TRUE if the given entity is the same as the primary entity represented by
@@ -718,51 +739,6 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   protected function isTheSameAs(\EntityDrupalWrapper $wrapper, $targetLang = NULL) {
     $comparator = $targetLang ? $this->getTargetEntity($targetLang) : $this->entity;
     return $comparator->getIdentifier() === $wrapper->getIdentifier() && $comparator->type() === $wrapper->type();
-  }
-
-  /**
-   * OO wrapper around the watchdog() logging function.
-   */
-  protected function watchdog($type, $message, $variables = array(), $severity = NULL, $link = NULL) {
-    watchdog($type, $message, $variables, $severity, $link);
-  }
-
-  /**
-   * OO wrapper around entity_metadata_wrapper().
-   * @return \EntityMetadataWrapper
-   */
-  protected function entityMetadataWrapper($type, $data = NULL, array $info = array()) {
-    return entity_metadata_wrapper($type, $data, $info);
-  }
-
-  /**
-   * OO wrapper around entity_get_info().
-   * @param string $entityType
-   * @return array
-   */
-  protected function entityGetInfo($entityType = NULL) {
-    return entity_get_info($entityType);
-  }
-
-  /**
-   * OO wrapper around element_children().
-   * @param array $elements
-   * @param bool $sort
-   * @return array
-   */
-  protected function elementChildren(&$elements, $sort = FALSE) {
-    return element_children($elements, $sort);
-  }
-
-  /**
-   * OO Wrapper around drupal_array_set_nested_value().
-   * @param array $array
-   * @param array $parents
-   * @param $value
-   * @param bool $force
-   */
-  protected function drupalArraySetNestedValue(array &$array, array $parents, $value, $force = FALSE) {
-    drupal_array_set_nested_value($array, $parents, $value, $force);
   }
 
 }
