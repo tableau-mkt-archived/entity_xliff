@@ -7,6 +7,7 @@
 
 namespace EntityXliff\Drupal\Translatable;
 
+use EntityXliff\Drupal\Mediator\Entity as EntityMediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
 
 
@@ -27,8 +28,8 @@ class NodeTranslatable extends EntityTranslatableBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL) {
-    parent::__construct($entityWrapper, $handler);
+  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityMediator $entityMediator = NULL) {
+    parent::__construct($entityWrapper, $handler, $entityMediator);
 
     // Handle content translation for nodes.
     $this->drupal->staticReset('translation_node_get_translations');
