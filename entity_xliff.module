@@ -5,7 +5,7 @@
  * Module hooks and functions for the Entity XLIFF module.
  */
 
-use EntityXliff\Drupal\Translatable\NodeTranslatable;
+use EntityXliff\Drupal\Mediator\EntityMediator;
 
 /**
  * Implements hook_menu().
@@ -53,6 +53,24 @@ function entity_xliff_permission() {
 }
 
 /**
+ * Implements hook_entity_info_alter().
+ */
+function entity_xliff_entity_info_alter(&$entityInfo) {
+  // Load our provided default implementations.
+  _entity_xliff_load_provided_incs();
+
+  // Return a list of translatable info (classes) keyed by entity type.
+  $translatables = module_invoke_all('entity_xliff_translatable_info');
+  drupal_alter('entity_xliff_translatable_info', $translatables);
+
+  foreach ($translatables as $type => $info) {
+    if (isset($entityInfo[$type]) && isset($info['class'])) {
+      $entityInfo[$type]['entity xliff translatable class'] = $info['class'];
+    }
+  }
+}
+
+/**
  * Gets a TranslatableInterface instance given an entity wrapper.
  *
  * @param \EntityDrupalWrapper $wrapper
@@ -61,16 +79,20 @@ function entity_xliff_permission() {
  * @return EggsCereal\Interfaces\TranslatableInterface|null
  *   Returns a translatable object compatible with Eggs'n'Cereal's Translatable
  *   interface. If none is known, NULL is returned.
- *
- * @todo This should eventually be hook-driven, so modules declaring custom
- * entity types that we aren't aware of can provide their own implementations.
- * This should also feed into the EntityTranslatableBase class itself.
  */
 function entity_xliff_get_translatable($wrapper) {
-  switch ($wrapper->type()) {
-    case 'node':
-      return new NodeTranslatable($wrapper);
+  $entityMediator = &drupal_static(__FUNCTION__, FALSE);
+  if ($entityMediator === FALSE) {
+    $entityMediator = new EntityMediator();
   }
+  return $entityMediator->getTranslatable($wrapper);
+}
 
-  return NULL;
+/**
+ * Loads in includes provided on behalf of existing modules.
+ */
+function _entity_xliff_load_provided_incs() {
+  foreach (array('node', 'field_collection') as $entity) {
+    module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
+  }
 }

@@ -7,6 +7,7 @@
 
 namespace EntityXliff\Drupal\Translatable;
 
+use EntityXliff\Drupal\Mediator\EntityMediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
 
 
@@ -26,27 +27,21 @@ class NodeTranslatable extends EntityTranslatableBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @param array $translationSet
-   *   An array of partial nodes, keyed by their respective language codes, that
-   *   constitute the translation set for this node. Used when content
-   *   translation is in use. If no translation set is provided, a default will
-   *   be provided by translation_node_get_translations().
    */
-  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, array $entityInfo = array(), array $translationSet = array()) {
-    parent::__construct($entityWrapper, $handler, $entityInfo);
+  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityMediator $entityMediator = NULL) {
+    parent::__construct($entityWrapper, $handler, $entityMediator);
 
     // Handle content translation for nodes.
     $this->drupal->staticReset('translation_node_get_translations');
     if ($entityWrapper->language->value() === 'en') {
-      $this->tset = $translationSet ?: $this->nodeGetTranslations((int) $entityWrapper->getIdentifier());
+      $this->tset = $this->nodeGetTranslations((int) $entityWrapper->getIdentifier());
     }
     else {
       $raw = $entityWrapper->raw();
       if (!is_object($raw)) {
         $raw = $this->drupal->nodeLoad((int) $raw);
       }
-      $this->tset = $translationSet ?: $this->nodeGetTranslations((int) $raw->tnid);
+      $this->tset = $this->nodeGetTranslations((int) $raw->tnid);
     }
   }
 

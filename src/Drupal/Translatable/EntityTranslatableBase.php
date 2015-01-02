@@ -9,6 +9,7 @@ namespace EntityXliff\Drupal\Translatable;
 
 use EggsCereal\Interfaces\TranslatableInterface;
 use EggsCereal\Utils\Data;
+use EntityXliff\Drupal\Mediator\EntityMediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
 
 
@@ -31,6 +32,11 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    * @var array
    */
   protected $entityInfo;
+
+  /**
+   * @var EntityMediator
+   */
+  protected $entityMediator;
 
   /**
    * @var \EntityDrupalWrapper[]
@@ -94,15 +100,6 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   );
 
   /**
-   * Maps EntityTranslatable implementations to their entity names.
-   * @var array
-   */
-  protected $translatableMap = array(
-    'node' => 'EntityXliff\Drupal\Translatable\NodeTranslatable',
-    'field_collection_item' => 'EntityXliff\Drupal\Translatable\FieldCollectionTranslatable',
-  );
-
-  /**
    * Creates a Translatable from an Entity wrapper.
    *
    * @param \EntityDrupalWrapper $entityWrapper
@@ -111,23 +108,24 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    * @param DrupalHandler $handler
    *   (Optional) Inject the utility Drupal handler.
    *
-   * @param array $entityInfo
-   *   (Optional) Inject entity info.
+   * @param EntityMediator $entityMediator
+   *   (Optional) Inject the entity mediator.
    */
-  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, array $entityInfo = array()) {
+  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityMediator $entityMediator = NULL) {
     // If no Drupal Handler was provided, instantiate it manually.
     if ($handler === NULL) {
       $handler = new DrupalHandler();
     }
 
-    // If no entity info was provided, pull it manually.
-    if ($entityInfo === array()) {
-      $entityInfo = $handler->entityGetInfo();
+    // If no Entity mediator was provided, instantiate it manually.
+    if ($entityMediator === NULL) {
+      $entityMediator = new EntityMediator($handler);
     }
 
     $this->entity = $entityWrapper;
     $this->drupal = $handler;
-    $this->entityInfo = $entityInfo;
+    $this->entityMediator = $entityMediator;
+    $this->entityInfo = $handler->entityGetInfo();
   }
 
   /**
@@ -183,11 +181,13 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
     // Save any entities that need saving (this includes the target entity).
     foreach ($this->entitiesNeedSave as $key => $wrapper) {
-      $type = $wrapper->type();
+      $translatableClass = $this->entityMediator->getTranslatableClass($wrapper);
 
-      if (isset($this->translatableMap[$type]) && method_exists($this->translatableMap[$type], 'saveWrapper')) {
-        call_user_func_array($this->translatableMap[$type] . '::saveWrapper', array($wrapper));
+      // If a translatable class provides a static save method, call it.
+      if ($translatableClass && method_exists($translatableClass, 'saveWrapper')) {
+        call_user_func_array($translatableClass . '::saveWrapper', array($wrapper));
       }
+      // Otherwise, call \EntityDrupalWrapper::save().
       else {
         $wrapper->save();
       }
@@ -617,7 +617,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   protected function entitySetReferencedEntity(\EntityDrupalWrapper $parent, $field, array $parents, $value, $targetLang) {
     $parentType = $parent->type();
     $needsSaveKey = $parent->type() . ':' . $parent->getIdentifier();
-    if (isset($this->translatableMap[$parentType])) {
+    if ($translatableClass = $this->entityMediator->getTranslatableClass($parent)) {
       // Load the translatable for this referenced entity.
       if (isset($this->entitiesNeedSave[$needsSaveKey])) {
         $parentWrapper = $this->entitiesNeedSave[$needsSaveKey];
@@ -631,7 +631,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
         $parentTranslatable = $this->translatables[$needsSaveKey];
       }
       else {
-        $parentTranslatable = new $this->translatableMap[$parentType]($parentWrapper);
+        $parentTranslatable = new $translatableClass($parentWrapper);
       }
 
       // Recreate the $data array for this referenced entity.
