@@ -9,7 +9,7 @@ namespace EntityXliff\Drupal\Translatable;
 
 use EggsCereal\Interfaces\TranslatableInterface;
 use EggsCereal\Utils\Data;
-use EntityXliff\Drupal\Mediator\Entity as EntityMediator;
+use EntityXliff\Drupal\Mediator\EntityMediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
 
 

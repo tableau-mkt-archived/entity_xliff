@@ -11,7 +11,7 @@ namespace EntityXliff\Drupal\Mediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
 
 
-class Entity {
+class EntityMediator {
 
   /**
    * @var DrupalHandler

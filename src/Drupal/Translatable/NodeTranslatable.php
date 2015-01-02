@@ -7,7 +7,7 @@
 
 namespace EntityXliff\Drupal\Translatable;
 
-use EntityXliff\Drupal\Mediator\Entity as EntityMediator;
+use EntityXliff\Drupal\Mediator\EntityMediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
 
 

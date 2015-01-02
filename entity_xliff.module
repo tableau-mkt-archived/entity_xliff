@@ -5,8 +5,7 @@
  * Module hooks and functions for the Entity XLIFF module.
  */
 
-use EntityXliff\Drupal\Translatable\NodeTranslatable;
-use EntityXliff\Drupal\Mediator\Entity as EntityMediator;
+use EntityXliff\Drupal\Mediator\EntityMediator;
 
 /**
  * Implements hook_menu().
