@@ -145,19 +145,13 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   /**
    * {@inheritdoc}
    */
-  public function getData(\EntityDrupalWrapper $wrapper = NULL) {
-    if ($wrapper === NULL) {
-      $wrapper = $this->entity;
-    }
-
+  public function getData() {
     $data = array();
-    $fields = $this->getTranslatableFields($wrapper);
-    $info = $wrapper->getPropertyInfo();
+    $fields = $this->getTranslatableFields($this->entity);
 
     // Iterate through all fields we're expecting to translate.
     foreach ($fields as $field) {
-      $type = isset($info[$field]['type']) ? $info[$field]['type'] : 'text';
-      if ($fieldData = $this->getFieldFromEntity($wrapper, $field, $type)) {
+      if ($fieldData = $this->getFieldFromEntity($this->entity, $field)) {
         $data[$field] = $fieldData;
       }
     }
@@ -294,18 +288,18 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   /**
    * @param \EntityDrupalWrapper $wrapper
    * @param string $field
-   * @param string $type
-   * @param mixed $value
+   * @param int $delta
    * @return array
    */
-  public function getFieldFromEntity(\EntityDrupalWrapper $wrapper, $field, $type = '', $value = NULL) {
+  public function getFieldFromEntity(\EntityDrupalWrapper $wrapper, $field, $delta = NULL) {
     $response = array();
-    $info = $wrapper->getPropertyInfo();
-    $fieldInfo = $info[$field];
+    $fieldWrapper = $delta !== NULL ? $wrapper->{$field}[$delta] : $wrapper->{$field};
+    $fieldInfo = $fieldWrapper->info();
+    $type = isset($fieldInfo['type']) ? $fieldInfo['type'] : 'text';
 
     // Check for getters against known types.
     if (isset($this->methodMap[$type]['get'])) {
-      if ($text = $this->{$this->methodMap[$type]['get']}($wrapper, $field, $value)) {
+      if ($text = $this->{$this->methodMap[$type]['get']}($fieldWrapper)) {
         if (is_array($text)) {
           $response = $text;
         }
@@ -318,15 +312,13 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
     // If this is an entity reference, restart the process recursively with the
     // referenced entity as the starting point.
     elseif(isset($this->entityInfo[$type])) {
-      $response += $this->getEntityFromEntity($wrapper, $type, $field, $value);
+      $response += $this->getEntityFromEntity($fieldWrapper);
     }
     // If this is a list, call ourselves recursively for each item.
     elseif (preg_match('/list<(.*?)>/', $type, $matches)) {
-      foreach ($wrapper->{$field}->getIterator() as $delta => $fieldWrapper) {
-        if ($fieldWrapperValue = $fieldWrapper->value()) {
-          if ($text = $this->getFieldFromEntity($wrapper, $field, $matches[1], $fieldWrapperValue)) {
-            $response[$delta] = $text;
-          }
+      foreach ($fieldWrapper->getIterator() as $delta => $subFieldWrapper) {
+        if ($text = $this->getFieldFromEntity($wrapper, $field, $delta)) {
+          $response[$delta] = $text;
         }
       }
     }
@@ -341,12 +333,10 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param string $field
-   * @param string $value
    * @return string
    */
-  protected function getScalarValueFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
-    return $value ?: $wrapper->{$field}->value();
+  protected function getScalarValueFromEntity(\EntityMetadataWrapper $wrapper) {
+    return $wrapper->value();
   }
 
   /**
@@ -359,18 +349,11 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param string $field
-   * @param array $value
    * @return mixed
    */
-  protected function getFormattedValueFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
-    if ($value) {
-      return $value['value'];
-    }
-    else {
-      $fieldValue = $wrapper->{$field}->value();
-      return $fieldValue['value'];
-    }
+  protected function getFormattedValueFromEntity(\EntityMetadataWrapper $wrapper) {
+    $fieldValue = $wrapper->value();
+    return $fieldValue['value'];
   }
 
   /**
@@ -385,38 +368,31 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param $field
-   * @param null $value
    * @return array
    */
-  protected function getFieldItemTextSummaryFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
+  protected function getFieldItemTextSummaryFromEntity(\EntityMetadataWrapper $wrapper) {
     $response = array();
 
-    if ($value) {
-      return $value;
+    $value = $wrapper->value();
+    $info = $wrapper->info();
+
+    // Check for value text.
+    if (isset($value['value']) && !empty($value['value'])) {
+      $response['value'] = array(
+        '#label' => $info['label'] . ' (value)',
+        '#text' => $value['value'],
+      );
     }
-    else {
-      $value = $wrapper->{$field}->value();
-      $info = $wrapper->{$field}->info();
 
-      // Check for value text.
-      if (isset($value['value']) && !empty($value['value'])) {
-        $response['value'] = array(
-          '#label' => $info['label'] . ' (value)',
-          '#text' => $value['value'],
-        );
-      }
-
-      // Check for summary text.
-      if (isset($value['summary']) && !empty($value['summary'])) {
-        $response['summary'] = array(
-          '#label' => $info['label'] . ' (summary)',
-          '#text' => $value['summary'],
-        );
-      }
-
-      return $response;
+    // Check for summary text.
+    if (isset($value['summary']) && !empty($value['summary'])) {
+      $response['summary'] = array(
+        '#label' => $info['label'] . ' (summary)',
+        '#text' => $value['summary'],
+      );
     }
+
+    return $response;
   }
 
   /**
@@ -438,17 +414,10 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param string $field
-   * @param array $value
    */
-  protected function getFieldItemLinkFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
-    if ($value) {
-      return $value['title'];
-    }
-    else {
-      $fieldValue = $wrapper->{$field}->value();
-      return $fieldValue['title'];
-    }
+  protected function getFieldItemLinkFromEntity(\EntityMetadataWrapper $wrapper) {
+    $fieldValue = $wrapper->value();
+    return $fieldValue['title'];
   }
 
   /**
@@ -463,11 +432,9 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param $field
-   * @param null $value
    * @return array
    */
-  protected function getFieldItemFileFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
+  protected function getFieldItemFileFromEntity(\EntityMetadataWrapper $wrapper) {
     return array();
   }
 
@@ -479,37 +446,30 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityMetadataWrapper $wrapper
-   * @param $field
-   * @param null $value
    * @return array
    */
-  protected function getFieldItemImageFromEntity(\EntityMetadataWrapper $wrapper, $field, $value = NULL) {
+  protected function getFieldItemImageFromEntity(\EntityMetadataWrapper $wrapper) {
     $response = array();
 
-    if ($value) {
-      return $value;
+    $value = $wrapper->value();
+
+    // Check for alt text.
+    if (isset($value['alt']) && !empty($value['alt'])) {
+      $response['alt'] = array(
+        '#label' => 'Alternate text',
+        '#text' => $value['alt'],
+      );
     }
-    else {
-      $value = $wrapper->{$field}->value();
 
-      // Check for alt text.
-      if (isset($value['alt']) && !empty($value['alt'])) {
-        $response['alt'] = array(
-          '#label' => 'Alternate text',
-          '#text' => $value['alt'],
-        );
-      }
-
-      // Check for title text.
-      if (isset($value['title']) && !empty($value['title'])) {
-        $response['title'] = array(
-          '#label' => 'Title text',
-          '#text' => $value['title'],
-        );
-      }
-
-      return $response;
+    // Check for title text.
+    if (isset($value['title']) && !empty($value['title'])) {
+      $response['title'] = array(
+        '#label' => 'Title text',
+        '#text' => $value['title'],
+      );
     }
+
+    return $response;
   }
 
   /**
@@ -531,24 +491,16 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
   /**
    * @param \EntityDrupalWrapper $wrapper
-   * @param $type
-   * @param $field
-   * @param null $value
    * @return array
    */
-  protected function getEntityFromEntity(\EntityDrupalWrapper $wrapper, $type, $field, $value = NULL) {
-    if ($value) {
-      $entity = $this->drupal->entityMetadataWrapper($type, $value);
-      return $this->getData($entity);
+  protected function getEntityFromEntity(\EntityDrupalWrapper $wrapper) {
+    // Ensure that this wrapper represents real data, not just a placeholder
+    // that has no data. Also make sure we know how to translate thie entity.
+    if ($wrapper->getIdentifier() && $translatable = $this->entityMediator->getTranslatable($wrapper)) {
+      return $translatable->getData();
     }
     else {
-      if ($identifier = $wrapper->{$field}->getIdentifier()) {
-        $entity = $this->drupal->entityMetadataWrapper($type, $identifier);
-        return $this->getData($entity);
-      }
-      else {
-        return array();
-      }
+      return array();
     }
   }
 
