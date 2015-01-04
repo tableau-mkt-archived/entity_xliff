@@ -57,7 +57,7 @@ function entity_xliff_permission() {
  */
 function entity_xliff_entity_info_alter(&$entityInfo) {
   // Load our provided default implementations.
-  _entity_xliff_load_provided_incs();
+  _entity_xliff_load_module_incs();
 
   // Return a list of translatable info (classes) keyed by entity type.
   $translatables = module_invoke_all('entity_xliff_translatable_info');
@@ -89,10 +89,27 @@ function entity_xliff_get_translatable($wrapper) {
 }
 
 /**
+ * Returns entity xliff field handlers declared by installed Drupal modules.
+ *
+ * @return array
+ * @see EntityXliff\Drupal\Mediator\FieldMediator::buildMap()
+ */
+function entity_xliff_get_field_handlers() {
+  // Load our provided default implementations.
+  _entity_xliff_load_module_incs();
+
+  // Return a list of field handlers (classes) keyed by entity property type.
+  $handlers = module_invoke_all('entity_xliff_field_handler_info');
+  drupal_alter('entity_xliff_field_handler_info', $handlers);
+
+  return $handlers;
+}
+
+/**
  * Loads in includes provided on behalf of existing modules.
  */
-function _entity_xliff_load_provided_incs() {
-  foreach (array('node', 'field_collection') as $entity) {
+function _entity_xliff_load_module_incs() {
+  foreach (array('node', 'field_collection', 'link', 'image', 'text', 'number', 'list') as $entity) {
     module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
   }
 }

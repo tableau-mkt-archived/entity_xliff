@@ -10,6 +10,7 @@ namespace EntityXliff\Drupal\Translatable;
 use EggsCereal\Interfaces\TranslatableInterface;
 use EggsCereal\Utils\Data;
 use EntityXliff\Drupal\Mediator\EntityMediator;
+use EntityXliff\Drupal\Mediator\FieldMediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
 
 
@@ -39,6 +40,11 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   protected $entityMediator;
 
   /**
+   * @var FieldMediator
+   */
+  protected $fieldMediator;
+
+  /**
    * @var \EntityDrupalWrapper[]
    */
   protected $targetEntities = array();
@@ -57,49 +63,6 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   protected $translatables = array();
 
   /**
-   * Maps getter and setter methods for various field types.
-   * @var array
-   */
-  protected $methodMap = array(
-    'text' => array(
-      'get' => 'getScalarValueFromEntity',
-      'set' => 'setScalarValueFromEntity',
-    ),
-    'boolean' => array(
-      'get' => 'getScalarValueFromEntity',
-      'set' => 'setScalarValueFromEntity',
-    ),
-    'integer' => array(
-      'get' => 'getScalarValueFromEntity',
-      'set' => 'setScalarValueFromEntity',
-    ),
-    'uri' => array(
-      'get' => 'getScalarValueFromEntity',
-      'set' => 'setScalarValueFromEntity',
-    ),
-    'text_formatted' => array(
-      'get' => 'getFormattedValueFromEntity',
-      'set' => 'setFormattedValueFromEntity',
-    ),
-    'field_item_textsummary' => array(
-      'get' => 'getFieldItemTextSummaryFromEntity',
-      'set' => 'setFieldItemTextSummaryFromEntity',
-    ),
-    'field_item_link' => array(
-      'get' => 'getFieldItemLinkFromEntity',
-      'set' => 'setFieldItemLinkFromEntity',
-    ),
-    'field_item_file' => array(
-      'get' => 'getFieldItemFileFromEntity',
-      'set' => 'setFieldItemFileFromEntity',
-    ),
-    'field_item_image' => array(
-      'get' => 'getFieldItemImageFromEntity',
-      'set' => 'setFieldItemImageFromEntity',
-    ),
-  );
-
-  /**
    * Creates a Translatable from an Entity wrapper.
    *
    * @param \EntityDrupalWrapper $entityWrapper
@@ -110,8 +73,11 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    *
    * @param EntityMediator $entityMediator
    *   (Optional) Inject the entity mediator.
+   *
+   * @param FieldMediator $fieldMediator
+   *   (Optional) Inject the field mediator.
    */
-  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityMediator $entityMediator = NULL) {
+  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityMediator $entityMediator = NULL, FieldMediator $fieldMediator = NULL) {
     // If no Drupal Handler was provided, instantiate it manually.
     if ($handler === NULL) {
       $handler = new DrupalHandler();
@@ -122,9 +88,14 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
       $entityMediator = new EntityMediator($handler);
     }
 
+    if ($fieldMediator === NULL) {
+      $fieldMediator = new FieldMediator($handler);
+    }
+
     $this->entity = $entityWrapper;
     $this->drupal = $handler;
     $this->entityMediator = $entityMediator;
+    $this->fieldMediator = $fieldMediator;
     $this->entityInfo = $handler->entityGetInfo();
   }
 
@@ -298,8 +269,8 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
     $type = isset($fieldInfo['type']) ? $fieldInfo['type'] : 'text';
 
     // Check for getters against known types.
-    if (isset($this->methodMap[$type]['get'])) {
-      if ($text = $this->{$this->methodMap[$type]['get']}($fieldWrapper)) {
+    if ($handler = $this->fieldMediator->getInstance($fieldWrapper)) {
+      if ($text = $handler->getValue($fieldWrapper)) {
         if (is_array($text)) {
           $response = $text;
         }
@@ -329,164 +300,6 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
     }
 
     return $response;
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @return string
-   */
-  protected function getScalarValueFromEntity(\EntityMetadataWrapper $wrapper) {
-    return $wrapper->value();
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @param $value
-   */
-  protected function setScalarValueFromEntity(\EntityMetadataWrapper $wrapper, $value) {
-    $wrapper->set($value);
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @return mixed
-   */
-  protected function getFormattedValueFromEntity(\EntityMetadataWrapper $wrapper) {
-    $fieldValue = $wrapper->value();
-    return $fieldValue['value'];
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @param $value
-   */
-  protected function setFormattedValueFromEntity(\EntityMetadataWrapper $wrapper, $value) {
-    $newValue = $wrapper->value();
-    $newValue['value'] = $value;
-    $wrapper->set($newValue);
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @return array
-   */
-  protected function getFieldItemTextSummaryFromEntity(\EntityMetadataWrapper $wrapper) {
-    $response = array();
-
-    $value = $wrapper->value();
-    $info = $wrapper->info();
-
-    // Check for value text.
-    if (isset($value['value']) && !empty($value['value'])) {
-      $response['value'] = array(
-        '#label' => $info['label'] . ' (value)',
-        '#text' => $value['value'],
-      );
-    }
-
-    // Check for summary text.
-    if (isset($value['summary']) && !empty($value['summary'])) {
-      $response['summary'] = array(
-        '#label' => $info['label'] . ' (summary)',
-        '#text' => $value['summary'],
-      );
-    }
-
-    return $response;
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @param $value
-   */
-  protected function setFieldItemTextSummaryFromEntity(\EntityMetadataWrapper $wrapper, $value) {
-    $newValue = $wrapper->value();
-
-    if (isset($value['value'])) {
-      $newValue['value'] = $value['value'];
-    }
-    if (isset($value['summary'])) {
-      $newValue['summary'] = $value['summary'];
-    }
-
-    $wrapper->set($newValue);
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   */
-  protected function getFieldItemLinkFromEntity(\EntityMetadataWrapper $wrapper) {
-    $fieldValue = $wrapper->value();
-    return $fieldValue['title'];
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @param $value
-   */
-  protected function setFieldItemLinkFromEntity(\EntityMetadataWrapper $wrapper, $value) {
-    $newValue = $wrapper->value();
-    $newValue['title'] = $value;
-    $wrapper->set($newValue);
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @return array
-   */
-  protected function getFieldItemFileFromEntity(\EntityMetadataWrapper $wrapper) {
-    return array();
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @param null $value
-   */
-  protected function setFieldItemFileFromEntity(\EntityMetadataWrapper $wrapper, $value = NULL) {}
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @return array
-   */
-  protected function getFieldItemImageFromEntity(\EntityMetadataWrapper $wrapper) {
-    $response = array();
-
-    $value = $wrapper->value();
-
-    // Check for alt text.
-    if (isset($value['alt']) && !empty($value['alt'])) {
-      $response['alt'] = array(
-        '#label' => 'Alternate text',
-        '#text' => $value['alt'],
-      );
-    }
-
-    // Check for title text.
-    if (isset($value['title']) && !empty($value['title'])) {
-      $response['title'] = array(
-        '#label' => 'Title text',
-        '#text' => $value['title'],
-      );
-    }
-
-    return $response;
-  }
-
-  /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @param $value
-   */
-  protected function setFieldItemImageFromEntity(\EntityMetadataWrapper $wrapper, $value) {
-    $newValue = $wrapper->value();
-
-    if (isset($value['alt'])) {
-      $newValue['alt'] = $value['alt'];
-    }
-    if (isset($value['title'])) {
-      $newValue['title'] = $value['title'];
-    }
-
-    $wrapper->set($newValue);
   }
 
   /**
@@ -536,10 +349,10 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
     }
 
     // Set the field value according to the type of data.
-    if (isset($this->methodMap[$type]['set'])) {
+    if ($handler = $this->fieldMediator->getInstance($ref)) {
       // If the parent IS the targetEntity, just set the value as calculated.
       if ($this->isTheSameAs($parent, $targetLang)) {
-        $this->{$this->methodMap[$type]['set']}($ref, $value);
+        $handler->setValue($ref, $value);
 
         // This may be a brand new entity. If so, save it immediately, then
         // re-queue it for one more save once all values have been appended.

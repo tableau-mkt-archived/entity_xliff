@@ -74,6 +74,14 @@ class DrupalHandler {
   }
 
   /**
+   * Returns entity xliff field handlers declared by installed Drupal modules.
+   * @return array
+   */
+  public function entityXliffGetFieldHandlers() {
+    return entity_xliff_get_field_handlers();
+  }
+
+  /**
    * Determines whether a given module exists.
    * @param string $module
    * @return bool

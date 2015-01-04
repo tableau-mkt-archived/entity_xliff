@@ -61,5 +61,41 @@ function hook_entity_xliff_translatable_info_alter(&$translatables) {
 }
 
 /**
+ * Return info about entity fields and the way in which they integrate with the
+ * Entity Xliff module.
+ *
+ * @return array
+ *   Returns an associative array of Entity Xliff field handler details, keyed
+ *   by entity type. At a bare minimum Entity Xliff field handler info must
+ *   include the following:
+ *   - class: Class that implements EntityXliff\Interfaces\FieldHandlerInterface,
+ *     describing how entity metadata properties of this type can be get/set.
+ */
+function hook_entity_xliff_field_handler_info() {
+  $handlers['addressfield'] = array(
+    'class' => 'AddressFieldHandler',
+  );
+
+  // Example showing a namespace'd PHP class.
+  $handlers['my_field_type'] = array(
+    'class' => 'NameSpace\Of\MyFieldTypeHandler',
+  );
+
+  return $handlers;
+}
+
+/**
+ * Alter Entity Xliff field handler info before it's provided for use by the
+ * Entity Xliff field handling / mediation process.
+ *
+ * @param array $handlers
+ *   An associative array of Entity Xliff translatable details exactly as spec'd
+ *   in hook_entity_xliff_translatable_info().
+ */
+function hook_entity_xliff_field_handler_info_alter(&$handlers) {
+  $handlers['addressfield']['class'] = 'MyCustomAddressFieldHandler';
+}
+
+/**
  * @}
  */
