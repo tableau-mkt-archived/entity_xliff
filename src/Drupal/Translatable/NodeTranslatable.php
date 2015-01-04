@@ -38,10 +38,7 @@ class NodeTranslatable extends EntityTranslatableBase {
       $this->tset = $this->nodeGetTranslations((int) $entityWrapper->getIdentifier());
     }
     else {
-      $raw = $entityWrapper->raw();
-      if (!is_object($raw)) {
-        $raw = $this->drupal->nodeLoad((int) $raw);
-      }
+      $raw = $this->getRawEntity($entityWrapper);
       $this->tset = $this->nodeGetTranslations((int) $raw->tnid);
     }
   }
@@ -83,10 +80,7 @@ class NodeTranslatable extends EntityTranslatableBase {
           // Ensure that the original is ready for translation.
           $this->initializeContentTranslation();
 
-          $target = $this->entity->raw();
-          if (!is_object($target) && !empty($target)) {
-            $target = $this->drupal->nodeLoad((int) $target, NULL, TRUE);
-          }
+          $target = $this->getRawEntity($this->entity);
           $target->translation_source = clone $target;
 
           unset($target->nid, $target->vid);

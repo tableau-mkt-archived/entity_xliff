@@ -24,11 +24,7 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
       // Handling for content translation. Entity field translation should be
       // taken care of by the parent.
       if (!$this->drupal->moduleExists('entity_translation')) {
-        $target = $this->entity->raw();
-        if (!is_object($target) && !empty($target)) {
-          $target = $this->drupal->entityLoad('field_collection_item', array((int) $target));
-          $target = reset($target);
-        }
+        $target = $this->getRawEntity($this->entity);
 
         // Pull the parent/host entity.
         if ($rawHost = $this->getHostEntity($target)) {
@@ -36,7 +32,7 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
         }
         else {
           $host = $this->getParent($this->entity);
-          $rawHost = $host->raw();
+          $rawHost = $this->getRawEntity($host);
         }
 
         // If the language of the host does not match the specified target

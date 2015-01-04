@@ -490,6 +490,24 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   }
 
   /**
+   * Returns the raw entity object given its entity wrapper.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   The Entity wrapper whose raw entity object is desired.
+   *
+   * @return mixed
+   *   The raw entity object.
+   */
+  public function getRawEntity(\EntityDrupalWrapper $wrapper) {
+    $raw = $wrapper->raw();
+    if (!is_object($raw)) {
+      $entities = $this->drupal->entityLoad($wrapper->type(), array((int) $raw));
+      $raw = reset($entities);
+    }
+    return $raw;
+  }
+
+  /**
    * @param \EntityDrupalWrapper $wrapper
    *   The entity wrapper to compare.
    *
