@@ -85,7 +85,7 @@ function entity_xliff_get_translatable($wrapper) {
   if ($entityMediator === FALSE) {
     $entityMediator = new EntityMediator();
   }
-  return $entityMediator->getTranslatable($wrapper);
+  return $entityMediator->getInstance($wrapper);
 }
 
 /**

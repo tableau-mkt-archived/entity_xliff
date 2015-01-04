@@ -146,7 +146,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
     // Save any entities that need saving (this includes the target entity).
     foreach ($this->entitiesNeedSave as $key => $wrapper) {
-      $translatableClass = $this->entityMediator->getTranslatableClass($wrapper);
+      $translatableClass = $this->entityMediator->getClass($wrapper);
 
       // If a translatable class provides a static save method, call it.
       if ($translatableClass && method_exists($translatableClass, 'saveWrapper')) {
@@ -309,7 +309,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   protected function getEntityFromEntity(\EntityDrupalWrapper $wrapper) {
     // Ensure that this wrapper represents real data, not just a placeholder
     // that has no data. Also make sure we know how to translate thie entity.
-    if ($wrapper->getIdentifier() && $translatable = $this->entityMediator->getTranslatable($wrapper)) {
+    if ($wrapper->getIdentifier() && $translatable = $this->entityMediator->getInstance($wrapper)) {
       return $translatable->getData();
     }
     else {
@@ -382,7 +382,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   protected function entitySetReferencedEntity(\EntityDrupalWrapper $parent, $field, array $parents, $value, $targetLang) {
     $parentType = $parent->type();
     $needsSaveKey = $parent->type() . ':' . $parent->getIdentifier();
-    if ($translatableClass = $this->entityMediator->getTranslatableClass($parent)) {
+    if ($translatableClass = $this->entityMediator->getClass($parent)) {
       // Load the translatable for this referenced entity.
       if (isset($this->entitiesNeedSave[$needsSaveKey])) {
         $parentWrapper = $this->entitiesNeedSave[$needsSaveKey];

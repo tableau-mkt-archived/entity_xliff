@@ -58,8 +58,8 @@ class EntityMediator {
    *   Returns an instance of the entity's translatable. If no translatable
    *   class is known, NULL is returned.
    */
-  public function getTranslatable(\EntityDrupalWrapper $wrapper) {
-    if ($translatable = $this->getTranslatableClass($wrapper)) {
+  public function getInstance(\EntityDrupalWrapper $wrapper) {
+    if ($translatable = $this->getClass($wrapper)) {
       return new $translatable($wrapper);
     }
     else {
@@ -92,7 +92,7 @@ class EntityMediator {
    *   The name of the class (suitable for dynamic class instantiation) or FALSE
    *   if the entity type is not known to be translatable.
    */
-  public function getTranslatableClass(\EntityDrupalWrapper $wrapper) {
+  public function getClass(\EntityDrupalWrapper $wrapper) {
     if ($this->canBeTranslated($wrapper)) {
       return $this->classMap[$wrapper->type()];
     }
