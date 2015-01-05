@@ -166,6 +166,20 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   /**
    * {@inheritdoc}
    */
+  public function getTranslatableFields() {
+    $fields = array();
+
+    foreach ($this->entity->getPropertyInfo() as $property => $info) {
+      if (isset($info['field']) && $info['field']) {
+        $fields[] = $property;
+      }
+    }
+    return $fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function saveWrapper(\EntityDrupalWrapper $wrapper) {
     $wrapper->save();
   }
@@ -224,21 +238,6 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         }
       }
     }
-  }
-
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getTranslatableFields() {
-    $fields = array();
-
-    foreach ($this->entity->getPropertyInfo() as $property => $info) {
-      if (isset($info['field']) && $info['field']) {
-        $fields[] = $property;
-      }
-    }
-    return $fields;
   }
 
   /**
@@ -363,7 +362,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   protected function entitySetReferencedEntity(\EntityDrupalWrapper $parent, $field, array $parents, $value, $targetLang) {
     $parentType = $parent->type();
     $needsSaveKey = $parent->type() . ':' . $parent->getIdentifier();
-    if ($translatableClass = $this->entityMediator->getClass($parent)) {
+    if ($this->entityMediator->canBeTranslated($parent)) {
       // Load the translatable for this referenced entity.
       if (isset($this->entitiesNeedSave[$needsSaveKey])) {
         $parentWrapper = $this->entitiesNeedSave[$needsSaveKey];
@@ -377,7 +376,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         $parentTranslatable = $this->translatables[$needsSaveKey];
       }
       else {
-        $parentTranslatable = new $translatableClass($parentWrapper);
+        $parentTranslatable = $this->entityMediator->getInstance($parentWrapper);
       }
 
       // Recreate the $data array for this referenced entity.
