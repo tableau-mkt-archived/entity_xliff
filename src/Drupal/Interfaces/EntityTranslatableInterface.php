@@ -40,6 +40,14 @@ interface EntityTranslatableInterface extends TranslatableInterface {
   public function getTranslatableFields();
 
   /**
+   * Returns whether or not the wrapped entity is translatable.
+   *
+   * @return bool
+   *   TRUE if the wrapped entity is translatable. FALSE otherwise.
+   */
+  public function isTranslatable();
+
+  /**
    * Saves a given Entity wrapper. This is the final step in saving translated
    * data on a given Entity; you may wish to override this static method in your
    * custom entity translatable implementation for special needs.

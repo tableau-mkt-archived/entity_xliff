@@ -19,6 +19,22 @@ use EntityXliff\Drupal\Utils\DrupalHandler;
 class NodeTranslatable extends EntityTranslatableBase {
 
   /**
+   * Represents Drupal core's content translation.
+   */
+  CONST PARADIGMCONTENT = 'translation';
+
+  /**
+   * Represents Entity Field translation.
+   */
+  CONST PARADIGMENTITYFIELD = 'entity_translation';
+
+  /**
+   * Represents the active translation paradigm for this translatable.
+   * @var string
+   */
+  protected $paradigm;
+
+  /**
    * An array of partial nodes in the translation set represented by this node,
    * keyed by site (used for content translation).
    *
@@ -32,14 +48,19 @@ class NodeTranslatable extends EntityTranslatableBase {
   public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityMediator $entityMediator = NULL, FieldMediator $fieldMediator = NULL) {
     parent::__construct($entityWrapper, $handler, $entityMediator, $fieldMediator);
 
+    // Note the active translation paradigm.
+    $this->paradigm = $this->activeParadigm();
+
     // Handle content translation for nodes.
-    $this->drupal->staticReset('translation_node_get_translations');
-    if ($entityWrapper->language->value() === 'en') {
-      $this->tset = $this->nodeGetTranslations((int) $entityWrapper->getIdentifier());
-    }
-    else {
-      $raw = $this->getRawEntity($entityWrapper);
-      $this->tset = $this->nodeGetTranslations((int) $raw->tnid);
+    if ($this->paradigm === self::PARADIGMCONTENT) {
+      $this->drupal->staticReset('translation_node_get_translations');
+      if ($entityWrapper->language->value() === 'en') {
+        $this->tset = $this->nodeGetTranslations((int) $entityWrapper->getIdentifier());
+      }
+      else {
+        $raw = $this->getRawEntity($entityWrapper);
+        $this->tset = $this->nodeGetTranslations((int) $raw->tnid);
+      }
     }
   }
 
@@ -50,7 +71,7 @@ class NodeTranslatable extends EntityTranslatableBase {
     $fields = parent::getTranslatableFields();
 
     // Only add the title property if we're using content translation.
-    if (!$this->drupal->moduleExists('entity_translation')) {
+    if ($this->paradigm === self::PARADIGMCONTENT) {
       $fields[] = 'title';
     }
 
@@ -60,11 +81,37 @@ class NodeTranslatable extends EntityTranslatableBase {
   /**
    * {@inheritdoc}
    */
+  public function isTranslatable() {
+    $typeIsTranslatable = $this->paradigm === self::PARADIGMCONTENT;
+    return $typeIsTranslatable || parent::isTranslatable();
+  }
+
+  /**
+   * Returns the active translation paradigm for the wrapped entity.
+   *
+   * @return string|bool
+   *   Returns the active translation paradigm if the wrapped entity is
+   *   translatable. If the entity is not translatable, FALSE is returned.
+   */
+  public function activeParadigm() {
+    // First, ensure the function is available by checking module existence.
+    if ($this->drupal->moduleExists('translation') && $this->drupal->translationSupportedType($this->entity->getBundle())) {
+      return self::PARADIGMCONTENT;
+    }
+    elseif (parent::isTranslatable()) {
+      return self::PARADIGMENTITYFIELD;
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getTargetEntity($targetLanguage) {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
       // Handling for content translation. Entity field translation should be
       // taken care of by the parent. @todo check if that assumption is legit.
-      if (!$this->drupal->moduleExists('entity_translation')) {
+      if ($this->paradigm === self::PARADIGMCONTENT) {
         // If a translation already exists, use it!
         if (isset($this->tset[$targetLanguage]->nid)) {
           $target = $this->drupal->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
