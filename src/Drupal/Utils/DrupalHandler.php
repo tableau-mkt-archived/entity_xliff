@@ -141,6 +141,15 @@ class DrupalHandler {
   }
 
   /**
+   * Returns whether the given content type has support for translations.
+   * @param string $type
+   * @return bool
+   */
+  public function translationSupportedType($type) {
+    return translation_supported_type($type);
+  }
+
+  /**
    * Loads a user object.
    * @param int $uid
    * @param bool $reset

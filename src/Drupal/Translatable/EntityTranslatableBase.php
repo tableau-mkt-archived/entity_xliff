@@ -169,12 +169,25 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   public function getTranslatableFields() {
     $fields = array();
 
+    // If the wrapped entity is not translatable, return no fields.
+    if (!$this->isTranslatable()) {
+      return $fields;
+    }
+
     foreach ($this->entity->getPropertyInfo() as $property => $info) {
       if (isset($info['field']) && $info['field']) {
         $fields[] = $property;
       }
     }
     return $fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isTranslatable() {
+    // @todo Assuming this needs one more check...
+    return $this->drupal->moduleExists('entity_translation');
   }
 
   /**
