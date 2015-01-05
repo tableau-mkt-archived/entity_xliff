@@ -7,8 +7,8 @@
 
 namespace EntityXliff\Drupal\Translatable;
 
-use EggsCereal\Interfaces\TranslatableInterface;
 use EggsCereal\Utils\Data;
+use EntityXliff\Drupal\Interfaces\EntityTranslatableInterface;
 use EntityXliff\Drupal\Mediator\EntityMediator;
 use EntityXliff\Drupal\Mediator\FieldMediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
@@ -17,7 +17,7 @@ use EntityXliff\Drupal\Utils\DrupalHandler;
 /**
  * Class EntityTranslatableBase
  */
-abstract class EntityTranslatableBase implements TranslatableInterface  {
+abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
   /**
    * @var \EntityDrupalWrapper
@@ -58,7 +58,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
   protected $entitiesNeedSave = array();
 
   /**
-   * @var TranslatableInterface[]
+   * @var EntityTranslatableInterface[]
    */
   protected $translatables = array();
 
@@ -118,7 +118,7 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
    */
   public function getData() {
     $data = array();
-    $fields = $this->getTranslatableFields($this->entity);
+    $fields = $this->getTranslatableFields();
 
     // Iterate through all fields we're expecting to translate.
     foreach ($fields as $field) {
@@ -147,29 +147,12 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
     // Save any entities that need saving (this includes the target entity).
     foreach ($this->entitiesNeedSave as $key => $wrapper) {
       $translatableClass = $this->entityMediator->getClass($wrapper);
-
-      // If a translatable class provides a static save method, call it.
-      if ($translatableClass && method_exists($translatableClass, 'saveWrapper')) {
-        call_user_func_array($translatableClass . '::saveWrapper', array($wrapper));
-      }
-      // Otherwise, call \EntityDrupalWrapper::save().
-      else {
-        $wrapper->save();
-      }
+      call_user_func_array($translatableClass . '::saveWrapper', array($wrapper));
     }
   }
 
   /**
-   * Sets the target entity when data is being imported.
-   *
-   * Likely, you'll want to override this method with one of your own, depending
-   * on the entity.
-   *
-   * @param string $targetLanguage
-   *   The language code of the intended target language.
-   *
-   * @return \EntityDrupalWrapper
-   *   An entity metadata wrapper representing the target.
+   * {@inheritdoc}
    */
   public function getTargetEntity($targetLanguage) {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
@@ -178,6 +161,13 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
       $this->targetEntities[$targetLanguage] = $target;
     }
     return $this->targetEntities[$targetLanguage];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function saveWrapper(\EntityDrupalWrapper $wrapper) {
+    $wrapper->save();
   }
 
   /**
@@ -238,17 +228,12 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
 
 
   /**
-   * @param \EntityDrupalWrapper $wrapper
-   * @return array
+   * {@inheritdoc}
    */
-  public function getTranslatableFields(\EntityDrupalWrapper $wrapper = NULL) {
+  public function getTranslatableFields() {
     $fields = array();
 
-    if ($wrapper === NULL) {
-      $wrapper = $this->entity;
-    }
-
-    foreach ($wrapper->getPropertyInfo() as $property => $info) {
+    foreach ($this->entity->getPropertyInfo() as $property => $info) {
       if (isset($info['field']) && $info['field']) {
         $fields[] = $property;
       }
@@ -337,10 +322,6 @@ abstract class EntityTranslatableBase implements TranslatableInterface  {
         $field = $parent;
       }
     }
-
-    // Get the field type for this field.
-    $fieldInfo = $ref->info();
-    $type = isset($fieldInfo['type']) ? $fieldInfo['type'] : 'text';
 
     // Save off the parent entity for saving.
     $parent = $this->getParent($ref);
