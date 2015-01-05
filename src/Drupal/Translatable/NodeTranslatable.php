@@ -44,15 +44,13 @@ class NodeTranslatable extends EntityTranslatableBase {
   }
 
   /**
-   * @param \EntityDrupalWrapper $wrapper
-   * @return array
+   * {@inheritdoc}
    */
-  public function getTranslatableFields(\EntityDrupalWrapper $wrapper = NULL) {
-    $fields = parent::getTranslatableFields($wrapper);
-    $type = $wrapper->type();
+  public function getTranslatableFields() {
+    $fields = parent::getTranslatableFields();
 
     // Only add the title property if we're using content translation.
-    if ($type === 'node' && !$this->drupal->moduleExists('entity_translation')) {
+    if (!$this->drupal->moduleExists('entity_translation')) {
       $fields[] = 'title';
     }
 

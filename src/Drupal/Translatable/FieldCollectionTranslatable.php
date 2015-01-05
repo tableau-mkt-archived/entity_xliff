@@ -63,6 +63,8 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Do not save the host entity; that is taken care of elsewhere.
    */
   public static function saveWrapper(\EntityDrupalWrapper $wrapper) {
     $wrapper->raw()->save(TRUE);
