@@ -29,21 +29,28 @@
  *
  * @return array
  *   Returns an associative array of Entity Xliff translatable details, keyed by
- *   entity type. At a bare minimum Entity Xliff translatable info must include
- *   the following:
- *   - class: Class that implements EggsCereal\Interfaces\TranslatableInterface,
- *     describing how entities of this type can be imported/exported. If you
- *     are providing a class, you may wish to study or extend from the
+ *   entity type and translation paradigm. At a bare minimum Entity Xliff
+ *   translatable info must include the following:
+ *   - classes: An associative array of classes, keyed by translation paradigm,
+ *     that implement EntityXliff\Drupal\Interfaces\EntityTranslatableInterface,
+ *     describing how entities of this type can be imported/exported. If you are
+ *     providing a class, you may wish to study or extend from the
  *     EntityXliff\Drupal\Translatable\EntityTranslatableBase abstract class.
+ *     Also note that translation paradigms exist as static constants on the
+ *     EntityXliff\Drupal\Factories\EntityTranslatableFactory class.
  */
 function hook_entity_xliff_translatable_info() {
   $translatables['node'] = array(
-    'class' => 'NodeTranslatable',
+    'classes' => array(
+      'content_translation' => 'NodeContentTranslatable',
+    ),
   );
 
   // Example showing a namespace'd PHP class.
   $translatables['my_entity'] = array(
-    'class' => 'NameSpace\Of\MyEntityTranslatable',
+    'classes' => array(
+      'entity_translation' => 'NameSpace\Of\MyEntityTranslatable',
+    ),
   );
 
   return $translatables;
@@ -57,7 +64,7 @@ function hook_entity_xliff_translatable_info() {
  *   in hook_entity_xliff_translatable_info().
  */
 function hook_entity_xliff_translatable_info_alter(&$translatables) {
-  $translatables['node']['class'] = 'MyCustomNodeTranslatable';
+  $translatables['node']['classes']['content_translation'] = 'MyCustomNodeTranslatable';
 }
 
 /**
