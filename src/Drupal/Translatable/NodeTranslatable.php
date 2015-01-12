@@ -7,7 +7,7 @@
 
 namespace EntityXliff\Drupal\Translatable;
 
-use EntityXliff\Drupal\Mediator\EntityMediator;
+use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 use EntityXliff\Drupal\Mediator\FieldMediator;
 use EntityXliff\Drupal\Utils\DrupalHandler;
 
@@ -45,8 +45,8 @@ class NodeTranslatable extends EntityTranslatableBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityMediator $entityMediator = NULL, FieldMediator $fieldMediator = NULL) {
-    parent::__construct($entityWrapper, $handler, $entityMediator, $fieldMediator);
+  public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityTranslatableFactory $factory = NULL, FieldMediator $fieldMediator = NULL) {
+    parent::__construct($entityWrapper, $handler, $factory, $fieldMediator);
 
     // Note the active translation paradigm.
     $this->paradigm = $this->activeParadigm();
