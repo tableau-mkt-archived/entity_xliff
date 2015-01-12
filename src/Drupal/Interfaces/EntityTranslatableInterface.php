@@ -48,6 +48,16 @@ interface EntityTranslatableInterface extends TranslatableInterface {
   public function isTranslatable();
 
   /**
+   * Takes the wrapped entity from a non-translated state to a ready-to-be
+   * translated state (or does nothing if it is already in the latter state).
+   *
+   * In most cases, this will update the wrapped entity's language from language
+   * neutral (und) to a specific language and perform any entity saves that it
+   * needs.
+   */
+  public function initializeTranslation();
+
+  /**
    * Saves a given Entity wrapper. This is the final step in saving translated
    * data on a given Entity; you may wish to override this method in your
    * custom entity translatable implementation for special needs.
