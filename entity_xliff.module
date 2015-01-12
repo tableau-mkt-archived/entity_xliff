@@ -5,7 +5,7 @@
  * Module hooks and functions for the Entity XLIFF module.
  */
 
-use EntityXliff\Drupal\Mediator\EntityMediator;
+use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 
 /**
  * Implements hook_menu().
@@ -64,8 +64,8 @@ function entity_xliff_entity_info_alter(&$entityInfo) {
   drupal_alter('entity_xliff_translatable_info', $translatables);
 
   foreach ($translatables as $type => $info) {
-    if (isset($entityInfo[$type]) && isset($info['class'])) {
-      $entityInfo[$type]['entity xliff translatable class'] = $info['class'];
+    if (isset($entityInfo[$type]) && isset($info['classes'])) {
+      $entityInfo[$type]['entity xliff translatable classes'] = $info['classes'];
     }
   }
 }
@@ -76,16 +76,12 @@ function entity_xliff_entity_info_alter(&$entityInfo) {
  * @param \EntityDrupalWrapper $wrapper
  *   Used when instantiating the translatable.
  *
- * @return EggsCereal\Interfaces\TranslatableInterface|null
+ * @return EntityXliff\Drupal\Interfaces\EntityTranslatableInterface|null
  *   Returns a translatable object compatible with Eggs'n'Cereal's Translatable
  *   interface. If none is known, NULL is returned.
  */
 function entity_xliff_get_translatable($wrapper) {
-  $entityMediator = &drupal_static(__FUNCTION__, FALSE);
-  if ($entityMediator === FALSE) {
-    $entityMediator = new EntityMediator();
-  }
-  return $entityMediator->getInstance($wrapper);
+  return EntityTranslatableFactory::getInstance()->getTranslatable($wrapper);
 }
 
 /**
@@ -109,6 +105,8 @@ function entity_xliff_get_field_handlers() {
  * Loads in includes provided on behalf of existing modules.
  */
 function _entity_xliff_load_module_incs() {
+  // This potentially runs before hook_init(), so register auto-loader now.
+  composer_manager_register_autoloader();
   foreach (array('node', 'field_collection', 'link', 'image', 'text', 'number', 'list') as $entity) {
     module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
   }

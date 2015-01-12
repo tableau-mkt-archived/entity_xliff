@@ -64,6 +64,14 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
 
   /**
    * {@inheritdoc}
+   */
+  public function isTranslatable() {
+    // @todo Determine best way to do this based on host entity paradigm...
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
    *
    * Do not save the host entity; that is taken care of elsewhere.
    */

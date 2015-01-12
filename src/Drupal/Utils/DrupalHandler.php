@@ -74,6 +74,16 @@ class DrupalHandler {
   }
 
   /**
+   * Determines whether the given entity type is translatable.
+   * @param string $entityType
+   * @param mixed  $entity
+   * @param bool $skipHandler
+   * @return bool
+   */
+  public function entityTranslationEnabled($entityType, $entity = NULL, $skipHandler = FALSE) {
+    return entity_translation_enabled($entityType, $entity, $skipHandler);
+  }
+  /**
    * Returns entity xliff field handlers declared by installed Drupal modules.
    * @return array
    */
