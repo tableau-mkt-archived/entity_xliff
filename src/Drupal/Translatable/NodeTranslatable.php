@@ -122,9 +122,6 @@ class NodeTranslatable extends EntityTranslatableBase {
         }
         // Otherwise, "clone" the original and mark it as new.
         else {
-          // Ensure that the original is ready for translation.
-          $this->initializeContentTranslation();
-
           $target = $this->getRawEntity($this->entity);
           $target->translation_source = clone $target;
 
@@ -145,13 +142,12 @@ class NodeTranslatable extends EntityTranslatableBase {
   }
 
   /**
-   * Initializes content translation on the translation set master, in cases
-   * where it hasn't yet been translated.
+   * {@inheritdoc}
    *
-   * Put in English: this converts a language neutral node to an English node
-   * that is part of a translation set.
+   * This converts a language neutral node to an English node that is part of a
+   * translation set.
    */
-  protected function initializeContentTranslation() {
+  public function initializeTranslation() {
     $nid = (int) $this->entity->getIdentifier();
     $source = $this->drupal->nodeLoad($nid, NULL, TRUE);
     if ($source->language === DrupalHandler::LANGUAGE_NONE || empty($source->tnid)) {

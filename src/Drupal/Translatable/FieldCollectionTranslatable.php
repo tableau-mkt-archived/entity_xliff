@@ -73,6 +73,15 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
   /**
    * {@inheritdoc}
    *
+   * This should never be called anyway since a Field Collection will always be
+   * saved in the context of a host entity. But just in case, this should be a
+   * no-op for this entity type.
+   */
+  public function initializeTranslation() {}
+
+  /**
+   * {@inheritdoc}
+   *
    * Do not save the host entity; that is taken care of elsewhere.
    */
   public function saveWrapper(\EntityDrupalWrapper $wrapper) {
