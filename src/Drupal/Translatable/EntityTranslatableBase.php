@@ -145,6 +145,9 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       return;
     }
 
+    // Attempt to initialize translation.
+    $this->initializeTranslation();
+
     // Save any entities that need saving (this includes the target entity).
     foreach ($this->entitiesNeedSave as $key => $wrapper) {
       $this->translatableFactory->getTranslatable($wrapper)->saveWrapper($wrapper);
@@ -188,6 +191,16 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   public function isTranslatable() {
     // @todo Assuming this needs one more check...
     return $this->drupal->moduleExists('entity_translation');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function initializeTranslation() {
+    if ($this->entity->language->value() === DrupalHandler::LANGUAGE_NONE) {
+      $this->entity->language->set('en');
+      $this->entity->save();
+    }
   }
 
   /**
