@@ -157,18 +157,6 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   /**
    * {@inheritdoc}
    */
-  public function getTargetEntity($targetLanguage) {
-    if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
-      $target = clone $this->entity;
-      $target->language($targetLanguage);
-      $this->targetEntities[$targetLanguage] = $target;
-    }
-    return $this->targetEntities[$targetLanguage];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getTranslatableFields() {
     $fields = array();
 
@@ -183,24 +171,6 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       }
     }
     return $fields;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isTranslatable() {
-    // @todo Assuming this needs one more check...
-    return $this->drupal->moduleExists('entity_translation');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function initializeTranslation() {
-    if ($this->entity->language->value() === DrupalHandler::LANGUAGE_NONE) {
-      $this->entity->language->set('en');
-      $this->entity->save();
-    }
   }
 
   /**

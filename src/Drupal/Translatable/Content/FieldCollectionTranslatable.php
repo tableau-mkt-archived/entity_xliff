@@ -2,10 +2,13 @@
 
 /**
  * @file
- *
+ * Defines a field collection translatable compatible with the nodes translated
+ * by the core Translation module.
  */
 
-namespace EntityXliff\Drupal\Translatable;
+namespace EntityXliff\Drupal\Translatable\Content;
+
+use EntityXliff\Drupal\Translatable\EntityTranslatableBase;
 
 /**
  * Class FieldCollectionTranslatable

@@ -17,7 +17,8 @@ if (!function_exists('node_entity_xliff_translatable_info')) {
     return array(
       'node' => array(
         'classes' => array(
-          Paradigm::CONTENT => 'EntityXliff\Drupal\Translatable\NodeTranslatable',
+          Paradigm::CONTENT => 'EntityXliff\Drupal\Translatable\Content\NodeTranslatable',
+          Paradigm::ENTITYFIELD => 'EntityXliff\Drupal\Translatable\Entity\NodeTranslatable',
         ),
       ),
     );
