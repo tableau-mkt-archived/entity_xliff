@@ -49,12 +49,14 @@ interface EntityTranslatableInterface extends TranslatableInterface {
 
   /**
    * Saves a given Entity wrapper. This is the final step in saving translated
-   * data on a given Entity; you may wish to override this static method in your
+   * data on a given Entity; you may wish to override this method in your
    * custom entity translatable implementation for special needs.
    *
    * @param \EntityDrupalWrapper $wrapper
    *   The Entity wrapper to be saved.
+   *
+   * @see EntityTranslatableBase::setData()
    */
-  public static function saveWrapper(\EntityDrupalWrapper $wrapper);
+  public function saveWrapper(\EntityDrupalWrapper $wrapper);
 
 }
