@@ -147,9 +147,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
     // Save any entities that need saving (this includes the target entity).
     foreach ($this->entitiesNeedSave as $key => $wrapper) {
-      $translatable = $this->translatableFactory->getTranslatable($wrapper);
-      $translatableClass = get_class($translatable);
-      call_user_func_array($translatableClass . '::saveWrapper', array($wrapper));
+      $this->translatableFactory->getTranslatable($wrapper)->saveWrapper($wrapper);
     }
   }
 
@@ -195,7 +193,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   /**
    * {@inheritdoc}
    */
-  public static function saveWrapper(\EntityDrupalWrapper $wrapper) {
+  public function saveWrapper(\EntityDrupalWrapper $wrapper) {
     $wrapper->save();
   }
 
