@@ -6,6 +6,8 @@
  * Entity Xliff.
  */
 
+use EntityXliff\Drupal\Factories\EntityTranslatableFactory as Paradigm;
+
 if (!function_exists('node_entity_xliff_translatable_info')) {
 
   /**
@@ -14,7 +16,9 @@ if (!function_exists('node_entity_xliff_translatable_info')) {
   function node_entity_xliff_translatable_info() {
     return array(
       'node' => array(
-        'class' => 'EntityXliff\Drupal\Translatable\NodeTranslatable',
+        'classes' => array(
+          Paradigm::CONTENT => 'EntityXliff\Drupal\Translatable\NodeTranslatable',
+        ),
       ),
     );
   }
