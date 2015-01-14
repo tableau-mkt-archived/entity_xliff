@@ -9,32 +9,45 @@ use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 
 /**
  * Implements hook_menu().
- *
- * Currently, only node serialization/unserialization is supported.
- * @todo Support all types of entities.
  */
 function entity_xliff_menu() {
-  // Local action to import/export a node via XLIFF.
-  $menu['node/%node/xliff'] = array(
-    'title' => 'XLIFF',
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'entity_xliff.admin.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('entity_xliff_actions', 'node', 1),
-    'access arguments' => array('administer entity xliff'),
-    'weight' => 10,
-  );
+  $allInfo = entity_get_info();
+  $menu = array();
 
-  // Callback to render a node as an XLIFF file.
-  $menu['node/%node/as.xlf'] = array(
-    'title' => 'Node XLIFF',
-    'type' => MENU_CALLBACK,
-    'file' => 'entity_xliff.pages.inc',
-    'delivery callback' => 'entity_xliff_deliver_xlf',
-    'page callback' => 'entity_xliff_to_xlf',
-    'page arguments' => array('node', 1),
-    'access arguments' => array('administer entity xliff'),
-  );
+  // Iterate through known translatable entities.
+  foreach (_entity_xliff_get_translatable_info() as $entity => $transInfo) {
+    // Easy access to entity info for this entity.
+    $entityInfo = $allInfo[$entity];
+
+    // Only add menu items for known paths.
+    if (isset($entityInfo['path'])) {
+      $ourPath = $entityInfo['path'] . '/xliff';
+      $argPart = count(explode('/', $ourPath)) - 2;
+
+      // Local action to import/export an entity via XLIFF.
+      $menu[$ourPath] = array(
+        'title' => 'XLIFF',
+        'type' => MENU_LOCAL_TASK,
+        'file' => 'entity_xliff.admin.inc',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('entity_xliff_actions', $entity, $argPart),
+        'access arguments' => array('administer entity xliff'),
+        'weight' => 10,
+      );
+
+      // Callback to render an entity as an XLIFF file.
+      $entityLabel = isset($entityInfo['label']) ? $entityInfo['label'] : 'Entity';
+      $menu[$entityInfo['path'] . '/as.xlf'] = array(
+        'title' =>  $entityLabel . ' XLIFF',
+        'type' => MENU_CALLBACK,
+        'file' => 'entity_xliff.pages.inc',
+        'delivery callback' => 'entity_xliff_deliver_xlf',
+        'page callback' => 'entity_xliff_to_xlf',
+        'page arguments' => array($entity, $argPart),
+        'access arguments' => array('administer entity xliff'),
+      );
+    }
+  }
 
   return $menu;
 }
@@ -56,14 +69,7 @@ function entity_xliff_permission() {
  * Implements hook_entity_info_alter().
  */
 function entity_xliff_entity_info_alter(&$entityInfo) {
-  // Load our provided default implementations.
-  _entity_xliff_load_module_incs();
-
-  // Return a list of translatable info (classes) keyed by entity type.
-  $translatables = module_invoke_all('entity_xliff_translatable_info');
-  drupal_alter('entity_xliff_translatable_info', $translatables);
-
-  foreach ($translatables as $type => $info) {
+  foreach (_entity_xliff_get_translatable_info() as $type => $info) {
     if (isset($entityInfo[$type]) && isset($info['classes'])) {
       $entityInfo[$type]['entity xliff translatable classes'] = $info['classes'];
     }
@@ -110,4 +116,19 @@ function _entity_xliff_load_module_incs() {
   foreach (array('node', 'user', 'field_collection', 'link', 'image', 'text', 'number', 'list') as $entity) {
     module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
   }
+}
+
+/**
+ * Returns an associative array of translatable info, keyed by entity.
+ *
+ * @return array
+ */
+function _entity_xliff_get_translatable_info() {
+  // Load our provided default implementations.
+  _entity_xliff_load_module_incs();
+
+  // Return a list of translatable info (classes) keyed by entity type.
+  $translatables = module_invoke_all('entity_xliff_translatable_info');
+  drupal_alter('entity_xliff_translatable_info', $translatables);
+  return $translatables;
 }
