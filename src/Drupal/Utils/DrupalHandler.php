@@ -74,6 +74,16 @@ class DrupalHandler {
   }
 
   /**
+   * Returns a translation handler.
+   * @param string $entityType
+   * @param mixed $entity
+   * @return \EntityTranslationHandlerInterface
+   */
+  public function entityTranslationGetHandler($entityType = NULL, $entity = NULL) {
+    return entity_translation_get_handler($entityType, $entity);
+  }
+
+  /**
    * Determines whether the given entity type is translatable.
    * @param string $entityType
    * @param mixed  $entity
@@ -83,6 +93,7 @@ class DrupalHandler {
   public function entityTranslationEnabled($entityType, $entity = NULL, $skipHandler = FALSE) {
     return entity_translation_enabled($entityType, $entity, $skipHandler);
   }
+
   /**
    * Returns entity xliff field handlers declared by installed Drupal modules.
    * @return array
