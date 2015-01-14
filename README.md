@@ -1,4 +1,4 @@
-# Entity XLIFF
+# Entity XLIFF [![Build Status](https://travis-ci.org/tableau-mkt/entity_xliff.svg?branch=7.x-1.x)](https://travis-ci.org/tableau-mkt/entity_xliff)
 
 This is a Drupal extension that integrates [Eggs'n'Cereal]()--a PHP library that
 generically facilitates serialization and unserialization of data in the [XLIFF]()
