@@ -107,7 +107,7 @@ function entity_xliff_get_field_handlers() {
 function _entity_xliff_load_module_incs() {
   // This potentially runs before hook_init(), so register auto-loader now.
   composer_manager_register_autoloader();
-  foreach (array('node', 'field_collection', 'link', 'image', 'text', 'number', 'list') as $entity) {
+  foreach (array('node', 'user', 'field_collection', 'link', 'image', 'text', 'number', 'list') as $entity) {
     module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
   }
 }
