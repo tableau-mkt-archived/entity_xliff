@@ -111,7 +111,8 @@ class EntityTranslatableFactory {
 
       $paradigm = $this->getTranslationParadigm($wrapper);
       if (isset($this->classMap[$type][$paradigm])) {
-        $this->translatables[$key] = new $this->classMap[$type][$paradigm]($wrapper);
+        $translatable = $this->classMap[$type][$paradigm];
+        $this->translatables[$key] = new $translatable($wrapper);
       }
     }
     return $this->translatables[$key];
