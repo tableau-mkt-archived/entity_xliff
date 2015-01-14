@@ -65,8 +65,11 @@ interface EntityTranslatableInterface extends TranslatableInterface {
    * @param \EntityDrupalWrapper $wrapper
    *   The Entity wrapper to be saved.
    *
+   * @param string $targetLanguage
+   *   The language in which this entity is intended to be saved.
+   *
    * @see EntityTranslatableBase::setData()
    */
-  public function saveWrapper(\EntityDrupalWrapper $wrapper);
+  public function saveWrapper(\EntityDrupalWrapper $wrapper, $targetLanguage);
 
 }

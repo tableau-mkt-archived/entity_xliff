@@ -78,10 +78,9 @@ abstract class EntityFieldTranslatableBase extends EntityTranslatableBase {
   /**
    * {@inheritdoc}
    */
-  public function saveWrapper(\EntityDrupalWrapper $wrapper) {
+  public function saveWrapper(\EntityDrupalWrapper $wrapper, $targetLanguage) {
     $rawEntity = $this->getRawEntity($wrapper);
     $type = $wrapper->type();
-    $targetLanguage = 'de';
     $handler = $this->drupal->entityTranslationGetHandler($type, $rawEntity);
 
     // Set the target language on the entity translation handler.
