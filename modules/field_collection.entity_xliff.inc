@@ -17,7 +17,7 @@ if (!function_exists('field_collection_entity_xliff_translatable_info')) {
     return array(
       'field_collection_item' => array(
         'classes' => array(
-          Paradigm::CONTENT => 'EntityXliff\Drupal\Translatable\FieldCollectionTranslatable',
+          Paradigm::CONTENT => 'EntityXliff\Drupal\Translatable\Content\FieldCollectionTranslatable',
         ),
       ),
     );
