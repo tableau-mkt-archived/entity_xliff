@@ -8,6 +8,9 @@ use EntityXliff\Drupal\Mediator\FieldMediator;
 class FieldMediatorTest extends \PHPUnit_Framework_TestCase {
 
   /**
+   * Tests that the constructor will instantiate a DrupalHandler if none is
+   * provided.
+   *
    * @test
    */
   public function constructorWithNoArgs() {
@@ -211,8 +214,15 @@ class MockFieldMediator extends FieldMediator {
  */
 class MockFieldMediatorForConstructorOnly extends FieldMediator {
 
+  /**
+   * Makes the buildMap method a no-op for testing the parent constructor.
+   */
   public function buildMap() {}
 
+  /**
+   * Returns the internal DrupalHandler property.
+   * @return \EntityXliff\Drupal\Utils\DrupalHandler
+   */
   public function getHandler() {
     return $this->drupal;
   }
