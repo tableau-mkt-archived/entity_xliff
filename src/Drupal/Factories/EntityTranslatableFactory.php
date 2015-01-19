@@ -66,7 +66,7 @@ class EntityTranslatableFactory {
     if (!isset(self::$instance)) {
       // If no handler was provided, instantiate one ourselves.
       $handler = $handler ?: new DrupalHandler();
-      self::$instance = new EntityTranslatableFactory($handler);
+      self::$instance = new static($handler);
     }
     return self::$instance;
   }
