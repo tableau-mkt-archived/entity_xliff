@@ -3,7 +3,7 @@
     "psr-4": {"EntityXliff\\": "src/"}
   },
   "require": {
-    "tableau-mkt/eggs-n-cereal": "0.0.2"
+    "tableau-mkt/eggs-n-cereal": "0.0.3"
   },
   "require-dev": {
     "phpunit/phpunit": "~4"
