@@ -1,4 +1,4 @@
-# Entity XLIFF [![Build Status](https://travis-ci.org/tableau-mkt/entity_xliff.svg?branch=7.x-1.x)](https://travis-ci.org/tableau-mkt/entity_xliff) [![Code Climate](https://codeclimate.com/github/tableau-mkt/entity_xliff/badges/gpa.svg)](https://codeclimate.com/github/tableau-mkt/entity_xliff)
+# Entity XLIFF [![Build Status](https://travis-ci.org/tableau-mkt/entity_xliff.svg?branch=7.x-1.x)](https://travis-ci.org/tableau-mkt/entity_xliff) [![Code Climate](https://codeclimate.com/github/tableau-mkt/entity_xliff/badges/gpa.svg)](https://codeclimate.com/github/tableau-mkt/entity_xliff) [![Dependency Status](https://gemnasium.com/tableau-mkt/entity_xliff.svg)](https://gemnasium.com/tableau-mkt/entity_xliff)
 
 This is a Drupal extension that integrates [Eggs'n'Cereal]()--a PHP library that
 generically facilitates serialization and unserialization of data in the [XLIFF]()
