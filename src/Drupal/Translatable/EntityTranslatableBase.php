@@ -379,6 +379,9 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       $fieldKey = array_search($field, $parents);
       $parentDataParents = array_slice($parents, $fieldKey);
       $parentContext = array_slice($parents, 0, $fieldKey);
+      if (count($parentContext) === 3) {
+        array_unshift($parentDataParents, $parentContext[2]);
+      }
       $delta = FALSE;
       if (is_numeric($parentDataParents[0])) {
         $delta = array_shift($parentDataParents);
