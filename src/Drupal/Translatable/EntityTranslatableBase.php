@@ -230,7 +230,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           array_pop($arrayKeys);
 
           // Set the value via a method inspired by drupal's nested array setter.
-          $this->entitySetNestedValue($this->getTargetEntity($targetLang), $arrayKeys, $value, $targetLang);
+          $this->entitySetNestedValue($this->getTargetEntity($targetLang), $arrayKeys, $trimmed, $targetLang);
         }
       }
     }
