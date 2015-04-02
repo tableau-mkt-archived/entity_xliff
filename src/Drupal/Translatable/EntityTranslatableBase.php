@@ -375,25 +375,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         $parentTranslatable = $this->translatableFactory->getTranslatable($parentWrapper);
       }
 
-      // Recreate the $data array for this referenced entity.
-      $fieldKey = array_search($field, $parents);
-      $parentDataParents = array_slice($parents, $fieldKey);
-      $parentContext = array_slice($parents, 0, $fieldKey);
-      if (count($parentContext) === 3) {
-        array_unshift($parentDataParents, $parentContext[2]);
-      }
-      $delta = FALSE;
-      if (is_numeric($parentDataParents[0])) {
-        $delta = array_shift($parentDataParents);
-      }
-      elseif (isset($parentContext[1]) && is_numeric($parentContext[1])) {
-        $delta = $parentContext[1];
-      }
-      $parentDataParents[] = '#text';
-      $parentData = array();
-      $this->drupal->arraySetNestedValue($parentData, $parentDataParents, $value);
-
-      // Set the data.
+      // Recreate the $data array for this referenced entity and set the data.
+      $parentData = array($field => array('#text' => $value));
       $parentTranslatable->setData($parentData, $targetLang, FALSE);
 
       // Set the wrapper with the new data for save.
@@ -417,19 +400,32 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       $this->translatables[$needsSaveKey] = $parentTranslatable;
 
       // Update the reference to use the (potentially newly created) entity.
-      $grandParent = $this->getParent($parent);
-      if ($grandParent === FALSE) {
-        $grandParent = $parent;
-      }
+      if ($grandParent = $this->getParent($parent)) {
+        $grandParentSaveKey = $grandParent->type() . '::' . $grandParent->getIdentifier();
 
-      $grandParentSaveKey = $grandParent->type() . ':' . $grandParent->getIdentifier();
-      if ($delta !== FALSE) {
-        $grandParent->{$parentContext[0]}[$delta]->set($targetWrapper);
-        $this->entitiesNeedSave[$grandParentSaveKey] = $grandParent;
-      }
-      else {
-        $grandParent->{$parentContext[0]}->set($targetWrapper);
-        $this->entitiesNeedSave[$grandParentSaveKey] = $grandParent;
+        // Determine how to access the reference from the grandparent.
+        $context = array_slice($parents, 0, array_search($field, $parents, TRUE));
+        krsort($context);
+        $context = array_values($context);
+
+        // Set the reference on the grandparent.
+        if (count($context) === 2) {
+          $grandParent->{$context[0]}[$context[1]]->set($targetWrapper);
+          $this->entitiesNeedSave[$grandParentSaveKey] = $grandParent;
+        }
+        elseif (count($context) === 1) {
+          $grandParent->{$context[0]}->set($targetWrapper);
+          $this->entitiesNeedSave[$grandParentSaveKey] = $grandParent;
+        }
+        else {
+          // @todo Solve arbitrary entity reference depth problem.
+          $this->drupal->watchdog('entity xliff', 'Could not update entity reference for @field field on %entity %id. Reference too deep (!depth).', array(
+            '@field' => $field,
+            '%entity' => $parentType,
+            '%id' => $parent->getIdentifier(),
+            '!depth' => count($context),
+          ), DrupalHandler::WATCHDOG_WARNING);
+        }
       }
     }
     else {
