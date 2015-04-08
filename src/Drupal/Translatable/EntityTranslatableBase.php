@@ -409,7 +409,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         $context = array_values($context);
 
         // Set the reference on the grandparent.
-        if (count($context) === 2) {
+        if (count($context) === 2 && is_numeric($context[1])) {
           $grandParent->{$context[0]}[$context[1]]->set($targetWrapper);
           $this->entitiesNeedSave[$grandParentSaveKey] = $grandParent;
         }
