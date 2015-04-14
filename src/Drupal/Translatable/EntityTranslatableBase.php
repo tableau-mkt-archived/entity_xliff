@@ -150,7 +150,9 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
     // Save any entities that need saving (this includes the target entity).
     foreach ($this->entitiesNeedSave as $key => $wrapper) {
-      $this->translatableFactory->getTranslatable($wrapper)->saveWrapper($wrapper, $targetLanguage);
+      $translatable = $this->translatableFactory->getTranslatable($wrapper);
+      $translatable->initializeTranslation();
+      $translatable->saveWrapper($wrapper, $targetLanguage);
     }
   }
 
@@ -298,141 +300,92 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   }
 
   /**
-   * @param \EntityDrupalWrapper $wrapper
+   * @param \EntityMetadataWrapper $wrapper
    * @param array $parents
    * @param $value
    * @param $targetLang
    */
-  protected function entitySetNestedValue(\EntityDrupalWrapper $wrapper, array $parents, $value, $targetLang) {
-    $ref = &$wrapper;
-    $field = '';
-    $delta = NULL;
-
-    foreach ($parents as $parent) {
-      if (is_numeric($parent)) {
-        $ref = &$ref[$parent];
-      }
-      else {
-        $ref = &$ref->{$parent};
-        $field = $parent;
-      }
-    }
-
-    // Save off the parent entity for saving.
-    $parent = $this->getParent($ref);
-    if ($parent === FALSE) {
-      $parent = $wrapper;
-    }
-
-    // Set the field value according to the type of data.
-    if ($handler = $this->fieldMediator->getInstance($ref)) {
-      // If the parent IS the targetEntity, just set the value as calculated.
-      if ($this->isTheSameAs($parent, $targetLang)) {
-        $handler->setValue($ref, $value);
-
-        // This may be a brand new entity. If so, save it immediately, then
-        // re-queue it for one more save once all values have been appended.
-        $targetId = $wrapper->getIdentifier();
-        $targetType = $wrapper->type();
-        if ($targetId === FALSE) {
-          $wrapper->save();
-          $targetId = $wrapper->getIdentifier();
-        }
-        $this->entitiesNeedSave[$targetType . ':' . $targetId] = $wrapper;
-      }
-      // Otherwise, we're in an entity reference and we need to handle it on the
-      // entity's target.
-      else {
-        $this->entitySetReferencedEntity($parent, $field, $parents, $value, $targetLang);
-      }
-    }
-  }
-
-  /**
-   * @param \EntityDrupalWrapper $parent
-   * @param string $field
-   * @param array $parents
-   * @param $value
-   * @param $targetLang
-   */
-  protected function entitySetReferencedEntity(\EntityDrupalWrapper $parent, $field, array $parents, $value, $targetLang) {
-    $parentType = $parent->type();
-    $needsSaveKey = $parent->type() . ':' . $parent->getIdentifier();
-    if ($this->translatableFactory->getTranslatable($parent)) {
-      // Load the translatable for this referenced entity.
-      if (isset($this->entitiesNeedSave[$needsSaveKey])) {
-        $parentWrapper = $this->entitiesNeedSave[$needsSaveKey];
-      }
-      else {
-        $parentWrapper = clone $parent;
-      }
-
-      // Attempt to load the translatable from static cache.
-      if (isset($this->translatables[$needsSaveKey])) {
-        $parentTranslatable = $this->translatables[$needsSaveKey];
-      }
-      else {
-        $parentTranslatable = $this->translatableFactory->getTranslatable($parentWrapper);
-      }
-
-      // Recreate the $data array for this referenced entity and set the data.
-      $parentData = array($field => array('#text' => $value));
-      $parentTranslatable->setData($parentData, $targetLang, FALSE);
-
-      // Set the wrapper with the new data for save.
-      $targetWrapper = $parentTranslatable->getTargetEntity($targetLang);
-      $targetId = $targetWrapper->getIdentifier();
-      $this->entitiesNeedSave[$needsSaveKey] = $targetWrapper;
-
-      // If the target ID we pulled is FALSE, we have to save the target entity
-      // first. It's brand new. Then add the correct entity to the save queue.
-      if (empty($targetId)) {
-        $targetWrapper->save();
-        $targetId = $targetWrapper->getIdentifier();
-
-        // Correct the wrapper that needs to be saved.
-        unset($this->entitiesNeedSave[$needsSaveKey]);
-        $needsSaveKey = $targetWrapper->type() . ':' . $targetId;
-        $this->entitiesNeedSave[$needsSaveKey] = $targetWrapper;
-      }
-
-      // Save off the translatable.
-      $this->translatables[$needsSaveKey] = $parentTranslatable;
-
-      // Update the reference to use the (potentially newly created) entity.
-      if ($grandParent = $this->getParent($parent)) {
-        $grandParentSaveKey = $grandParent->type() . '::' . $grandParent->getIdentifier();
-
-        // Determine how to access the reference from the grandparent.
-        $context = array_slice($parents, 0, array_search($field, $parents, TRUE));
-        krsort($context);
-        $context = array_values($context);
-
-        // Set the reference on the grandparent.
-        if (count($context) === 2 && is_numeric($context[1])) {
-          $grandParent->{$context[0]}[$context[1]]->set($targetWrapper);
-          $this->entitiesNeedSave[$grandParentSaveKey] = $grandParent;
-        }
-        elseif (count($context) === 1) {
-          $grandParent->{$context[0]}->set($targetWrapper);
-          $this->entitiesNeedSave[$grandParentSaveKey] = $grandParent;
-        }
-        else {
-          // @todo Solve arbitrary entity reference depth problem.
-          $this->drupal->watchdog('entity xliff', 'Could not update entity reference for @field field on %entity %id. Reference too deep (!depth).', array(
-            '@field' => $field,
-            '%entity' => $parentType,
-            '%id' => $parent->getIdentifier(),
-            '!depth' => count($context),
-          ), DrupalHandler::WATCHDOG_WARNING);
-        }
-      }
+  protected function entitySetNestedValue(\EntityMetadataWrapper $wrapper, array $parents, $value, $targetLang) {
+    // Get the field reference.
+    $ref = array_shift($parents);
+    if (is_numeric($ref)) {
+      $field = &$wrapper[$ref];
     }
     else {
-      // Otherwise, register the unknown entity.
-      $this->drupal->watchdog('entity xliff', 'Could not update entity reference. Unknown entity type %type.', array(
-        '%type' => $parentType,
-      ), DrupalHandler::WATCHDOG_WARNING);
+      $field = &$wrapper->{$ref};
+    }
+
+    // Base case: we are setting a basic field on an entity.
+    if (count($parents) === 0) {
+      // Set the value on the field.
+      if ($handler = $this->fieldMediator->getInstance($field)) {
+        $handler->setValue($field, $value);
+
+        // If this is an EntityDrupalWrapper, we need to mark the wrapper as needing
+        // saved.
+        if (get_class($wrapper) === 'EntityDrupalWrapper') {
+          $targetId = $wrapper->getIdentifier();
+          $targetType = $wrapper->type();
+
+          // If this is a brand new entity, we need to initialize and save it first.
+          if ($targetId === FALSE) {
+            $translatable = $this->translatableFactory->getTranslatable($wrapper);
+            $translatable->saveWrapper($wrapper, $targetLang);
+            $targetId = $wrapper->getIdentifier();
+          }
+
+          // Mark this entity as needing saved.
+          $this->entitiesNeedSave[$targetType . ':' . $targetId] = $wrapper;
+        }
+
+        return TRUE;
+      }
+      else {
+        return FALSE;
+      }
+    }
+    // Recursive case. We need to go deeper.
+    else {
+      // Ensure we're always setting data against the target entity.
+      if (get_class($field) === 'EntityDrupalWrapper') {
+        if ($translatable = $this->translatableFactory->getTranslatable($field)) {
+          $field = $translatable->getTargetEntity($targetLang);
+        }
+
+        // If this is a new entity, we need to initialize and save it first.
+        $targetId = $field->getIdentifier();
+        $targetType = $field->type();
+        if ($targetId === FALSE) {
+          $translatable->initializeTranslation();
+          $translatable->saveWrapper($field, $targetLang);
+          $targetId = $field->getIdentifier();
+        }
+
+        // Always attempt to pull the entity from static cache.
+        $needsSaveKey = $targetType . ':' . $targetId;
+        if (isset($this->entitiesNeedSave[$needsSaveKey])) {
+          $field = $this->entitiesNeedSave[$needsSaveKey];
+        }
+      }
+
+      // Attempt to set the nested value.
+      if ($this->entitySetNestedValue($field, $parents, $value, $targetLang)) {
+        // If the child is an entity, we need to set the reference.
+        if (get_class($field) === 'EntityDrupalWrapper') {
+          $targetId = $field->getIdentifier();
+          $targetType = $field->type();
+
+          if (is_numeric($ref)) {
+            $wrapper[$ref]->set($field->getIdentifier());
+          }
+          else {
+            $wrapper->{$ref}->set($field->getIdentifier());
+          }
+
+          // Mark this entity as needing saved.
+          $this->entitiesNeedSave[$targetType . ':' . $targetId] = $field;
+        }
+      }
     }
   }
 
@@ -480,23 +433,6 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       $raw = reset($entities);
     }
     return $raw;
-  }
-
-  /**
-   * @param \EntityDrupalWrapper $wrapper
-   *   The entity wrapper to compare.
-   *
-   * @param string $targetLang
-   *   (Optional) If provided, the target entity will be pulled via the
-   * getTargetEntity method.
-   *
-   * @return bool
-   *   TRUE if the given entity is the same as the primary entity represented by
-   *   this translatable. FALSE otherwise.
-   */
-  protected function isTheSameAs(\EntityDrupalWrapper $wrapper, $targetLang = NULL) {
-    $comparator = $targetLang ? $this->getTargetEntity($targetLang) : $this->entity;
-    return $comparator->getIdentifier() === $wrapper->getIdentifier() && $comparator->type() === $wrapper->type();
   }
 
 }
