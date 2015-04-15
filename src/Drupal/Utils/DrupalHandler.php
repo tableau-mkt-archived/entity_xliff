@@ -16,6 +16,18 @@ class DrupalHandler {
   CONST LANGUAGE_NONE = 'und';
 
   /**
+   * Passes alterable variables to specific hook_TYPE_alter() implementations.
+   * @param string $type
+   * @param mixed $data
+   * @param mixed $context1
+   * @param mixed $context2
+   * @param mixed $context3
+   */
+  public function alter($type, &$data, &$context1 = NULL, &$context2 = NULL, &$context3 = NULL) {
+    drupal_alter($type, $data, $context1, $context2, $context3);
+  }
+
+  /**
    * Sets a value in a nested array with variable depth.
    * @param array $array
    * @param array $parents
@@ -110,6 +122,15 @@ class DrupalHandler {
    */
   public function moduleExists($module) {
     return module_exists($module);
+  }
+
+  /**
+   * Invokes a hook in all enabled modules that implement it.
+   * @param string $hook
+   * @return array
+   */
+  public function moduleInvokeAll($hook) {
+    return call_user_func_array('module_invoke_all', func_get_args());
   }
 
   /**

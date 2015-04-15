@@ -152,6 +152,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     foreach ($this->entitiesNeedSave as $key => $wrapper) {
       $translatable = $this->translatableFactory->getTranslatable($wrapper);
       $translatable->initializeTranslation();
+      $this->drupal->alter('entity_xliff_presave', $wrapper, $wrapper->type());
       $translatable->saveWrapper($wrapper, $targetLanguage);
     }
   }
