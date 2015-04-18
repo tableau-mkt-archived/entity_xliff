@@ -127,6 +127,7 @@ function _entity_xliff_get_translatable_info() {
   // During install, prior to composer (re-)creating the auto-loader, this class
   // is unavailable. This check ensures Drupal is able to install the module,
   // thus allowing composer manager to create the auto loader with our classes.
+  composer_manager_register_autoloader();
   if (!class_exists('EntityXliff\Drupal\Factories\EntityTranslatableFactory')) {
     return array();
   }
