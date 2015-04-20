@@ -24,9 +24,6 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
    */
   public function getTargetEntity($targetLanguage) {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
-      // Handling for content translation. Entity field translation should be
-      // taken care of by the parent. @todo Need to be able to determine this
-      // based on the host entity's paradigm...
       if (!$this->drupal->moduleExists('entity_translation')) {
         $target = $this->getRawEntity($this->entity);
 
@@ -56,9 +53,6 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
         }
 
         $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('field_collection_item', $target);
-      }
-      else {
-        $this->targetEntities[$targetLanguage] = parent::getTargetEntity($targetLanguage);
       }
     }
 
