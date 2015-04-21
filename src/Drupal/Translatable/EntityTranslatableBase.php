@@ -152,7 +152,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     foreach ($this->entitiesNeedSave as $key => $wrapper) {
       $translatable = $this->translatableFactory->getTranslatable($wrapper);
       $translatable->initializeTranslation();
-      $this->drupal->alter('entity_xliff_presave', $wrapper, $wrapper->type());
+      $type = $wrapper->type();
+      $this->drupal->alter('entity_xliff_presave', $wrapper, $type);
       $translatable->saveWrapper($wrapper, $targetLanguage);
     }
   }
@@ -310,8 +311,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     // Get the field reference.
     $ref = array_shift($parents);
     if (is_numeric($ref)) {
-      $field = &$wrapper[$ref];
-    }
+      $field = &$wrapper[$ref]; // @codeCoverageIgnoreStart
+    } // @codeCoverageIgnoreEnd
     else {
       $field = &$wrapper->{$ref};
     }
@@ -324,7 +325,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
         // If this is an EntityDrupalWrapper, we need to mark the wrapper as needing
         // saved.
-        if (get_class($wrapper) === 'EntityDrupalWrapper') {
+        if (is_a($wrapper, 'EntityDrupalWrapper')) {
           $targetId = $wrapper->getIdentifier();
           $targetType = $wrapper->type();
 
@@ -348,7 +349,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     // Recursive case. We need to go deeper.
     else {
       // Ensure we're always setting data against the target entity.
-      if (get_class($field) === 'EntityDrupalWrapper') {
+      if (is_a($field, 'EntityDrupalWrapper')) {
         if ($translatable = $this->translatableFactory->getTranslatable($field)) {
           $field = $translatable->getTargetEntity($targetLang);
         }
@@ -372,13 +373,13 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       // Attempt to set the nested value.
       if ($this->entitySetNestedValue($field, $parents, $value, $targetLang)) {
         // If the child is an entity, we need to set the reference.
-        if (get_class($field) === 'EntityDrupalWrapper') {
+        if (is_a($field, 'EntityDrupalWrapper')) {
           $targetId = $field->getIdentifier();
           $targetType = $field->type();
 
           if (is_numeric($ref)) {
-            $wrapper[$ref]->set($field->getIdentifier());
-          }
+            $wrapper[$ref]->set($field->getIdentifier()); // @codeCoverageIgnoreStart
+          } // @codeCoverageIgnoreEnd
           else {
             $wrapper->{$ref}->set($field->getIdentifier());
           }
