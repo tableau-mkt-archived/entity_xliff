@@ -74,6 +74,15 @@ function entity_xliff_entity_info_alter(&$entityInfo) {
       $entityInfo[$type]['entity xliff translatable classes'] = $info['classes'];
     }
   }
+
+  // Provide "path" keys for known entity types.
+  $entityInfo['user']['path'] = 'user/%user';
+  if (module_exists('node')) {
+    $entityInfo['node']['path'] = 'node/%node';
+  }
+  if (module_exists('taxonomy')) {
+    $entityInfo['taxonomy_term']['path'] = 'taxonomy/term/%taxonomy_term';
+  }
 }
 
 /**
