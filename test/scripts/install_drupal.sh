@@ -11,7 +11,7 @@
 WORKING_DIR=`pwd`
 
 # Clear out any existing Drupal site build.
-rm -rfd $BUILD_DIR/drupal
+rm -rf $BUILD_DIR/drupal
 
 # Ensure we have a database to install to.
 if ! mysql --user=$DB_USER --password=$DB_PW --host=$DB_HOST -e "use $DB_NAME"; then
@@ -31,13 +31,14 @@ if ! mysql --user=$DB_USER --password=$DB_PW --host=$DB_HOST -e "use $DB_NAME"; 
 fi
 
 # Install Drupal into: project_root/build/drupal
-drush --yes qd --profile=standard --no-server --browser=0 --db-url=mysql://$DB_USER:$DB_PW@$DB_HOST/$DB_NAME $BUILD_DIR
+/usr/bin/env PHP_OPTIONS="-d sendmail_path=`which true`" drush --yes qd --profile=standard --no-server --browser=0 --db-url=mysql://$DB_USER:$DB_PW@$DB_HOST/$DB_NAME $BUILD_DIR --verbose --debug
 
 # Place this module into the sites/all/modules directory and enable it.
 rsync -aq "`pwd`" "`pwd`/$BUILD_DIR/drupal/sites/all/modules/entity_xliff" --exclude build
 pushd $BUILD_DIR/drupal
-  drush --yes dl composer_manager link
+  drush --yes dl composer-8.x-1.1 composer_manager link
   drush --yes en composer_manager translation link
+  drush cc drush
   drush --yes en entity_xliff
   drush cc all
 popd

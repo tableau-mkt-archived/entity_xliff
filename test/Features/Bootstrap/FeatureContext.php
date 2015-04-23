@@ -21,40 +21,40 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
-   * @When I attach a :arg1 translation of this content
+   * @When I attach a :langcode translation of this content
    */
-  public function iAttachATranslationOfThisContent($language) {
+  public function iAttachATranslationOfThisContent($langcode) {
+    $baseUrl = $this->getMinkParameter('base_url');
     $path = $this->getMinkParameter('files_path');
-    $page = $this->getSession()->getPage();
+    $session = $this->getSession();
+    $url = $session->getCurrentUrl();
 
-    if ($downloadLink = $page->find('xpath', '(//a[text()="Download"])[2]')) {
-      $importFileField = $page->find('css', 'input[name="files[import-fr]"]');
-      $randomFile = mt_rand(0, 10000) . '-' . $language . '.xlf';
+    if (preg_match('/node\/(\d+)/', $url, $matches)) {
+      $nid = $matches[1];
+      $randomFile = mt_rand(0, 10000) . '-' . $langcode . '.xlf';
 
-      // Click the second "download" button to get the XLIFF.
-      $downloadLink->click();
-      $xliff = $page->getContent();
+      // Load the XLIFF file for this node.
+      $this->getSession()->visit($baseUrl . "/node/$nid/as.xlf?targetLang=$langcode");
+      $xliff = $session->getPage()->getContent();
 
       // "Translate" the file.
-      $translation = str_replace('English', $language, $xliff);
+      $translation = str_replace('English', $langcode, $xliff);
       $fullPath = $path . DIRECTORY_SEPARATOR . $randomFile;
 
       // Write the file to the configured path.
-      file_put_contents($fullPath, $translation);
-
-      // Go back and attach the file to the expected import field.
-      $this->getSession()->back();
-      $importFileField->attachFile($fullPath);
-    }
-    else {
-      // Allow use of this step from any local task off of a piece of content.
-      if ($portalLink = $page->findLink('XLIFF')) {
-        $portalLink->click();
-        $this->iAttachATranslationOfThisContent($language);
+      if (file_put_contents($fullPath, $translation)) {
+        // Go back and attach the file to the expected import field.
+        $session->visit($baseUrl . "/node/$nid/xliff");
+        $page = $session->getPage();
+        $importFileField = $page->find('css', 'input[name="files[import-' . $langcode . ']"]');
+        $importFileField->attachFile($fullPath);
       }
       else {
-        throw new Exception('Unable to determine what "this content" is referring to.');
+        throw new Exception('Unable to write translation to disk.');
       }
+    }
+    else {
+      throw new Exception('Unable to determine what "this content" is referring to.');
     }
   }
 

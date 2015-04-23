@@ -10,9 +10,3 @@ pushd $DIR/../../build/drupal
   drush runserver 127.0.0.1:8181 --browser=0 > /dev/null 2>&1 &
   sleep 4
 popd
-
-# Run Behat tests.
-pushd $DIR/../.. && ./vendor/bin/behat; popd
-
-# Foreground and kill the runserver command.
-kill %"drush runserver" && fg

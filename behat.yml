@@ -16,7 +16,7 @@ default:
       goutte: ~
       selenium2: ~
       base_url: http://127.0.0.1:8181
-      files_path: 'sites/default/files'
+      files_path: %paths.base%/build/drupal/sites/default/files
     Drupal\DrupalExtension:
       blackbox: ~
       api_driver: 'drupal'
