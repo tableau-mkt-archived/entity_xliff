@@ -371,14 +371,18 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       }
 
       // Attempt to set the nested value.
-      if ($this->entitySetNestedValue($field, $parents, $value, $targetLang)) {
+      $set = $this->entitySetNestedValue($field, $parents, $value, $targetLang);
+      if ($set) {
         // If the child is an entity, we need to set the reference.
         if (is_a($field, 'EntityDrupalWrapper')) {
           $targetId = $field->getIdentifier();
           $targetType = $field->type();
 
           if (is_numeric($ref)) {
-            $wrapper[$ref]->set($field->getIdentifier()); // @codeCoverageIgnoreStart
+            // @codeCoverageIgnoreStart
+            $vals = $wrapper->raw();
+            $vals[$ref] = $field->getIdentifier();
+            $wrapper->set($vals);
           } // @codeCoverageIgnoreEnd
           else {
             $wrapper->{$ref}->set($field->getIdentifier());
@@ -388,6 +392,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           $this->entitiesNeedSave[$targetType . ':' . $targetId] = $field;
         }
       }
+
+      return $set;
     }
   }
 
