@@ -14,7 +14,7 @@ if (!function_exists('number_entity_xliff_field_handler_info')) {
   function number_entity_xliff_field_handler_info() {
     return array(
       'integer' => array(
-        'class' => 'EntityXliff\Drupal\FieldHandlers\DefaultFieldHandler',
+        'class' => 'EntityXliff\Drupal\FieldHandlers\IntegerFieldHandler',
       ),
     );
   }
