@@ -21,6 +21,11 @@ around importing and exporting XLIFFs.
 More information on [installing and using Composer Manager]() is available on
 GitHub.
 
+## Gotchas
+If you use this module with Field Collection, you may need this patch to avoid
+issues where tabs may appear to multiply as you import XLIFFs:
+https://www.drupal.org/node/1937866
+
 ## Developing with this module
 @todo
 
