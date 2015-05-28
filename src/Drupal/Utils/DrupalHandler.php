@@ -115,6 +115,13 @@ class DrupalHandler {
   }
 
   /**
+   * Loads in includes provided on behalf of existing modules.
+   */
+  public function entityXliffLoadModuleIncs() {
+    _entity_xliff_load_module_incs();
+  }
+
+  /**
    * Determines whether a given module exists.
    * @param string $module
    * @return bool
