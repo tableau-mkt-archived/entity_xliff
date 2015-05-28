@@ -52,7 +52,20 @@ namespace EntityXliff\Drupal\Tests\Translatable {
      */
     public function getData() {
       $mockEntity = $this->getMockWrapper();
-      $translatable = new EntityTranslatableMockForGetData($mockEntity);
+      $mockMediator = $this->getMockMediator();
+      $listenerDrupal = $this->getMockHandler();
+
+      // Instantiate the translatable.
+      $translatable = new EntityTranslatableMockForGetData($mockEntity, $listenerDrupal, NULL, $mockMediator);
+
+      // Ensure translatable fields are alterable, with the entity (as context).
+      $listenerDrupal->expects($this->once())
+        ->method('entityXliffLoadModuleIncs');
+      $listenerDrupal->expects($this->once())
+        ->method('alter')
+        ->with('entity_xliff_translatable_fields', array_keys($translatable->translatableFieldData), $mockEntity);
+
+      // Ensure the translatable data returned matches expectations.
       $this->assertSame($translatable->translatableFieldData, $translatable->getData());
       $this->assertSame($translatable->gotFieldFromEntity, $mockEntity);
     }

@@ -120,10 +120,17 @@ function entity_xliff_get_field_handlers() {
  * Loads in includes provided on behalf of existing modules.
  */
 function _entity_xliff_load_module_incs() {
-  // This potentially runs before hook_init(), so register auto-loader now.
-  composer_manager_register_autoloader();
-  foreach (array('node', 'user', 'taxonomy', 'comment', 'field_collection', 'link', 'image', 'text', 'number', 'list') as $entity) {
-    module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
+  static $loaded = FALSE;
+
+  // This may be called many times per request. Reduce overhead w/static flag.
+  if (!$loaded) {
+    // This potentially runs before hook_init(), so register auto-loader now.
+    composer_manager_register_autoloader();
+    foreach (array('node', 'user', 'taxonomy', 'comment', 'field_collection', 'link', 'image', 'text', 'number', 'list', 'auto_nodetitle', 'auto_entitylabel') as $entity) {
+      module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
+    }
+
+    $loaded = TRUE;
   }
 }
 

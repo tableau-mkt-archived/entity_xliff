@@ -121,6 +121,10 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     $data = array();
     $fields = $this->getTranslatableFields();
 
+    // Allow modules to alter translatable fields for this entity.
+    $this->drupal->entityXliffLoadModuleIncs();
+    $this->drupal->alter('entity_xliff_translatable_fields', $fields, $this->entity);
+
     // Iterate through all fields we're expecting to translate.
     foreach ($fields as $field) {
       if ($fieldData = $this->getFieldFromEntity($this->entity, $field)) {
