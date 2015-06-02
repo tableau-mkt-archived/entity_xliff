@@ -47,7 +47,7 @@ function entity_xliff_to_xlf($type, $entity) {
   $targetlang = entity_xliff_get_target_lang();
 
   if ($translatable = entity_xliff_get_translatable($wrapper)) {
-    entity_xliff_file_name(implode('-', array($type, $wrapper->getIdentifier(), $targetlang)));
+    entity_xliff_file_name(implode('-', array($type, $wrapper->getIdentifier(), $targetlang)) . '.xlf');
     return $serializer->serialize($translatable, $targetlang);
   }
   else {
