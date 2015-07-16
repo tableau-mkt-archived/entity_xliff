@@ -29,7 +29,7 @@ Feature: XLIFF Portal
     When I am on the homepage
     And follow "English page title"
     And I click "XLIFF"
-    When I attach a "fr" translation of this content
+    When I attach a "fr" translation of this node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View"
