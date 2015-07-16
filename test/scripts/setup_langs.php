@@ -15,16 +15,41 @@ catch (PDOException $e) {
   echo "Language already installed.\n";
 }
 
+// Enable path prefix-based language negotiation.
+$negotiation = array(
+  'locale-url' => array(
+    'callbacks' => array(
+      'language' => 'locale_language_from_url',
+      'switcher' => 'locale_language_switcher_url',
+      'url_rewrite' => 'locale_language_url_rewrite_url',
+    ),
+    'file' => 'includes/locale.inc',
+  ),
+  'language-default' => array(
+    'callbacks' => array(
+      'language' => 'language_from_default',
+    ),
+  ),
+);
+variable_set('language_negotiation_language', $negotiation);
+variable_set('language_negotiation_language_content', $negotiation);
+
 // Enable translation for the page content type.
 variable_set('language_content_type_page', TRANSLATION_ENABLED);
 
-// Add relevant fields to the content type:
+// Add relevant fields to the page content type:
 add_long_text_field();
-add_link_field();
+add_link_field('node', 'page');
 add_image_field();
 add_text_field_with_cardinality();
 
+// Enable entity field translation for appropriate entities.
+$etypes = variable_get('entity_translation_entity_types', array());
+$etypes['user'] = 'user';
+variable_set('entity_translation_entity_types', $etypes);
 
+// Add relevant fields to those entities.
+add_link_field('user', 'user');
 
 
 /**
@@ -71,9 +96,9 @@ function add_long_text_field() {
 }
 
 /**
- * Adds a link field (label "Link", name "field_link") to the page content type.
+ * Adds a link field (label "Link", name "field_link") to the entity/bundle.
  */
-function add_link_field() {
+function add_link_field($entity, $bundle) {
   if (!$field = field_read_field('field_link')) {
     try {
       $field_definition = array(
@@ -93,6 +118,7 @@ function add_link_field() {
           'enable_tokens' => 1,
           'display' => array('url_cutoff' => 80),
         ),
+        'translatable' => TRUE,
       );
       $field = field_create_field($field_definition);
     }
@@ -108,13 +134,13 @@ function add_link_field() {
     'description' => '',
     'default_value' => NULL,
     'field_name' => 'field_link',
-    'entity_type' => 'node',
+    'entity_type' => $entity,
   );
 
 // Don't bother if the field already exists.
-  if (!field_read_instance('node', 'field_link', 'page')) {
+  if (!field_read_instance($entity, 'field_link', $bundle)) {
     // Apply bundle-specific settings.
-    $field_instance_definition['bundle'] = 'page';
+    $field_instance_definition['bundle'] = $bundle;
 
     try {
       field_create_instance($field_instance_definition);
