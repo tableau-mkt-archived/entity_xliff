@@ -41,16 +41,18 @@ variable_set('language_content_type_page', TRANSLATION_ENABLED);
 add_long_text_field('node', 'page');
 add_link_field('node', 'page');
 add_image_field();
-add_text_field_with_cardinality();
+add_text_field_with_cardinality('node', 'page');
 add_field_collection_field();
 
 // Enable entity field translation for appropriate entities.
 $etypes = variable_get('entity_translation_entity_types', array());
 $etypes['user'] = 'user';
+$etypes['taxonomy_term'] = 'taxonomy_term';
 variable_set('entity_translation_entity_types', $etypes);
 
 // Add relevant fields to those entities.
 add_link_field('user', 'user');
+add_text_field_with_cardinality('taxonomy_term', 'tags');
 
 
 /**
@@ -179,9 +181,9 @@ function add_image_field() {
 }
 
 /**
- * Adds a text field with cardinality to the page content type.
+ * Adds a text field with cardinality to the given entity/bundle.
  */
-function add_text_field_with_cardinality() {
+function add_text_field_with_cardinality($entity, $bundle) {
   if (!$field = field_read_field('field_text')) {
     try {
       $field_definition = array(
@@ -192,6 +194,7 @@ function add_text_field_with_cardinality() {
         'settings' => array(
           'max_length' => 255,
         ),
+        'translatable' => TRUE,
       );
       $field = field_create_field($field_definition);
     }
@@ -207,13 +210,13 @@ function add_text_field_with_cardinality() {
     'description' => '',
     'default_value' => NULL,
     'field_name' => 'field_text',
-    'entity_type' => 'node',
+    'entity_type' => $entity,
   );
 
   // Don't bother if the field already exists.
-  if (!field_read_instance('node', 'field_text', 'page')) {
+  if (!field_read_instance($entity, 'field_text', $bundle)) {
     // Apply bundle-specific settings.
-    $field_instance_definition['bundle'] = 'page';
+    $field_instance_definition['bundle'] = $bundle;
 
     try {
       field_create_instance($field_instance_definition);
