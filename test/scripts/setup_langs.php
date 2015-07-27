@@ -38,10 +38,11 @@ variable_set('language_negotiation_language_content', $negotiation);
 variable_set('language_content_type_page', TRANSLATION_ENABLED);
 
 // Add relevant fields to the page content type:
-add_long_text_field();
+add_long_text_field('node', 'page');
 add_link_field('node', 'page');
 add_image_field();
 add_text_field_with_cardinality();
+add_field_collection_field();
 
 // Enable entity field translation for appropriate entities.
 $etypes = variable_get('entity_translation_entity_types', array());
@@ -55,7 +56,7 @@ add_link_field('user', 'user');
 /**
  * Adds a long text field to the page content type.
  */
-function add_long_text_field() {
+function add_long_text_field($entity, $bundle) {
   if (!$field = field_read_field('field_long_text')) {
     try {
       $field_definition = array(
@@ -78,13 +79,16 @@ function add_long_text_field() {
     'description' => '',
     'default_value' => NULL,
     'field_name' => 'field_long_text',
-    'entity_type' => 'node',
+    'entity_type' => $entity,
+    'settings' => array(
+      'text_processing' => 1,
+    ),
   );
 
 // Don't bother if the field already exists.
-  if (!field_read_instance('node', 'field_long_text', 'page')) {
+  if (!field_read_instance($entity, 'field_long_text', $bundle)) {
     // Apply bundle-specific settings.
-    $field_instance_definition['bundle'] = 'page';
+    $field_instance_definition['bundle'] = $bundle;
 
     try {
       field_create_instance($field_instance_definition);
@@ -218,4 +222,60 @@ function add_text_field_with_cardinality() {
       echo "Unable to create text field instance.\n";
     }
   }
+}
+
+/**
+ * Adds a field collection field which itself contains a text field.
+ */
+function add_field_collection_field() {
+  if (!$field = field_read_field('field_field_collection')) {
+    try {
+      $field_definition = array(
+        'field_name' => 'field_field_collection',
+        'type' => 'field_collection',
+        'cardinality' => -1,
+        'module' => 'field_collection',
+        'translatable' => TRUE,
+        'settings' => array(
+          'hide_blank_items' => TRUE,
+          'path' => '',
+          'entity_translation_sync' => FALSE,
+        ),
+      );
+      $field = field_create_field($field_definition);
+    }
+    catch (FieldException $e) {
+      echo "Unable to create field collection field.\n";
+    }
+  }
+
+  $field_instance_definition = array(
+    'label' => 'Field Collection Field',
+    'field_id' => $field['id'],
+    'required' => FALSE,
+    'description' => '',
+    'default_value' => NULL,
+    'field_name' => 'field_field_collection',
+    'entity_type' => 'node',
+    'widget' => array(
+      'type' => 'field_collection_embed',
+      'module' => 'field_collection',
+    ),
+  );
+
+  // Don't bother if the field already exists.
+  if (!field_read_instance('node', 'field_field_collection', 'page')) {
+    // Apply bundle-specific settings.
+    $field_instance_definition['bundle'] = 'page';
+
+    try {
+      field_create_instance($field_instance_definition);
+    }
+    catch (FieldException $e) {
+      echo "Unable to create text field instance.\n";
+    }
+  }
+
+  // Attach a long text field to this field collection type.
+  add_long_text_field('field_collection_item', 'field_field_collection');
 }

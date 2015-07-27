@@ -145,10 +145,6 @@ namespace EntityXliff\Drupal\Tests\Translatable\Content {
       //   - The host entity (on the first go around),
       //   - The returned field collection entity (on the second go around).
       $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler');
-      $observerDrupal->expects($this->once())
-        ->method('moduleExists')
-        ->with($this->equalTo('entity_translation'))
-        ->willReturn(FALSE);
       $observerDrupal->expects($this->exactly(2))
         ->method('entityMetadataWrapper')
         ->withConsecutive(array(
@@ -230,10 +226,6 @@ namespace EntityXliff\Drupal\Tests\Translatable\Content {
       // - Check if the Entity Translation module exists (@todo, still necessary?)
       // - Wrap the field collection entity just prior to return.
       $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler');
-      $observerDrupal->expects($this->once())
-        ->method('moduleExists')
-        ->with($this->equalTo('entity_translation'))
-        ->willReturn(FALSE);
       $observerDrupal->expects($this->once())
         ->method('entityMetadataWrapper')
         ->with($this->equalTo('field_collection_item'))

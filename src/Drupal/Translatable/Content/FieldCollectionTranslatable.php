@@ -18,42 +18,37 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
 
   /**
    * {@inheritdoc}
-   *
-   * Field collections support both entity field translation and content
-   * translation workflows... We handle that here.
    */
   public function getTargetEntity($targetLanguage) {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
-      if (!$this->drupal->moduleExists('entity_translation')) {
-        $target = $this->getRawEntity($this->entity);
+      $target = $this->getRawEntity($this->entity);
 
-        // Pull the parent/host entity.
-        if ($rawHost = $this->getHostEntity($target)) {
-          $host = $this->drupal->entityMetadataWrapper($target->hostEntityType(), $rawHost);
-        }
-        else {
-          $host = $this->getParent($this->entity);
-          $rawHost = $this->getRawEntity($host);
-        }
-
-        // If the language of the host does not match the specified target
-        // language, then we need to create a new field collection. Otherwise,
-        // we're just updating the existing field collection.
-        if ($host->language->value() !== $targetLanguage) {
-          unset($target->item_id, $target->revision_id);
-          $target->is_new = TRUE;
-          $target->setHostEntity($host->type(), $rawHost);
-        }
-        else {
-          $target->is_new = TRUE;
-          $target->setHostEntity($host->type(), $rawHost);
-          $target->is_new = FALSE;
-          $target->is_new_revision = FALSE;
-          $target->default_revision = TRUE;
-        }
-
-        $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('field_collection_item', $target);
+      // Pull the parent/host entity.
+      if ($rawHost = $this->getHostEntity($target)) {
+        $host = $this->drupal->entityMetadataWrapper($target->hostEntityType(), $rawHost);
       }
+      else {
+        $host = $this->getParent($this->entity);
+        $rawHost = $this->getRawEntity($host);
+      }
+
+      // If the language of the host does not match the specified target
+      // language, then we need to create a new field collection. Otherwise,
+      // we're just updating the existing field collection.
+      if ($host->language->value() !== $targetLanguage) {
+        unset($target->item_id, $target->revision_id);
+        $target->is_new = TRUE;
+        $target->setHostEntity($host->type(), $rawHost);
+      }
+      else {
+        $target->is_new = TRUE;
+        $target->setHostEntity($host->type(), $rawHost);
+        $target->is_new = FALSE;
+        $target->is_new_revision = FALSE;
+        $target->default_revision = TRUE;
+      }
+
+      $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('field_collection_item', $target);
     }
 
     return $this->targetEntities[$targetLanguage];
