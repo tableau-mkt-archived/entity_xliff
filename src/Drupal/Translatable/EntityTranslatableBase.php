@@ -395,6 +395,12 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           // Mark this entity as needing saved.
           $this->entitiesNeedSave[$targetType . ':' . $targetId] = $field;
         }
+        elseif (is_a($field, 'EntityListWrapper')) {
+          $needsSaveKey = $wrapper->type() . ':' . $wrapper->getIdentifier();
+          if (!isset($this->entitiesNeedSave[$needsSaveKey])) {
+            $this->entitiesNeedSave[$needsSaveKey] = $wrapper;
+          }
+        }
       }
 
       return $set;
