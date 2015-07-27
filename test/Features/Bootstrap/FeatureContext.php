@@ -17,6 +17,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   protected $entityPathPartMap = array(
     'node' => 'node',
     'user' => 'user',
+    'taxonomy_term' => 'taxonomy/term'
   );
 
   /**
@@ -39,7 +40,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     $url = $session->getCurrentUrl();
     $pathPart = $this->entityPathPartMap[$entity];
 
-    if (preg_match('/' . preg_quote($pathPart) . '\/(\d+)/', $url, $matches)) {
+    if (preg_match('/' . preg_quote($pathPart, '/') . '\/(\d+)/', $url, $matches)) {
       $id = $matches[1];
       $randomFile = mt_rand(0, 10000) . '-' . $langcode . '.xlf';
 
@@ -77,7 +78,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     $url = $session->getCurrentUrl();
     $pathPart = $this->entityPathPartMap[$entity];
 
-    if (preg_match('/' . preg_quote($pathPart) . '\/(\d+)/', $url, $matches)) {
+    if (preg_match('/' . preg_quote($pathPart, '/') . '\/(\d+)/', $url, $matches)) {
       $id = $matches[1];
       $session->visit($baseUrl . "/$langcode/$pathPart/$id");
     }
