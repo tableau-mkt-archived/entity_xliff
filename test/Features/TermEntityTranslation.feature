@@ -40,6 +40,8 @@ Feature: Entity Field Translation of Taxonomy Term Entities
 
   Scenario: No access to XLIFF portal local task without permissions
     Given I am not logged in
-    When I am logged in as a user with the "authenticated user" role
-    And I am at "taxonomy/term/1"
-    Then I should not see the link "XLIFF"
+    When I am logged in as a user with the "administer taxonomy,access administration pages" permissions
+    And I am at "admin/structure/taxonomy/tags"
+    When I click "Great content"
+    Then I should see the heading "Great content"
+    And I should not see the link "XLIFF"
