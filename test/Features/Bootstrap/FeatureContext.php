@@ -86,4 +86,35 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     }
   }
 
+  /**
+   * @When I am viewing a(n) :n_many complex :type content with the title :title
+   */
+  public function iAmViewingAComplexNode($n_many, $type, $title) {
+    // First, create a node.
+    $node = (object) array(
+      'title' => $title,
+      'type' => $type,
+      'uid' => 1,
+    );
+    $node = $this->getDriver()->createNode($node);
+
+    // Create and reference related nodes.
+    for ($n = 1; $n <= $n_many; $n++) {
+      $fieldCollectionItem = entity_create('field_collection_item', array('field_name' => 'field_field_collection'));
+      $fieldCollectionItem->setHostEntity('node', $node);
+      $fieldCollectionItem->field_long_text[LANGUAGE_NONE][0] = array(
+        'format' => 'plain_text',
+        'value' => $title . " field collection $n",
+      );
+      $fieldCollectionItem->save();
+    }
+
+    // Resave the original node.
+    node_save($node);
+    $this->nodes[] = $node;
+
+    // Set internal page on the node.
+    $this->getSession()->visit($this->locatePath('/node/' . $node->nid));
+  }
+
 }

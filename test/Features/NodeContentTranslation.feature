@@ -1,8 +1,8 @@
 @api
-Feature: XLIFF Portal
-  In order to prove the module "works" in the broadest sense,
+Feature: Content Translation of Node and Field Collection Entities
+  In order to prove that nodes can be translated via Content Translation
   Site administrators should be able to
-  Import and export XLIFF translations through the XLIFF portal UI
+  Import and export XLIFF translations through the XLIFF portal UI for a node
 
   Background:
     Given I am logged in as a user with the "administer entity xliff" permission
@@ -36,6 +36,23 @@ Feature: XLIFF Portal
     And I click "Français"
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
+
+  Scenario: Import complex XLIFF through portal
+    Given I am viewing a 3 complex "page" content with the title "Complex English page title"
+    When I click "XLIFF"
+    And I attach a "fr" translation of this node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
+    When I click "View"
+    Then I should not see the heading "Complex fr page title"
+    And I should not see "Complex fr page title field collection 1"
+    And I should not see "Complex fr page title field collection 2"
+    And I should not see "Complex fr page title field collection 3"
+    When I click "Français"
+    Then I should see the heading "Complex fr page title"
+    And I should see "Complex fr page title field collection 1"
+    And I should see "Complex fr page title field collection 2"
+    And I should see "Complex fr page title field collection 3"
 
   Scenario: No access to XLIFF portal local task without permissions
     Given I am not logged in
