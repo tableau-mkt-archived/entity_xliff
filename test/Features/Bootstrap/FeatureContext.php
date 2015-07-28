@@ -70,6 +70,52 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
+   * @Given this :entity has an image attached with alt text :alt
+   */
+  public function thisHasAnImageAttachedWithAltText($entity, $alt) {
+    $session = $this->getSession();
+    $url = $session->getCurrentUrl();
+    $pathPart = $this->entityPathPartMap[$entity];
+
+    if (preg_match('/' . preg_quote($pathPart, '/') . '\/(\d+)/', $url, $matches)) {
+      $id = $matches[1];
+      $randomFile = mt_rand(0, 10000) . '-test_file.jpg';
+
+      $file = array(
+        'uid' => 1,
+        'filename' => $randomFile,
+        'uri' => 'public://field/image/' . $randomFile,
+        'filemime' => 'image/jpeg',
+        'filesize' => 146157,
+        'status' => 1,
+        'timestamp' => REQUEST_TIME,
+      );
+      if (drupal_write_record('file_managed', $file)) {
+        $fileUsage = array(
+          'fid' => $file['fid'],
+          'module' => 'file',
+          'type' => $entity,
+          'id' => $id,
+          'count' => 1,
+        );
+        drupal_write_record('file_usage', $fileUsage);
+
+        $wrapper = entity_metadata_wrapper($entity, $id);
+        $wrapper->field_image->set($file + array(
+          'alt' => $alt,
+        ));
+        $wrapper->save();
+      }
+      else {
+        throw new Exception('Unable to "attach" image to ' . $entity . '.');
+      }
+    }
+    else {
+      throw new Exception('Unable to determine what "this ' . $entity . '" is referring to.');
+    }
+  }
+
+  /**
    * @When I switch to the :langcode translation of this :entity
    */
   public function iSwitchToTheTranslationOfThisUser($langcode, $entity) {
