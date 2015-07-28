@@ -129,7 +129,7 @@ function _entity_xliff_load_module_incs() {
   if (!$loaded) {
     // This potentially runs before hook_init(), so register auto-loader now.
     composer_manager_register_autoloader();
-    foreach (array('node', 'user', 'taxonomy', 'comment', 'field_collection', 'link', 'image', 'text', 'number', 'list', 'auto_nodetitle', 'auto_entitylabel') as $entity) {
+    foreach (array('translation', 'entity_translation', 'link', 'image', 'text', 'number', 'list', 'field_collection', 'auto_nodetitle', 'auto_entitylabel') as $entity) {
       module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
     }
 
