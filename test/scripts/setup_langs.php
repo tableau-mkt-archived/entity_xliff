@@ -46,9 +46,15 @@ add_field_collection_field();
 
 // Enable entity field translation for appropriate entities.
 $etypes = variable_get('entity_translation_entity_types', array());
+$etypes['node'] = 'node';
 $etypes['user'] = 'user';
 $etypes['taxonomy_term'] = 'taxonomy_term';
 variable_set('entity_translation_entity_types', $etypes);
+
+// Enable entity field translation for article nodes, as well as fields.
+variable_set('language_content_type_article', ENTITY_TRANSLATION_ENABLED);
+make_field_translatable('body');
+make_field_translatable('field_image');
 
 // Add relevant fields to those entities.
 add_link_field('user', 'user');
@@ -281,4 +287,19 @@ function add_field_collection_field() {
 
   // Attach a long text field to this field collection type.
   add_long_text_field('field_collection_item', 'field_field_collection');
+}
+
+/**
+ * Makes the provided field translatable.
+ *
+ * @param string $name
+ *   The name of the field to make translatable.
+ *
+ * @throws FieldException
+ */
+function make_field_translatable($name) {
+  if ($field = field_read_field($name)) {
+    $field['translatable'] = TRUE;
+    field_update_field($field);
+  }
 }
