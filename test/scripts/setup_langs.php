@@ -48,6 +48,7 @@ add_field_collection_field();
 $etypes = variable_get('entity_translation_entity_types', array());
 $etypes['node'] = 'node';
 $etypes['user'] = 'user';
+$etypes['comment'] = 'comment';
 $etypes['taxonomy_term'] = 'taxonomy_term';
 variable_set('entity_translation_entity_types', $etypes);
 
@@ -60,6 +61,8 @@ make_field_translatable('field_image');
 add_link_field('user', 'user');
 add_text_field_with_cardinality('taxonomy_term', 'tags');
 
+// Make the comment body translatable.
+make_field_translatable('comment_body');
 
 /**
  * Adds a long text field to the page content type.
