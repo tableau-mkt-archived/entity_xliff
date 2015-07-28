@@ -17,7 +17,8 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   protected $entityPathPartMap = array(
     'node' => 'node',
     'user' => 'user',
-    'taxonomy_term' => 'taxonomy/term'
+    'taxonomy_term' => 'taxonomy/term',
+    'comment' => 'comment',
   );
 
   /**

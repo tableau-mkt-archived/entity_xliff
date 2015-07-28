@@ -83,6 +83,9 @@ function entity_xliff_entity_info_alter(&$entityInfo) {
   if (module_exists('taxonomy')) {
     $entityInfo['taxonomy_term']['path'] = 'taxonomy/term/%taxonomy_term';
   }
+  if (module_exists('comment')) {
+    $entityInfo['comment']['path'] = 'comment/%comment';
+  }
 }
 
 /**
