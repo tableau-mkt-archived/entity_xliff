@@ -336,6 +336,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           // If this is a brand new entity, we need to initialize and save it first.
           if ($targetId === FALSE) {
             $translatable = $this->translatableFactory->getTranslatable($wrapper);
+            $this->drupal->alter('entity_xliff_presave', $wrapper, $targetType);
             $translatable->saveWrapper($wrapper, $targetLang);
             $targetId = $wrapper->getIdentifier();
           }
@@ -363,6 +364,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         $targetType = $field->type();
         if ($targetId === FALSE) {
           $translatable->initializeTranslation();
+          $this->drupal->alter('entity_xliff_presave', $field, $targetType);
           $translatable->saveWrapper($field, $targetLang);
           $targetId = $field->getIdentifier();
         }

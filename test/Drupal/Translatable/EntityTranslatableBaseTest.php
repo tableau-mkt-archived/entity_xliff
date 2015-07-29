@@ -522,6 +522,11 @@ namespace EntityXliff\Drupal\Tests\Translatable {
         ->willReturn($expectedType);
       $observerWrapper->{$givenField} = $this->getMock('\EntityMetadataWrapper');
 
+      $observerHandler = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('alter'));
+      $observerHandler->expects($this->once())
+        ->method('alter')
+        ->with($this->equalTo('entity_xliff_presave'), $this->equalTo($observerWrapper), $this->equalto($expectedType));
+
       $observerFieldHandler = $this->getMock('EntityXliff\Drupal\Interfaces\FieldHandlerInterface');
       $observerFieldHandler->expects($this->once())
         ->method('setValue')
@@ -544,7 +549,7 @@ namespace EntityXliff\Drupal\Tests\Translatable {
         ->with($this->equalTo($observerWrapper))
         ->willReturn($observerTranslatable);
 
-      $translatable = new EntityTranslatableMockForEntitySetNestedValue($mockEntity, NULL, $observerFactory, $observerMediator);
+      $translatable = new EntityTranslatableMockForEntitySetNestedValue($mockEntity, $observerHandler, $observerFactory, $observerMediator);
 
       $this->assertTrue($translatable->entitySetNestedValue($observerWrapper, $givenParents, $givenValue, $givenTargetLang));
       $needsSave = $translatable->getEntitiesNeedSave();
@@ -581,6 +586,11 @@ namespace EntityXliff\Drupal\Tests\Translatable {
         ->method('set')
         ->with($this->equalTo($expectedIdentifier));
 
+      $observerHandler = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('alter'));
+      $observerHandler->expects($this->once())
+        ->method('alter')
+        ->with($this->equalTo('entity_xliff_presave'), $this->equalTo($observerWrapper->{$givenBaseField}), $this->equalto($expectedType));
+
       $observerTranslatable = $this->getMock('EntityXliff\Drupal\Interfaces\EntityTranslatableInterface');
       $observerTranslatable->expects($this->once())
         ->method('saveWrapper')
@@ -596,7 +606,7 @@ namespace EntityXliff\Drupal\Tests\Translatable {
         ->with($this->equalTo($observerWrapper->{$givenBaseField}))
         ->willReturn($observerTranslatable);
 
-      $translatable = new EntityTranslatableMockForEntitySetNestedValue($mockEntity, NULL, $observerFactory);
+      $translatable = new EntityTranslatableMockForEntitySetNestedValue($mockEntity, $observerHandler, $observerFactory);
       $translatable->setEntitiesNeedSave(array($expectedKey => $observerWrapper->{$givenBaseField}));
 
       $translatable->entitySetNestedValue($observerWrapper, $givenParents, $givenValue, $givenTargetLang);
