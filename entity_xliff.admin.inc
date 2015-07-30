@@ -6,8 +6,6 @@
  */
 
 
-use EggsCereal\Serializer;
-
 /**
  * Page callback (as a form) which provides an extremely basic UI around
  * exporting and importing entities via XLIFF. The UI should never, ever be
@@ -100,7 +98,7 @@ function entity_xliff_actions_submit($form, &$form_state) {
     $entity = $form_state['build_info']['args'][1];
     $wrapper = entity_metadata_wrapper($type, $entity);
     $translatable = entity_xliff_get_translatable($wrapper);
-    $serializer = new Serializer();
+    $serializer = entity_xliff_get_serializer('en');
 
     foreach ($form_state['storage']['import'] as $langcode => $file) {
       $xliff = file_get_contents($file->uri);

@@ -5,6 +5,7 @@
  * Module hooks and functions for the Entity XLIFF module.
  */
 
+use EggsCereal\Serializer;
 use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 
 /**
@@ -100,6 +101,27 @@ function entity_xliff_entity_info_alter(&$entityInfo) {
  */
 function entity_xliff_get_translatable($wrapper) {
   return EntityTranslatableFactory::getInstance()->getTranslatable($wrapper);
+}
+
+/**
+ * Gets an EggsCereal\Serializer instance, set up to serialize and unserialize
+ * data with the provided source language.
+ *
+ * @param string $sourceLanguage
+ *   Language code representing the source language for documents to be either
+ *   serialized or validated during unserialization.
+ *
+ * @return Serializer
+ *   A configured instance of an XLIFF serializer.
+ */
+function entity_xliff_get_serializer($sourceLanguage) {
+  $serializer = new Serializer($sourceLanguage);
+  if (module_exists('psr3_watchdog')) {
+    composer_manager_register_autoloader();
+    $logger = new Psr3Watchdog();
+    $serializer->setLogger($logger);
+  }
+  return $serializer;
 }
 
 /**
