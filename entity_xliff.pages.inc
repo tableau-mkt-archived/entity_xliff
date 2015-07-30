@@ -5,7 +5,6 @@
  * Functions that handle UI-based use-cases...
  */
 
-use EggsCereal\Serializer;
 
 /**
  * @see drupal_deliver_html_page()
@@ -42,7 +41,7 @@ function entity_xliff_deliver_xlf($page_callback_result) {
  *   serialized to XLIFF, the MENU_NOT_FOUND constant will be returned.
  */
 function entity_xliff_to_xlf($type, $entity) {
-  $serializer = new Serializer();
+  $serializer = entity_xliff_get_serializer('en');
   $wrapper = entity_metadata_wrapper($type, $entity);
   $targetlang = entity_xliff_get_target_lang();
 
