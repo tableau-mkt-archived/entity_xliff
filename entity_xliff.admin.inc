@@ -97,13 +97,10 @@ function entity_xliff_actions_submit($form, &$form_state) {
     $type = $form_state['build_info']['args'][0];
     $entity = $form_state['build_info']['args'][1];
     $wrapper = entity_metadata_wrapper($type, $entity);
-    $translatable = entity_xliff_get_translatable($wrapper);
 
     foreach ($form_state['storage']['import'] as $langcode => $file) {
-      $sourceLang = $translatable->getSourceLanguage();
-      $serializer = entity_xliff_get_serializer($sourceLang);
       $xliff = file_get_contents($file->uri);
-      $data = $serializer->unserialize($translatable, $langcode, $xliff);
+      $data = entity_xliff_set_xliff($wrapper, $langcode, $xliff);
 
       // If no data was returned, the import was invalid.
       if ($data === array()) {
