@@ -39,7 +39,7 @@ Feature: Entity Field Translation of User Entities
     And I click "Joe User"
     Then I should see the link "English link title"
     And I click "XLIFF"
-    When I attach a "fr" translation of this user
+    When I attach a "fr" translation of this "English" user
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View"

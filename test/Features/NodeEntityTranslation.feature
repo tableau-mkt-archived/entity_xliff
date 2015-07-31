@@ -36,7 +36,7 @@ Feature: Entity Field Translation of Nodes
     And follow "English article title"
     And I click "XLIFF"
     Given this "node" has an image attached with alt text "Image English alt text"
-    When I attach a "fr" translation of this node
+    When I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View"

@@ -32,9 +32,9 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
-   * @When I attach a :langcode translation of this :entity
+   * @When I attach a(n) :targetlang translation of this :sourcelang :entity
    */
-  public function iAttachATranslationOfThisEntity($langcode, $entity) {
+  public function iAttachATranslationOfThisEntity($targetLang, $sourceLang, $entity) {
     $baseUrl = $this->getMinkParameter('base_url');
     $path = $this->getMinkParameter('files_path');
     $session = $this->getSession();
@@ -43,14 +43,14 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
 
     if (preg_match('/' . preg_quote($pathPart, '/') . '\/(\d+)/', $url, $matches)) {
       $id = $matches[1];
-      $randomFile = mt_rand(0, 10000) . '-' . $langcode . '.xlf';
+      $randomFile = mt_rand(0, 10000) . '-' . $targetLang . '.xlf';
 
       // Load the XLIFF file for this node.
-      $this->getSession()->visit($baseUrl . "/$pathPart/$id/as.xlf?targetLang=$langcode");
+      $this->getSession()->visit($baseUrl . "/$pathPart/$id/as.xlf?targetLang=$targetLang");
       $xliff = $session->getPage()->getContent();
 
       // "Translate" the file.
-      $translation = str_replace('English', $langcode, $xliff);
+      $translation = str_replace($sourceLang, $targetLang, $xliff);
       $fullPath = $path . DIRECTORY_SEPARATOR . $randomFile;
 
       // Write the file to the configured path.
@@ -58,7 +58,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
         // Go back and attach the file to the expected import field.
         $session->visit($baseUrl . "/$pathPart/$id/xliff");
         $page = $session->getPage();
-        $importFileField = $page->find('css', 'input[name="files[import-' . $langcode . ']"]');
+        $importFileField = $page->find('css', 'input[name="files[import-' . $targetLang . ']"]');
         $importFileField->attachFile($fullPath);
       }
       else {

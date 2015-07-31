@@ -28,7 +28,7 @@ Feature: Entity Field Translation of Taxonomy Term Entities
 
   Scenario: Import XLIFF through portal
     When  I click "XLIFF"
-    And I attach a "fr" translation of this taxonomy_term
+    And I attach a "fr" translation of this "English" taxonomy_term
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View"

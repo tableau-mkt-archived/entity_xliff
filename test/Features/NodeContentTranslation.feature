@@ -29,7 +29,7 @@ Feature: Content Translation of Node and Field Collection Entities
     When I am on the homepage
     And follow "English page title"
     And I click "XLIFF"
-    When I attach a "fr" translation of this node
+    When I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View"
@@ -40,7 +40,7 @@ Feature: Content Translation of Node and Field Collection Entities
   Scenario: Import complex XLIFF through portal
     Given I am viewing a 3 complex "page" content with the title "Complex English page title"
     When I click "XLIFF"
-    And I attach a "fr" translation of this node
+    And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View"

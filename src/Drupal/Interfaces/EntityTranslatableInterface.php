@@ -13,6 +13,14 @@ use EggsCereal\Interfaces\TranslatableInterface;
 interface EntityTranslatableInterface extends TranslatableInterface {
 
   /**
+   * Returns the language of the wrapped entity, in effect representing the
+   * "source" language for any XLIFF generated or being processed.
+   *
+   * @return string
+   */
+  public function getSourceLanguage();
+
+  /**
    * Returns the target entity used by TranslatableInterface::setData() to set
    * and save translated data for this entity.
    *

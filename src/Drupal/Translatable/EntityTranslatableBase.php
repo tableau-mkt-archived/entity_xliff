@@ -117,6 +117,17 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   /**
    * {@inheritdoc}
    */
+  public function getSourceLanguage() {
+    $language = $this->entity->language->value();
+    if ($language === DrupalHandler::LANGUAGE_NONE || empty($language)) {
+      $language = $this->drupal->languageDefault('language');
+    }
+    return $language;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getData() {
     $data = array();
     $fields = $this->getTranslatableFields();

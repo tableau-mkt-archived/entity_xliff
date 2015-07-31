@@ -24,21 +24,21 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
 
   /**
    * Tests that constructor will pull the translation set for the wrapped entity
-   * as expected, specifically in the case that the wrapped entity is English.
+   * as expected, specifically in the case that the wrapped entity represents an
+   * as-yet untranslated node.
    *
    * @test
    */
-  public function constructTranslatableFromEnglish() {
+  public function constructTranslatableAsYetUntranslated() {
     $expectedNid = 123;
 
-    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('getIdentifier'));
+    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('getIdentifier', 'raw'));
     $observerWrapper->expects($this->once())
       ->method('getIdentifier')
       ->willReturn((string) $expectedNid);
-    $observerWrapper->language = $this->getMock('\EntityMetadataWrapper', array('value'));
-    $observerWrapper->language->expects($this->once())
-      ->method('value')
-      ->willReturn('en');
+    $observerWrapper->expects($this->once())
+      ->method('raw')
+      ->willReturn((object) array());
 
     $observerDrupal = $this->getMockHandlerForConstructor($expectedNid);
 
@@ -52,21 +52,20 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
   /**
    * Tests that the constructor will pull the translation set from the wrapped
    * entity's translation source ID in the case that the wrapped entity is
-   * not English.
+   * already translated, and therefore already part of a translation set.
    *
    * @test
    */
-  public function constructTranslatableFromNonEnglish() {
+  public function constructTranslatableAlreadyTranslated() {
     $expectedNid = 123;
     $expectedRawNode = (object) array(
       'tnid' => $expectedNid,
     );
 
-    $observerWrapper = $this->getMock('\EntityDrupalWrapper');
-    $observerWrapper->language = $this->getMock('\EntityMetadataWrapper', array('value'));
-    $observerWrapper->language->expects($this->once())
-      ->method('value')
-      ->willReturn('de');
+    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('raw'));
+    $observerWrapper->expects($this->once())
+      ->method('raw')
+      ->willReturn($expectedRawNode);
 
     $observerDrupal = $this->getMockHandlerForConstructor($expectedNid);
 
@@ -240,6 +239,10 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $observerWrapper->expects($this->once())
       ->method('getIdentifier')
       ->willReturn((string) $expectedNid);
+    $observerWrapper->language = $this->getMock('\EntityMetadataWrapper', array('value'));
+    $observerWrapper->language->expects($this->once())
+      ->method('value')
+      ->willReturn('en');
 
     $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array(
       'nodeLoad',
@@ -315,7 +318,7 @@ class MockNodeTranslatable extends NodeTranslatable {
    * @param \EntityDrupalWrapper $wrapper
    * @param DrupalHandler $handler
    */
-  public function __construct(\EntityDrupalWrapper$wrapper = NULL, DrupalHandler$handler = NULL) {
+  public function __construct(\EntityDrupalWrapper $wrapper = NULL, DrupalHandler$handler = NULL) {
     $this->entity = $wrapper;
     $this->drupal = $handler;
   }

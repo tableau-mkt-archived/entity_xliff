@@ -122,6 +122,15 @@ class DrupalHandler {
   }
 
   /**
+   * Returns the default language used on the site
+   * @param string $property
+   * @return mixed
+   */
+  public function languageDefault($property = NULL) {
+    return language_default($property);
+  }
+
+  /**
    * Determines whether a given module exists.
    * @param string $module
    * @return bool
