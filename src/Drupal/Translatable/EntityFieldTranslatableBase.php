@@ -18,6 +18,16 @@ abstract class EntityFieldTranslatableBase extends EntityTranslatableBase {
   /**
    * {@inheritdoc}
    */
+  public function getSourceLanguage() {
+    $rawEntity = $this->entity->raw();
+    $type = $this->entity->type();
+    $handler = $this->drupal->entityTranslationGetHandler($type, $rawEntity);
+    return $handler->getLanguage();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getTranslatableFields() {
     $fields = array();
 
@@ -49,7 +59,7 @@ abstract class EntityFieldTranslatableBase extends EntityTranslatableBase {
   public function getTargetEntity($targetLanguage) {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
       $target = clone $this->entity;
-      $target->language->set('en');
+      $target->language->set($this->getSourceLanguage());
       $target->language($targetLanguage);
       $this->targetEntities[$targetLanguage] = $target;
     }
@@ -61,13 +71,14 @@ abstract class EntityFieldTranslatableBase extends EntityTranslatableBase {
    */
   public function initializeTranslation() {
     if ($this->entity->language->value() === DrupalHandler::LANGUAGE_NONE) {
-      $this->entity->language('en');
+      $sourceLanguage = $this->getSourceLanguage();
+      $this->entity->language($sourceLanguage);
       $rawEntity = $this->getRawEntity($this->entity);
       $type = $this->entity->type();
 
       // Initialize translation for this entity.
       $handler = $this->drupal->entityTranslationGetHandler($type, $rawEntity);
-      $handler->setOriginalLanguage('en');
+      $handler->setOriginalLanguage($sourceLanguage);
       $handler->initOriginalTranslation();
       $handler->saveTranslations();
 
@@ -95,7 +106,7 @@ abstract class EntityFieldTranslatableBase extends EntityTranslatableBase {
       'status' => TRUE,
       'language' => $targetLanguage,
       // @see EntityFieldTranslatableBase::initializeTranslation()
-      'source' => 'en',
+      'source' => $this->getSourceLanguage(),
     ));
     $handler->saveTranslations();
   }

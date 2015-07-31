@@ -115,9 +115,9 @@ function entity_xliff_get_translatable($wrapper) {
  *   A configured instance of an XLIFF serializer.
  */
 function entity_xliff_get_serializer($sourceLanguage) {
+  composer_manager_register_autoloader();
   $serializer = new Serializer($sourceLanguage);
   if (module_exists('psr3_watchdog')) {
-    composer_manager_register_autoloader();
     $logger = new Psr3Watchdog();
     $serializer->setLogger($logger);
   }

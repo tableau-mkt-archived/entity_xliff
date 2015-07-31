@@ -41,11 +41,12 @@ function entity_xliff_deliver_xlf($page_callback_result) {
  *   serialized to XLIFF, the MENU_NOT_FOUND constant will be returned.
  */
 function entity_xliff_to_xlf($type, $entity) {
-  $serializer = entity_xliff_get_serializer('en');
   $wrapper = entity_metadata_wrapper($type, $entity);
   $targetlang = entity_xliff_get_target_lang();
 
   if ($translatable = entity_xliff_get_translatable($wrapper)) {
+    $sourceLang = $translatable->getSourceLanguage();
+    $serializer = entity_xliff_get_serializer($sourceLang);
     entity_xliff_file_name(implode('-', array($type, $wrapper->getIdentifier(), $targetlang)) . '.xlf');
     return $serializer->serialize($translatable, $targetlang);
   }

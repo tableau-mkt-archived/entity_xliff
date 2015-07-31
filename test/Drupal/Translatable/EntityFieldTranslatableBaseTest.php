@@ -100,19 +100,20 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
    * @test
    */
   public function getTargetEntity() {
+    $sourceLanguage = 'fr';
     $targetLanguage = 'de';
-    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('language'));
+    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('language', 'raw', 'type'));
     $observerWrapper->language = $this->getMock('\EntityMetadataWrapper', array('set'));
 
     $observerWrapper->language->expects($this->once())
       ->method('set')
-      ->with($this->equalTo('en'));
+      ->with($this->equalTo($sourceLanguage));
 
     $observerWrapper->expects($this->once())
       ->method('language')
       ->with($this->equalTo($targetLanguage));
 
-    $translatable = $this->getTranslatableOrNotInstance(TRUE, $observerWrapper);
+    $translatable = $this->getTranslatableOrNotInstance(TRUE, $observerWrapper, NULL, NULL, NULL, $sourceLanguage);
     $translatable->getTargetEntity($targetLanguage);
 
     // Ensure that the result was saved to static cache.
@@ -155,6 +156,7 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
    * @test
    */
   public function initializeTranslation() {
+    $expectedSourceLanguage = 'fr';
     $expectedType = 'node';
     $expectedRawEntity = (object) array('nid' => 1234);
     $expectedHandlerEntity = (object) array('nid' => 1234, 'handled' => TRUE);
@@ -164,7 +166,7 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
     $observerWrapper->language = $this->getMock('\EntityMetadataWrapper', array('value'));
     $observerWrapper->expects($this->once())
       ->method('language')
-      ->with($this->equalTo('en'));
+      ->with($this->equalTo($expectedSourceLanguage));
     $observerWrapper->expects($this->once())
       ->method('type')
       ->willReturn($expectedType);
@@ -180,7 +182,7 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
     ));
     $observerTranslationHandler->expects($this->once())
       ->method('setOriginalLanguage')
-      ->with($this->equalTo('en'));
+      ->with($this->equalTo($expectedSourceLanguage));
     $observerTranslationHandler->expects($this->once())
       ->method('initOriginalTranslation');
     $observerTranslationHandler->expects($this->once())
@@ -211,8 +213,11 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
 
     $translatable = $this->getMockBuilder('EntityXliff\Drupal\Tests\Translatable\EntityFieldTranslatableBaseInstance')
       ->setConstructorArgs(array($observerWrapper, $observerDrupal, $mockFactory, $mockMediator))
-      ->setMethods(array('getRawEntity'))
+      ->setMethods(array('getRawEntity', 'getSourceLanguage'))
       ->getMock();
+    $translatable->expects($this->once())
+      ->method('getSourceLanguage')
+      ->willReturn($expectedSourceLanguage);
     $translatable->expects($this->once())
       ->method('getRawEntity')
       ->with($this->equalTo($observerWrapper))
@@ -229,6 +234,7 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
    * @test
    */
   public function saveWrapper() {
+    $expectedSourceLanguage = 'de';
     $expectedType = 'node';
     $expectedRawEntity = (object) array('nid' => 1234);
     $targetLanguage = 'de';
@@ -236,7 +242,7 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
       'translate' => 0,
       'status' => TRUE,
       'language' => $targetLanguage,
-      'source' => 'en',
+      'source' => $expectedSourceLanguage,
     );
 
     $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('type', 'save'));
@@ -278,8 +284,11 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
 
     $translatable = $this->getMockBuilder('EntityXliff\Drupal\Tests\Translatable\EntityFieldTranslatableBaseInstance')
       ->setConstructorArgs(array($mockWrapper, $observerDrupal, $mockFactory, $mockMediator))
-      ->setMethods(array('getRawEntity'))
+      ->setMethods(array('getRawEntity', 'getSourceLanguage'))
       ->getMock();
+    $translatable->expects($this->once())
+      ->method('getSourceLanguage')
+      ->willReturn($expectedSourceLanguage);
     $translatable->expects($this->once())
       ->method('getRawEntity')
       ->with($this->equalTo($observerWrapper))
@@ -321,19 +330,23 @@ class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
    *
    * @return \EntityXliff\Drupal\Interfaces\EntityTranslatableInterface
    */
-  protected function getTranslatableOrNotInstance($isTranslatable, $wrapper, $handler = NULL, $factory = NULL, $mediator = NULL) {
+  protected function getTranslatableOrNotInstance($isTranslatable, $wrapper, $handler = NULL, $factory = NULL, $mediator = NULL, $sourceLang = 'en') {
     $handler = $handler ?: $this->getMockHandler();
     $factory = $factory ?: $this->getMockFactory();
     $mediator = $mediator ?: $this->getMockMediator();
 
     $translatable = $this->getMockBuilder('EntityXliff\Drupal\Tests\Translatable\EntityFieldTranslatableBaseInstance')
       ->setConstructorArgs(array($wrapper, $handler, $factory, $mediator))
-      ->setMethods(array('isTranslatable'))
+      ->setMethods(array('isTranslatable', 'getSourceLanguage'))
       ->getMock();
 
     $translatable->expects($this->any())
       ->method('isTranslatable')
       ->willReturn($isTranslatable);
+
+    $translatable->expects($this->any())
+      ->method('getSourceLanguage')
+      ->willReturn($sourceLang);
 
     return $translatable;
   }

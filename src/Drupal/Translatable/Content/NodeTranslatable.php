@@ -34,11 +34,11 @@ class NodeTranslatable extends EntityTranslatableBase {
     parent::__construct($entityWrapper, $handler, $factory, $fieldMediator);
 
     $this->drupal->staticReset('translation_node_get_translations');
-    if ($entityWrapper->language->value() === 'en') {
+    $raw = $entityWrapper->raw();
+    if (!isset($raw->tnid) || empty($raw->tnid)) {
       $this->tset = $this->nodeGetTranslations((int) $entityWrapper->getIdentifier());
     }
     else {
-      $raw = $this->getRawEntity($entityWrapper);
       $this->tset = $this->nodeGetTranslations((int) $raw->tnid);
     }
   }
@@ -102,7 +102,7 @@ class NodeTranslatable extends EntityTranslatableBase {
     $source = $this->drupal->nodeLoad($nid, NULL, TRUE);
     if ($source->language === DrupalHandler::LANGUAGE_NONE || empty($source->tnid)) {
       $source->tnid = $nid;
-      $source->language = 'en';
+      $source->language = $this->getSourceLanguage();
       $this->drupal->nodeSave($source);
       $this->entity = $this->drupal->entityMetadataWrapper('node', $source);
       $this->drupal->staticReset('translation_node_get_translations');
