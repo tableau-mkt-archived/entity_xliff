@@ -44,11 +44,9 @@ function entity_xliff_to_xlf($type, $entity) {
   $wrapper = entity_metadata_wrapper($type, $entity);
   $targetlang = entity_xliff_get_target_lang();
 
-  if ($translatable = entity_xliff_get_translatable($wrapper)) {
-    $sourceLang = $translatable->getSourceLanguage();
-    $serializer = entity_xliff_get_serializer($sourceLang);
+  if ($xliff = entity_xliff_get_xliff($wrapper, $targetlang)) {
     entity_xliff_file_name(implode('-', array($type, $wrapper->getIdentifier(), $targetlang)) . '.xlf');
-    return $serializer->serialize($translatable, $targetlang);
+    return $xliff;
   }
   else {
     return MENU_NOT_FOUND;

@@ -8,6 +8,69 @@
 use EggsCereal\Serializer;
 use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 
+
+/**
+ * Takes an Entity API wrapped entity and returns XLIFF XML data that represents
+ * it. This data can be used by localization software, a TMS, or a text editor
+ * to edit translations of this entity.
+ *
+ * @param \EntityDrupalWrapper $wrapper
+ *   The entity metadata wrapper for which you want an XLIFF.
+ *
+ * @param string $targetLanguage
+ *   Target language you want the XLIFF to represent. Should be the Drupal
+ *   language code.
+ *
+ * @return string
+ *   XLIFF XML data representing the given entity. If the given entity isn't
+ *   translatable, an empty string is returned.
+ */
+function entity_xliff_get_xliff($wrapper, $targetLanguage) {
+  $xliff = '';
+
+  if ($translatable = entity_xliff_get_translatable($wrapper)) {
+    $serializer = entity_xliff_get_serializer($translatable->getSourceLanguage());
+    $xliff = $serializer->serialize($translatable, $targetLanguage);
+    drupal_alter('entity_xliff_get_xliff', $xliff, $wrapper, $targetLanguage);
+  }
+
+  return $xliff;
+}
+
+/**
+ * Takes XLIFF data representing an entity and creates the translation that it
+ * represents.
+ *
+ * @param \EntityDrupalWrapper $wrapper
+ *   The entity metadata wrapper of the entity for whose translation you're
+ *   importing.
+ *
+ * @param string $targetLanguage
+ *   Target language the XLIFF represents. Should be a Drupal language code.
+ *
+ * @param string $xliff
+ *   A string of the XLIFF XML.
+ *
+ * @param bool $save
+ *   (Optional) Whether or not to actually set and save the underlying data to
+ *   the database. Defaults to TRUE.
+ *
+ * @return array
+ *   An associative array representing the translation data. If the returned
+ *   array is empty, it means the XLIFF unserialization process failed.
+ */
+function entity_xliff_set_xliff($wrapper, $targetLanguage, $xliff, $save = TRUE) {
+  $data = array();
+
+  if ($translatable = entity_xliff_get_translatable($wrapper)) {
+    $serializer = entity_xliff_get_serializer($translatable->getSourceLanguage());
+    drupal_alter('entity_xliff_set_xliff', $xliff, $wrapper, $targetLanguage);
+    $data = $serializer->unserialize($translatable, $targetLanguage, $xliff, $save);
+  }
+
+  return $data;
+}
+
 /**
  * Implements hook_menu().
  */

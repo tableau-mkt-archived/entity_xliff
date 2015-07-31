@@ -22,7 +22,8 @@ abstract class EntityFieldTranslatableBase extends EntityTranslatableBase {
     $rawEntity = $this->entity->raw();
     $type = $this->entity->type();
     $handler = $this->drupal->entityTranslationGetHandler($type, $rawEntity);
-    return $handler->getLanguage();
+    $language = $handler->getLanguage();
+    return $language;
   }
 
   /**
