@@ -30,7 +30,7 @@ Feature: Entity Field Translation of Comment Entities
   Scenario: Import XLIFF through portal
     When I click "delete"
     And I click "XLIFF"
-    When I attach a "fr" translation of this comment
+    When I attach a "fr" translation of this "English" comment
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View"
