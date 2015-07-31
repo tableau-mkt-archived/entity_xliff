@@ -45,6 +45,47 @@ namespace EntityXliff\Drupal\Tests\Translatable {
     }
 
     /**
+     * Tests that EntityTranslatableBase::getSourceLanguage() returns the lang
+     * code of the wrapped entity, as expected.
+     *
+     * @test
+     */
+    public function getSourceLanguageReal() {
+      $expectedLanguage = 'fr';
+
+      $observerWrapper = $this->getMock('\EntityDrupalWrapper');
+      $observerWrapper->language = $this->getMock('\EntityMetadataWrapper', array('value'));
+      $observerWrapper->language->expects($this->once())
+        ->method('value')
+        ->willReturn($expectedLanguage);
+
+      $translatable = $this->getTranslatableOrNotInstance(TRUE, $observerWrapper);
+      $this->assertSame($expectedLanguage, $translatable->getSourceLanguage());
+    }
+
+    /**
+     * @test
+     */
+    public function getSourceLanguageNeutral() {
+      $expectedLanguage = 'en';
+
+      $observerDrupal = $this->getMockHandler();
+      $observerDrupal->expects($this->once())
+        ->method('languageDefault')
+        ->with($this->equalTo('language'))
+        ->willReturn($expectedLanguage);
+
+      $observerWrapper = $this->getMock('\EntityDrupalWrapper');
+      $observerWrapper->language = $this->getMock('\EntityMetadataWrapper', array('value'));
+      $observerWrapper->language->expects($this->once())
+        ->method('value')
+        ->willReturn(DrupalHandler::LANGUAGE_NONE);
+
+      $translatable = $this->getTranslatableOrNotInstance(TRUE, $observerWrapper, $observerDrupal);
+      $this->assertSame($expectedLanguage, $translatable->getSourceLanguage());
+    }
+
+    /**
      * Ensures that EntityTranslatableBase::getData() returns translatable data
      * as expected.
      *

@@ -9,6 +9,40 @@ use EntityXliff\Drupal\Utils\DrupalHandler;
 class EntityFieldTranslatableBaseTest extends \PHPUnit_Framework_TestCase {
 
   /**
+   * Tests that EntityFieldTranslatableBase::getSourceLanguage() returns the
+   * language code of the wrapped entity as expected.
+   *
+   * @test
+   */
+  public function getSourceLanguage() {
+    $mockEntityType = 'node';
+    $mockEntityRaw = (object) array('nid' => 123);
+    $expectedLanguage = 'fr';
+
+    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('raw', 'type'));
+    $observerWrapper->expects($this->once())
+      ->method('raw')
+      ->willReturn($mockEntityRaw);
+    $observerWrapper->expects($this->once())
+      ->method('type')
+      ->willReturn($mockEntityType);
+
+    $observerHandler = $this->getMock('\EntityTranslationHandlerInterface', array('getLanguage'));
+    $observerHandler->expects($this->once())
+      ->method('getLanguage')
+      ->willReturn($expectedLanguage);
+
+    $observerDrupal = $this->getMockHandler();
+    $observerDrupal->expects($this->once())
+      ->method('entityTranslationGetHandler')
+      ->with($this->equalTo($mockEntityType), $this->equalTo($mockEntityRaw))
+      ->willReturn($observerHandler);
+
+    $translatable = new EntityFieldTranslatableBaseInstance($observerWrapper, $observerDrupal, NULL, $this->getMockMediator());
+    $this->assertSame($expectedLanguage, $translatable->getSourceLanguage());
+  }
+
+  /**
    * Tests that EntityFieldTranslatableBase::getTranslatableFields returns an
    * empty array when the wrapped entity is not translatable.
    *
