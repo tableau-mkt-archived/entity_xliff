@@ -6,8 +6,6 @@
  * Entity Xliff.
  */
 
-use EntityXliff\Drupal\Factories\EntityTranslatableFactory as Paradigm;
-
 if (!function_exists('field_collection_entity_xliff_translatable_fields_alter')) {
 
   /**
@@ -25,7 +23,7 @@ if (!function_exists('field_collection_entity_xliff_translatable_fields_alter'))
       $field = $fields[$n];
       // If this field is translatable and it's a field collection, move it to
       // the back of the translatable list.
-      if (isset($info[$field]) && strpos($info[$field]['type'], $needle)) {
+      if (isset($info[$field]['type']) && strpos($info[$field]['type'], $needle)) {
         unset($fields[$n]);
         $fields[] = $field;
       }
