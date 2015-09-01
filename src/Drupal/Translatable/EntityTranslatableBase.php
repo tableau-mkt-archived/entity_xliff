@@ -366,14 +366,29 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     else {
       // Ensure we're always setting data against the target entity.
       if (is_a($field, 'EntityDrupalWrapper')) {
-        if ($translatable = $this->translatableFactory->getTranslatable($field)) {
-          $field = $translatable->getTargetEntity($targetLang);
+        $targetId = $field->getIdentifier();
+        $targetType = $field->type();
+        $needsSaveKey = $targetType . ':' . $targetId;
+
+        // If the entity exists and we already have it in static cache, use it.
+        if ($targetId && isset($this->entitiesNeedSave[$needsSaveKey])) {
+          $field = $this->entitiesNeedSave[$needsSaveKey];
+        }
+        else {
+          // Otherwise, ensure we're using the translation.
+          if ($translatable = $this->translatableFactory->getTranslatable($field)) {
+            // If the ref's source language is the target language ignore.
+            if ($translatable->getSourceLanguage() !== $targetLang) {
+              // Otherwise, get the target entity.
+              $translatable->initializeTranslation();
+              $field = $translatable->getTargetEntity($targetLang);
+            }
+          }
         }
 
         // If this is a new entity, we need to initialize and save it first.
-        $targetId = $field->getIdentifier();
-        $targetType = $field->type();
         if ($targetId === FALSE) {
+          $translatable = $this->translatableFactory->getTranslatable($field);
           $translatable->initializeTranslation();
           $this->drupal->alter('entity_xliff_presave', $field, $targetType);
           $translatable->saveWrapper($field, $targetLang);
