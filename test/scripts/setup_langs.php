@@ -43,6 +43,7 @@ add_link_field('node', 'page');
 add_image_field();
 add_text_field_with_cardinality('node', 'page');
 add_field_collection_field();
+add_entity_reference_field('node', 'page');
 
 // Enable entity field translation for appropriate entities.
 $etypes = variable_get('entity_translation_entity_types', array());
@@ -290,6 +291,78 @@ function add_field_collection_field() {
 
   // Attach a long text field to this field collection type.
   add_long_text_field('field_collection_item', 'field_field_collection');
+}
+
+/**
+ * Adds an entity reference field to the given entity/bundle combination.
+ */
+function add_entity_reference_field($entity, $bundle) {
+  if (!$field = field_read_field('field_reference')) {
+    try {
+      $field_definition = array(
+        'field_name' => 'field_reference',
+        'type' => 'entityreference',
+        'cardinality' => '1',
+        'module' => 'entityreference',
+        'translatable' => FALSE,
+        'settings' => array(
+          'target_type' => 'node',
+          'handler' => 'base',
+          'handler_settings' => array(
+            'target_bundles' => array(
+              'article' => 'article',
+              'page' => 'page',
+            ),
+            'sort' => array(
+              'type' => 'node',
+            )
+          ),
+          'entity_translation_sync' => FALSE,
+        ),
+      );
+      $field = field_create_field($field_definition);
+    }
+    catch (FieldException $e) {
+      echo "Unable to create field collection field.\n";
+    }
+  }
+
+  $field_instance_definition = array(
+    'label' => 'Entity Reference',
+    'field_id' => $field['id'],
+    'required' => FALSE,
+    'description' => '',
+    'field_name' => 'field_reference',
+    'entity_type' => $entity,
+    'widget' => array(
+      'type' => 'options_select',
+      'module' => 'options',
+    ),
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'type' => 'entityreference_entity_view',
+        'settings' => array(
+          'view_mode' => 'default',
+          'links' => FALSE,
+        ),
+        'module' => 'entityreference',
+      )
+    ),
+  );
+
+  // Don't bother if the field already exists.
+  if (!field_read_instance($entity, 'field_reference', $bundle)) {
+    // Apply bundle-specific settings.
+    $field_instance_definition['bundle'] = $bundle;
+
+    try {
+      field_create_instance($field_instance_definition);
+    }
+    catch (FieldException $e) {
+      echo "Unable to create text field instance.\n";
+    }
+  }
 }
 
 /**
