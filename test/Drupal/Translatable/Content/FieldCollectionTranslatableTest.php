@@ -2,6 +2,7 @@
 
 namespace EntityXliff\Drupal\Tests\Translatable\Content {
 
+  use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
   use EntityXliff\Drupal\Translatable\Content\FieldCollectionTranslatable;
   use EntityXliff\Drupal\Utils\DrupalHandler;
 
@@ -95,6 +96,122 @@ namespace EntityXliff\Drupal\Tests\Translatable\Content {
       // user should be remain as it was before the method call.
       $this->assertEquals($expectedHostEntity, $returnedHostEntity);
       $this->assertEquals($untouchedUser, $GLOBALS['user']);
+    }
+
+    /**
+     * Tests that the source language is pulled from the host entity and its
+     * associated translatable.
+     *
+     * @test
+     */
+    public function getSourceLanguageFromHost() {
+      $expectedLanguage = 'en';
+      $expectedHostEntity = 'Host entity value pulled from the field collection';
+      $expectedHostEntityType = 'node';
+      $expectedHostWrapper = $this->getMock('\EntityDrupalWrapper');
+
+      // Ensure we pull the host entity type from the field collection.
+      $observerFieldCollection = $this->getMock('\FieldCollectionItemEntity', array('hostEntityType'));
+      $observerFieldCollection->expects($this->once())
+        ->method('hostEntityType')
+        ->willReturn($expectedHostEntityType);
+
+      $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('value'));
+      $observerWrapper->expects($this->atLeastOnce())
+        ->method('value')
+        ->willReturn($observerFieldCollection);
+
+      // Ensure we wrap the host entity in a metadata wrapper.
+      $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler');
+      $observerDrupal->expects($this->once())
+        ->method('entityMetadataWrapper')
+        ->with($this->equalTo($expectedHostEntityType), $this->equalTo($expectedHostEntity))
+        ->willReturn($expectedHostWrapper);
+
+      // Ensure the source language is returned from the host entity.
+      $observerTranslatable = $this->getMockBuilder('EntityXliff\Drupal\Translatable\EntityTranslatableBase')
+        ->disableOriginalConstructor()
+        ->getMock();
+      $observerTranslatable->expects($this->once())
+        ->method('getSourceLanguage')
+        ->willReturn($expectedLanguage);
+
+      // Ensure "getTranslatable" is called on with the expected host wrapper.
+      $observerFactory = $this->getMockBuilder('EntityXliff\Drupal\Factories\EntityTranslatableFactory')
+        ->disableOriginalConstructor()
+        ->getMock();
+      $observerFactory->expects($this->once())
+        ->method('getTranslatable')
+        ->with($expectedHostWrapper)
+        ->willReturn($observerTranslatable);
+
+      // Instantiate a field collection translatable and set the host entity.
+      $translatable = new MockFieldCollectionTranslatableForSourceLangTest($observerWrapper, $observerDrupal, $observerFactory);
+      $translatable->setExpectedHost($expectedHostEntity);
+
+      // Ensure the returned language is the expected language.
+      $this->assertEquals($expectedLanguage, $translatable->getSourceLanguage());
+    }
+
+    /**
+     * Tests that the source language is pulled from the site default when the
+     * host entity is language neutral.
+     *
+     * @test
+     */
+    public function getSourceLanguageWhenHostIsLanguageNeutral() {
+      $givenLanguage = DrupalHandler::LANGUAGE_NONE;
+      $expectedLanguage = 'en';
+      $expectedHostEntity = 'Host entity value pulled from the field collection';
+      $expectedHostEntityType = 'node';
+      $expectedHostWrapper = $this->getMock('\EntityDrupalWrapper');
+
+      // Ensure we pull the host entity type from the field collection.
+      $observerFieldCollection = $this->getMock('\FieldCollectionItemEntity', array('hostEntityType'));
+      $observerFieldCollection->expects($this->once())
+        ->method('hostEntityType')
+        ->willReturn($expectedHostEntityType);
+
+      $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('value'));
+      $observerWrapper->expects($this->atLeastOnce())
+        ->method('value')
+        ->willReturn($observerFieldCollection);
+
+      // Ensure we wrap the host entity in a metadata wrapper.
+      $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler');
+      $observerDrupal->expects($this->once())
+        ->method('entityMetadataWrapper')
+        ->with($this->equalTo($expectedHostEntityType), $this->equalTo($expectedHostEntity))
+        ->willReturn($expectedHostWrapper);
+      // Ensures the default language is pulled from Drupal.
+      $observerDrupal->expects($this->once())
+        ->method('languageDefault')
+        ->with('language')
+        ->willReturn($expectedLanguage);
+
+      // Ensure the source language is returned from the host entity.
+      $observerTranslatable = $this->getMockBuilder('EntityXliff\Drupal\Translatable\EntityTranslatableBase')
+        ->disableOriginalConstructor()
+        ->getMock();
+      $observerTranslatable->expects($this->once())
+        ->method('getSourceLanguage')
+        ->willReturn($givenLanguage);
+
+      // Ensure "getTranslatable" is called on with the expected host wrapper.
+      $observerFactory = $this->getMockBuilder('EntityXliff\Drupal\Factories\EntityTranslatableFactory')
+        ->disableOriginalConstructor()
+        ->getMock();
+      $observerFactory->expects($this->once())
+        ->method('getTranslatable')
+        ->with($expectedHostWrapper)
+        ->willReturn($observerTranslatable);
+
+      // Instantiate a field collection translatable and set the host entity.
+      $translatable = new MockFieldCollectionTranslatableForSourceLangTest($observerWrapper, $observerDrupal, $observerFactory);
+      $translatable->setExpectedHost($expectedHostEntity);
+
+      // Ensure the returned language is the expected language.
+      $this->assertEquals($expectedLanguage, $translatable->getSourceLanguage());
     }
 
     /**
@@ -308,6 +425,40 @@ namespace EntityXliff\Drupal\Tests\Translatable\Content {
      */
     public function setTargetEntities(array $targetEntities) {
       $this->targetEntities = $targetEntities;
+    }
+
+  }
+
+  /**
+   * Class MockFieldCollectionTranslatableForSourceLangTest
+   * @package EntityXliff\Drupal\Tests\Translatable\Content
+   *
+   * Extension of the FieldCollectionTranslatable class used to test the source
+   * language getter.
+   */
+  class MockFieldCollectionTranslatableForSourceLangTest extends FieldCollectionTranslatable {
+
+    protected $expectedHost;
+
+    /**
+     * Overrides the parent constructor to just perform injection.
+     *
+     * @param \EntityDrupalWrapper $wrapper
+     * @param DrupalHandler $handler
+     */
+    public function __construct(\EntityDrupalWrapper $wrapper = NULL, DrupalHandler $handler = NULL, EntityTranslatableFactory $factory = NULL) {
+      $this->entity = $wrapper;
+      $this->drupal = $handler;
+      $this->translatableFactory = $factory;
+    }
+
+    public function setExpectedHost($expectedHost) {
+      $this->expectedHost = $expectedHost;
+    }
+
+    public function getHostEntity(\FieldCollectionItemEntity $fieldCollection) {
+      $this->gotHostEntity = $fieldCollection;
+      return $this->expectedHost;
     }
 
   }

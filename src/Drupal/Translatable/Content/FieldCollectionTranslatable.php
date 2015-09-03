@@ -18,25 +18,32 @@ use EntityXliff\Drupal\Utils\DrupalHandler;
 class FieldCollectionTranslatable extends EntityTranslatableBase {
 
   /**
+   * Static cached value of the source language for this field collection. It's
+   * stored this way due to the expense associated with determining a host's
+   * source language.
+   *
+   * @var string
+   */
+  protected $sourceLanguage = '';
+
+  /**
    * {@inheritdoc}
    */
   public function getSourceLanguage() {
-    static $language = FALSE;
-
     // Load the source language once from the host entity.
-    if ($language === FALSE) {
+    if (empty($this->sourceLanguage)) {
       $hostEntity = $this->getHostEntity($this->entity->value());
       $hostEntityType = $this->entity->value()->hostEntityType();
-      $hostWrapper = entity_metadata_wrapper($hostEntityType, $hostEntity);
+      $hostWrapper = $this->drupal->entityMetadataWrapper($hostEntityType, $hostEntity);
       $translatable = $this->translatableFactory->getTranslatable($hostWrapper);
-      $language = $translatable->getSourceLanguage();
+      $this->sourceLanguage = $translatable->getSourceLanguage();
     }
 
-    if ($language === DrupalHandler::LANGUAGE_NONE || empty($language)) {
-      $language = $this->drupal->languageDefault('language');
+    if ($this->sourceLanguage === DrupalHandler::LANGUAGE_NONE || empty($this->sourceLanguage)) {
+      $this->sourceLanguage = $this->drupal->languageDefault('language');
     }
 
-    return $language;
+    return $this->sourceLanguage;
   }
 
   /**
