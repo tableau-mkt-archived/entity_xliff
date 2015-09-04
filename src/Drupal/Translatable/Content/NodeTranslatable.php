@@ -76,6 +76,7 @@ class NodeTranslatable extends EntityTranslatableBase {
       }
       // Otherwise, "clone" the original and mark it as new.
       else {
+        $this->initializeTranslation();
         $target = $this->getRawEntity($this->entity);
         $target->translation_source = clone $target;
 
@@ -106,6 +107,7 @@ class NodeTranslatable extends EntityTranslatableBase {
       $this->drupal->nodeSave($source);
       $this->entity = $this->drupal->entityMetadataWrapper('node', $source);
       $this->drupal->staticReset('translation_node_get_translations');
+      $this->tset = $this->nodeGetTranslations((int) $source->tnid);
     }
   }
 

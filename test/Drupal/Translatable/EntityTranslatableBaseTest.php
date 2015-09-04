@@ -642,7 +642,7 @@ namespace EntityXliff\Drupal\Tests\Translatable {
         ->willReturn($observerWrapper->{$givenBaseField});
 
       $observerFactory = $this->getMockFactory();
-      $observerFactory->expects($this->once())
+      $observerFactory->expects($this->atLeastOnce())
         ->method('getTranslatable')
         ->with($this->equalTo($observerWrapper->{$givenBaseField}))
         ->willReturn($observerTranslatable);

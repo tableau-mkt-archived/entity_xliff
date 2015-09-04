@@ -196,15 +196,22 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $expectedEntity = 'expected entity wrapper';
 
     $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('getIdentifier'));
-    $observerWrapper->expects($this->once())
+    $observerWrapper->expects($this->any())
       ->method('getIdentifier')
       ->willReturn($targetNid);
 
-    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('entityMetadataWrapper'));
+    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('entityMetadataWrapper', 'nodeLoad'));
     $observerDrupal->expects($this->once())
       ->method('entityMetadataWrapper')
       ->with($this->equalTo('node'), $this->equalTo($expectedRawnode))
       ->willReturn($expectedEntity);
+    // Ensure translation initialization is triggered in this case.
+    $observerDrupal->expects($this->atLeastOnce())
+      ->method('nodeLoad')
+      ->willReturn((object) array(
+        'language' => 'fr',
+        'tnid' => 1,
+      ));
 
     $translatable = $this->getMockBuilder('EntityXliff\Drupal\Tests\Translatable\Content\MockNodeTranslatable')
       ->setMethods(array('getRawEntity'))
@@ -249,6 +256,9 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       'nodeSave',
       'entityMetadataWrapper',
       'staticReset',
+      'translationNodeGetTranslations',
+      'userLoad',
+      'saveSession',
       ));
     $observerDrupal->expects($this->once())
       ->method('nodeLoad')
@@ -263,6 +273,16 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $observerDrupal->expects($this->once())
       ->method('staticReset')
       ->with($this->equalTo('translation_node_get_translations'));
+    // Ensures translation initialization re-populates the internal tset prop.
+    $observerDrupal->expects($this->once())
+      ->method('translationNodeGetTranslations')
+      ->with($this->equalTo($willedNode->nid));
+    $observerDrupal->expects($this->once())
+      ->method('userLoad')
+      ->with($this->equalTo(1));
+    $observerDrupal->expects($this->exactly(2))
+      ->method('saveSession')
+      ->withConsecutive($this->equalTo(FALSE), $this->equalTo(TRUE));
 
     $translatable = new MockNodeTranslatable($observerWrapper, $observerDrupal);
     $translatable->initializeTranslation();

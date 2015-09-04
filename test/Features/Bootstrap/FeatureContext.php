@@ -117,6 +117,37 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
+   * @Given this :hostentity references the :title :entity
+   */
+  public function thisNodeReferencesTheNode($hostentity, $title, $entity) {
+    $session = $this->getSession();
+    $url = $session->getCurrentUrl();
+    $pathPart = $this->entityPathPartMap[$hostentity];
+
+    if (preg_match('/' . preg_quote($pathPart, '/') . '\/(\d+)/', $url, $matches)) {
+      $hostId = $matches[1];
+
+      try {
+        $efq = new EntityFieldQuery();
+        $efq->entityCondition('entity_type', $entity);
+        $efq->propertyCondition('title', $title);
+        $entities = $efq->execute();
+        $entityId = (int) key($entities[$entity]);
+
+        $host = entity_metadata_wrapper($hostentity, $hostId);
+        $host->field_reference->set($entityId);
+        $host->save();
+      }
+      catch (Exception $e) {
+        throw new Exception('Unable to relate ' . $title . ' to this ' . $hostentity . ' because ' . $e->getMessage());
+      }
+    }
+    else {
+      throw new Exception('Unable to determine what "this ' . $hostentity . '" is referring to.');
+    }
+  }
+
+  /**
    * @When I switch to the :langcode translation of this :entity
    */
   public function iSwitchToTheTranslationOfThisUser($langcode, $entity) {
