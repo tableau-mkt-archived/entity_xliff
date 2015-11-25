@@ -196,4 +196,57 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     $this->getSession()->visit($this->locatePath('/node/' . $node->nid));
   }
 
+  /**
+   * @Given I am viewing a :type content with paragraphs and the title :title
+   */
+  public function iAmViewingAParagraphEnabledNode($type, $title) {
+    // First, create a node.
+    $node = (object) array(
+      'title' => $title,
+      'type' => $type,
+      'uid' => 1,
+    );
+    $node = $this->getDriver()->createNode($node);
+
+    // Create and reference paragraphs.
+    $this->createParagraph('node', $node, 'bundle_1', array(
+      'field_long_text' => array(LANGUAGE_NONE => array(array(
+        'format' => 'plain_text',
+        'value' => $title . " paragraph 1",
+      ))),
+    ));
+    $paragraphHost = $this->createParagraph('node', $node, 'bundle_2');
+    $this->createParagraph('paragraph_item', $paragraphHost, 'bundle_1', array(
+      'field_long_text' => array(LANGUAGE_NONE => array(array(
+        'format' => 'plain_text',
+        'value' => $title . " paragraph 2",
+      ))),
+    ));
+
+    // Resave the original node.
+    node_save($node);
+    $this->nodes[] = $node;
+
+    // Set internal page on the node.
+    $this->getSession()->visit($this->locatePath('/node/' . $node->nid));
+  }
+
+  /**
+   * Instantiates and saves a Paragraph item and attaches it to the given host.
+   * @param string $hostType
+   * @param object $host
+   * @param string $bundle
+   * @param array $data
+   * @return \ParagraphsItemEntity
+   */
+  protected function createParagraph($hostType, $host, $bundle, $data = array()) {
+    $paragraph = entity_create('paragraphs_item', array('field_name' => 'field_paragraphs', 'bundle' => $bundle));
+    $paragraph->setHostEntity($hostType, $host);
+    foreach ($data as $field => $values) {
+      $paragraph->{$field} = $values;
+    }
+    $paragraph->save();
+    return $paragraph;
+  }
+
 }
