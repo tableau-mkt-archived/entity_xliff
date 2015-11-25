@@ -36,8 +36,8 @@ fi
 # Place this module into the sites/all/modules directory and enable it.
 rsync -aq "`pwd`" "`pwd`/$BUILD_DIR/drupal/sites/all/modules/entity_xliff" --exclude build
 pushd $BUILD_DIR/drupal
-  drush --yes dl composer-8.x-1.1 composer_manager link field_collection entityreference entity_translation
-  drush --yes en composer_manager translation link entity_translation field_collection entityreference
+  drush --yes dl composer-8.x-1.1 composer_manager link field_collection paragraphs entityreference entity_translation
+  drush --yes en composer_manager translation link entity_translation field_collection paragraphs_i18n entityreference
   drush cc drush
   drush --yes en entity_xliff
   drush cc all
@@ -46,6 +46,11 @@ popd
 # Patch field collection module.
 pushd $BUILD_DIR/drupal/sites/all/modules/field_collection
   curl https://www.drupal.org/files/issues/1937866-field_collection-metadata-setter-6.patch | patch -p1
+popd
+
+# Patch paragraphs module.
+pushd $BUILD_DIR/drupal/sites/all/modules/paragraphs
+  curl https://www.drupal.org/files/issues/paragraphs-metadata_wrapper_set_revision-2621866-3.patch | patch -p1
 popd
 
 # Patch entityreference module.
