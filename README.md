@@ -22,9 +22,14 @@ More information on [installing and using Composer Manager]() is available on
 GitHub.
 
 ## Gotchas
-If you use this module with Field Collection, you may need this patch to avoid
-issues where tabs may appear to multiply as you import XLIFFs:
-https://www.drupal.org/node/1937866
+
+__Field Collections__: If you use this module with Field Collection, you will
+need this patch to avoid issues where tabs may appear to multiply as you import
+XLIFFs: https://www.drupal.org/node/1937866
+
+__Paragraphs__: If you use this module with Paragraphs, you will need this patch
+to avoid issues where paragraphs items seem to disappear as you import XLIFFs:
+https://www.drupal.org/node/2621866
 
 ## Developing with this module
 @todo
