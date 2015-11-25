@@ -37,12 +37,19 @@ variable_set('language_negotiation_language_content', $negotiation);
 // Enable translation for the page content type.
 variable_set('language_content_type_page', TRANSLATION_ENABLED);
 
+// Set up Paragraphs bundles.
+paragraphs_bundle_save((object) array('bundle' => 'bundle_1', 'name' => 'Bundle 1', 'locked' => 1));
+paragraphs_bundle_save((object) array('bundle' => 'bundle_2', 'name' => 'Bundle 2', 'locked' => 1));
+add_long_text_field('paragraphs_item', 'bundle_1');
+add_paragraphs_field('paragraphs_item', 'bundle_2', TRUE);
+
 // Add relevant fields to the page content type:
 add_long_text_field('node', 'page');
 add_link_field('node', 'page');
 add_image_field();
 add_text_field_with_cardinality('node', 'page');
 add_field_collection_field();
+add_paragraphs_field('node', 'page');
 add_entity_reference_field('node', 'page');
 
 // Enable entity field translation for appropriate entities.
@@ -193,7 +200,7 @@ function add_image_field() {
 /**
  * Adds a text field with cardinality to the given entity/bundle.
  */
-function add_text_field_with_cardinality($entity, $bundle) {
+function add_text_field_with_cardinality($entity, $bundle, $required = FALSE) {
   if (!$field = field_read_field('field_text')) {
     try {
       $field_definition = array(
@@ -216,7 +223,7 @@ function add_text_field_with_cardinality($entity, $bundle) {
   $field_instance_definition = array(
     'label' => 'Text (With Cardinality)',
     'field_id' => $field['id'],
-    'required' => FALSE,
+    'required' => $required,
     'description' => '',
     'default_value' => NULL,
     'field_name' => 'field_text',
@@ -291,6 +298,71 @@ function add_field_collection_field() {
 
   // Attach a long text field to this field collection type.
   add_long_text_field('field_collection_item', 'field_field_collection');
+}
+
+/**
+ * Adds a paragraphs field to the given entity/bundle combo.
+ */
+function add_paragraphs_field($entity, $bundle, $required = FALSE) {
+  if (!$field = field_read_field('field_paragraphs')) {
+    try {
+      $field_definition = array(
+        'field_name' => 'field_paragraphs',
+        'type' => 'paragraphs',
+        'cardinality' => -1,
+        'module' => 'paragraphs',
+        'translatable' => FALSE,
+        'settings' => array(
+          'entity_translation_sync' => FALSE,
+        ),
+      );
+      $field = field_create_field($field_definition);
+    }
+    catch (FieldException $e) {
+      echo "Unable to create paragraphs field.\n";
+    }
+  }
+
+  $allowed_bundles = array('bundle_1' => 'bundle_1', 'bundle_2' => 'bundle_2');
+  $add_mode = 'button';
+  if ($required) {
+    $allowed_bundles['bundle_2'] = -1;
+    $add_mode = 'select';
+  }
+
+  $field_instance_definition = array(
+    'label' => 'Paragraphs',
+    'field_id' => $field['id'],
+    'required' => $required,
+    'description' => '',
+    'default_value' => NULL,
+    'field_name' => 'field_paragraphs',
+    'entity_type' => $entity,
+    'widget' => array(
+      'type' => 'paragraphs_embed',
+      'module' => 'paragraphs',
+    ),
+    'settings' => array(
+      'title' => 'Paragraph',
+      'title_multiple' => 'Paragraphs',
+      'default_edit_mode' => 'open',
+      'add_mode' => $add_mode,
+      'allowed_bundles' => $allowed_bundles,
+    ),
+  );
+
+  // Don't bother if the field already exists.
+  if (!field_read_instance($entity, 'field_paragraphs', $bundle)) {
+    // Apply bundle-specific settings.
+    $field_instance_definition['bundle'] = $bundle;
+
+    try {
+      field_create_instance($field_instance_definition);
+    }
+    catch (FieldException $e) {
+      echo "Unable to create paragraphs field instance.\n";
+    }
+  }
 }
 
 /**

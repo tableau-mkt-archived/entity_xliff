@@ -131,7 +131,7 @@ class EntityTranslatableFactory {
       return self::ENTITYFIELD;
     }
     // @todo How best to support field collection? Other similar entities?
-    elseif ($contentTranslationExists && (($type === 'node' && $this->drupal->translationSupportedType($bundle)) || $type === 'field_collection_item')) {
+    elseif ($contentTranslationExists && (($type === 'node' && $this->drupal->translationSupportedType($bundle)) || $type === 'field_collection_item' || $type === 'paragraphs_item')) {
       return self::CONTENT;
     }
     else {
