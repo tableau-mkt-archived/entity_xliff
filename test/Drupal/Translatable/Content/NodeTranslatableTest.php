@@ -187,12 +187,6 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       'nid' => $targetNid,
       'vid' => 456,
     );
-    $expectedRawnode = (object) array(
-      'translation_source' => clone $willedRawNode,
-      'is_new' => TRUE,
-      'tnid' => $targetNid,
-      'language' => $targetLang,
-    );
     $expectedEntity = 'expected entity wrapper';
 
     $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('getIdentifier'));
@@ -200,10 +194,10 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       ->method('getIdentifier')
       ->willReturn($targetNid);
 
-    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('entityMetadataWrapper', 'nodeLoad'));
+    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('entityMetadataWrapper', 'nodeLoad', 'translationNodePrepare', 'saveSession', 'userLoad'));
     $observerDrupal->expects($this->once())
       ->method('entityMetadataWrapper')
-      ->with($this->equalTo('node'), $this->equalTo($expectedRawnode))
+      ->with($this->equalTo('node'))
       ->willReturn($expectedEntity);
     // Ensure translation initialization is triggered in this case.
     $observerDrupal->expects($this->atLeastOnce())
@@ -212,6 +206,10 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
         'language' => 'fr',
         'tnid' => 1,
       ));
+    // Ensure node translation preparation occurs.
+    $observerDrupal->expects($this->once())
+      ->method('translationNodePrepare')
+      ->with($this->equalTo($willedRawNode));
 
     $translatable = $this->getMockBuilder('EntityXliff\Drupal\Tests\Translatable\Content\MockNodeTranslatable')
       ->setMethods(array('getRawEntity'))
