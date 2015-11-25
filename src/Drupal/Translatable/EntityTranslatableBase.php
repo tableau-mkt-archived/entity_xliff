@@ -377,12 +377,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         else {
           // Otherwise, ensure we're using the translation.
           if ($translatable = $this->translatableFactory->getTranslatable($field)) {
-            // If the ref's source language is the target language ignore.
-            if ($translatable->getSourceLanguage() !== $targetLang) {
-              // Otherwise, get the target entity.
-              $translatable->initializeTranslation();
-              $field = $translatable->getTargetEntity($targetLang);
-            }
+            $translatable->initializeTranslation();
+            $field = $translatable->getTargetEntity($targetLang);
           }
         }
 
