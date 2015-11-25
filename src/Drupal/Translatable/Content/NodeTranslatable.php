@@ -74,16 +74,13 @@ class NodeTranslatable extends EntityTranslatableBase {
         // cases where this node happens to reference a field collection...
         $target->revision = FALSE;
       }
-      // Otherwise, "clone" the original and mark it as new.
+      // Otherwise prepare the original for translation.
       else {
         $this->initializeTranslation();
         $target = $this->getRawEntity($this->entity);
-        $target->translation_source = clone $target;
-
         unset($target->nid, $target->vid);
         $target->is_new = TRUE;
-        $target->tnid = (int) $this->entity->getIdentifier();
-        $target->language = $targetLanguage;
+        $this->translationNodePrepare($target, $this->entity->getIdentifier(), $targetLanguage);
       }
 
       $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('node', $target);
@@ -128,6 +125,24 @@ class NodeTranslatable extends EntityTranslatableBase {
     $GLOBALS['user'] = $tempUser;
     $this->drupal->saveSession(TRUE);
     return $tset;
+  }
+
+  /**
+   * OO wrapper around translation_node_prepare().
+   * @param object $node
+   * @param int $sourceNid
+   * @param string $targetLang
+   */
+  protected function translationNodePrepare($node, $sourceNid, $targetLang) {
+    $tempUser = clone $GLOBALS['user'];
+    $this->drupal->saveSession(FALSE);
+    $GLOBALS['user'] = $this->drupal->userLoad(1);
+    $_GET['translation'] = $sourceNid;
+    $_GET['target'] = $targetLang;
+    $this->drupal->translationNodePrepare($node);
+    unset($_GET['translation'], $_GET['target']);
+    $GLOBALS['user'] = $tempUser;
+    $this->drupal->saveSession(TRUE);
   }
 
 }

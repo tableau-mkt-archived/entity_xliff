@@ -199,6 +199,14 @@ class DrupalHandler {
   }
 
   /**
+   * Prepares a node for translation (content translation paradigm).
+   * @param object $node
+   */
+  public function translationNodePrepare($node) {
+    translation_node_prepare($node);
+  }
+
+  /**
    * Returns whether the given content type has support for translations.
    * @param string $type
    * @return bool
