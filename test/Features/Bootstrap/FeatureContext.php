@@ -128,12 +128,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
       $hostId = $matches[1];
 
       try {
-        $efq = new EntityFieldQuery();
-        $efq->entityCondition('entity_type', $entity);
-        $efq->propertyCondition('title', $title);
-        $entities = $efq->execute();
-        $entityId = (int) key($entities[$entity]);
-
+        $entityId = $this->getEntityIdForTitle($entity, $title);
         $host = entity_metadata_wrapper($hostentity, $hostId);
         $host->field_reference->set($entityId);
         $host->save();
@@ -200,13 +195,19 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
    * @Given I am viewing a :type content with paragraphs and the title :title
    */
   public function iAmViewingAParagraphEnabledNode($type, $title) {
-    // First, create a node.
-    $node = (object) array(
-      'title' => $title,
-      'type' => $type,
-      'uid' => 1,
-    );
-    $node = $this->getDriver()->createNode($node);
+    // See if a node with this title already exists...
+    if ($nid = $this->getEntityIdForTitle('node', $title)) {
+      $node = node_load($nid);
+    }
+    else {
+      // If not, create one.
+      $node = (object) array(
+        'title' => $title,
+        'type' => $type,
+        'uid' => 1,
+      );
+      $node = $this->getDriver()->createNode($node);
+    }
 
     // Create and reference paragraphs.
     $this->createParagraph('node', $node, 'bundle_1', array(
@@ -249,4 +250,17 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     return $paragraph;
   }
 
+  /**
+   * Given an entity type and title, returns an entity ID.
+   * @param string $entityType
+   * @param string $title
+   * @return int
+   */
+  protected function getEntityIdForTitle($entityType, $title) {
+    $efq = new EntityFieldQuery();
+    $efq->entityCondition('entity_type', $entityType);
+    $efq->propertyCondition('title', $title);
+    $entities = $efq->execute();
+    return isset($entities[$entityType]) ? (int) key($entities[$entityType]) : 0;
+  }
 }
