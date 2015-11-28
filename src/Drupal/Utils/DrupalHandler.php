@@ -121,6 +121,14 @@ class DrupalHandler {
     _entity_xliff_load_module_incs();
   }
 
+  /**
+   * Prepares an entity for translation.
+   * @param string $entity_type
+   * @param object $entity
+   * @param string $langcode
+   * @param object $source_entity
+   * @param string $source_langcode
+   */
   public function fieldAttachPrepareTranslation($entity_type, $entity, $langcode, $source_entity, $source_langcode) {
     field_attach_prepare_translation($entity_type, $entity, $langcode, $source_entity, $source_langcode);
   }
