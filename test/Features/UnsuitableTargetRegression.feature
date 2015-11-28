@@ -25,6 +25,9 @@ Feature: Unsuitable Translation Target (Regression)
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
+    When I click "View"
+    And I click "Français"
+    Then I should see "French page title"
 
   Scenario: Referenced entity added after initial translation
     Given "page" content:
@@ -37,6 +40,9 @@ Feature: Unsuitable Translation Target (Regression)
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
+    When I click "View"
+    And I click "Français"
+    Then I should see "French page title"
 
   Scenario: Paragraphs added after initial translation
     Given I am viewing a "page" content with paragraphs and the title "English page title"
@@ -44,3 +50,6 @@ Feature: Unsuitable Translation Target (Regression)
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
+    When I click "View"
+    And I click "Français"
+    Then I should see "French page title"
