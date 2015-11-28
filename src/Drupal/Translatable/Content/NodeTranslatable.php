@@ -69,16 +69,10 @@ class NodeTranslatable extends EntityTranslatableBase {
       // If a translation already exists, use it!
       if (isset($this->tset[$targetLanguage]->nid)) {
         // Prepare a node as if it were a brand new translation.
-        $realTarget = $this->drupal->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
-        $target = $this->drupal->nodeLoad($realTarget->tnid);
-        $this->translationNodePrepare($target, $this->entity->getIdentifier(), $targetLanguage);
-
-        // But reset the prepared node to use the actual/existing nid/vid. This
-        // ensures any underlying content structure (embedded entities) matches
-        // the structure represented by the XLIFF import.
-        $target->is_new = FALSE;
-        $target->nid = $realTarget->nid;
-        $target->vid = $realTarget->vid;
+        $target = $this->drupal->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
+        $sourceNid = $target->tnid;
+        $source = $this->drupal->nodeLoad($sourceNid);
+        $this->drupal->fieldAttachPrepareTranslation('node', $target, $targetLanguage, $source, $source->language);
 
         // Do not mark this node as a new revision. This is necessary in
         // cases where this node happens to reference a field collection...

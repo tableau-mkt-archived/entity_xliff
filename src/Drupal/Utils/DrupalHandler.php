@@ -121,6 +121,10 @@ class DrupalHandler {
     _entity_xliff_load_module_incs();
   }
 
+  public function fieldAttachPrepareTranslation($entity_type, $entity, $langcode, $source_entity, $source_langcode) {
+    field_attach_prepare_translation($entity_type, $entity, $langcode, $source_entity, $source_langcode);
+  }
+
   /**
    * Returns the default language used on the site
    * @param string $property

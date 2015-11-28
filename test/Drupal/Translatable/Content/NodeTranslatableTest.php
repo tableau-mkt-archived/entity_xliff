@@ -150,7 +150,10 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
    */
   public function getTargetEntityTranslationExists() {
     $sourceNid = 122;
-    $sourceNode = (object) array('nid' => $sourceNid);
+    $sourceNode = (object) array(
+      'nid' => $sourceNid,
+      'language' => 'en',
+    );
     $targetLang = 'de';
     $targetNid = 123;
     $tset = array($targetLang => (object) array(
@@ -160,14 +163,18 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     ));
     $expectedNode = clone $tset[$targetLang];
     $expectedNode->revision = FALSE;
-    $expectedNode->is_new = FALSE;
-    unset($expectedNode->tnid); // Actually handled by translation_node_prepare().
     $expectedEntity = 'expected entity wrapper';
 
-    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('nodeLoad', 'entityMetadataWrapper', 'saveSession', 'userLoad', 'translationNodePrepare'));
+    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('nodeLoad', 'entityMetadataWrapper', 'saveSession', 'userLoad', 'fieldAttachPrepareTranslation'));
     $observerDrupal->expects($this->once())
-      ->method('translationNodePrepare')
-      ->with($this->equalTo($sourceNode));
+      ->method('fieldAttachPrepareTranslation')
+      ->with(
+        $this->equalTo('node'),
+        $this->equalTo($tset[$targetLang]),
+        $targetLang,
+        $this->equalTo($sourceNode),
+        $sourceNode->language
+      );
     $observerDrupal->expects($this->exactly(2))
       ->method('nodeLoad')
       ->withConsecutive(
