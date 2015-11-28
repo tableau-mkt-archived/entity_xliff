@@ -149,26 +149,50 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
    * @test
    */
   public function getTargetEntityTranslationExists() {
+    $sourceNid = 122;
+    $sourceNode = (object) array(
+      'nid' => $sourceNid,
+      'language' => 'en',
+    );
     $targetLang = 'de';
     $targetNid = 123;
     $tset = array($targetLang => (object) array(
       'nid' => $targetNid,
+      'tnid' => $sourceNid,
+      'vid' => 123,
     ));
     $expectedNode = clone $tset[$targetLang];
     $expectedNode->revision = FALSE;
     $expectedEntity = 'expected entity wrapper';
 
-    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('nodeLoad', 'entityMetadataWrapper'));
+    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('nodeLoad', 'entityMetadataWrapper', 'saveSession', 'userLoad', 'fieldAttachPrepareTranslation'));
     $observerDrupal->expects($this->once())
+      ->method('fieldAttachPrepareTranslation')
+      ->with(
+        $this->equalTo('node'),
+        $this->equalTo($tset[$targetLang]),
+        $targetLang,
+        $this->equalTo($sourceNode),
+        $sourceNode->language
+      );
+    $observerDrupal->expects($this->exactly(2))
       ->method('nodeLoad')
-      ->with($this->equalTo($targetNid), $this->equalTo(NULL), $this->equalTo(TRUE))
-      ->willReturn($tset[$targetLang]);
+      ->withConsecutive(
+        array($this->equalTo($targetNid), $this->equalTo(NULL), $this->equalTo(TRUE)),
+        array($this->equalTo($sourceNid))
+      )->will($this->onConsecutiveCalls($tset[$targetLang], $sourceNode));
+
     $observerDrupal->expects($this->once())
       ->method('entityMetadataWrapper')
       ->with($this->equalTo('node'), $this->equalTo($expectedNode))
       ->willReturn($expectedEntity);
 
-    $translatable = new MockNodeTranslatable(NULL, $observerDrupal);
+    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('getIdentifier'));
+    $observerWrapper->expects($this->any())
+      ->method('getIdentifier')
+      ->willReturn($targetNid);
+
+    $translatable = new MockNodeTranslatable($observerWrapper, $observerDrupal);
     $translatable->setTranslationSet($tset);
     $this->assertEquals($expectedEntity, $translatable->getTargetEntity($targetLang));
   }
