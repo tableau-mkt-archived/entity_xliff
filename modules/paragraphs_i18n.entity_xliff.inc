@@ -30,7 +30,7 @@ if (!function_exists('paragraphs_i18n_entity_xliff_translatable_fields_alter')) 
   /**
    * Implements hook_entity_xliff_translatable_fields_alter().
    *
-   * Ensures that pargraphs items fields always appear last in XLIFF exports.
+   * Ensures that paragraphs items fields always appear last in XLIFF exports.
    * This works around an issue where paragraphs items rely on host entity
    * translation initialization.
    */
