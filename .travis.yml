@@ -51,7 +51,7 @@ install:
   - composer install --prefer-dist
 
   # Install drush.
-  - if [ $BDD = 'true' ] ; then composer global require drush/drush:6.2.0 ; fi
+  - if [ $BDD = 'true' ] ; then composer global require drush/drush:6.x-dev ; fi
   - if [ $BDD = 'true' ] ; then export PATH="$HOME/.composer/vendor/bin:$TRAVIS_BUILD_DIR/vendor/bin:$PATH" ; fi
 
 before_script:
