@@ -207,7 +207,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   protected function addTranslatedDataRecursive($translation, array $key = array(), $targetLang) {
     if (isset($translation['#text'])) {
       $values = array(
-        '#translation' => $translation,
+        // Strip out all extraneous keys (like label) for data setting.
+        '#translation' => array('#text' => $translation['#text']),
       );
       $this->setItem($key, $values, $targetLang);
       return;
