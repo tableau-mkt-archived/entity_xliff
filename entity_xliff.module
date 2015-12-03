@@ -214,12 +214,32 @@ function _entity_xliff_load_module_incs() {
   if (!$loaded) {
     // This potentially runs before hook_init(), so register auto-loader now.
     composer_manager_register_autoloader();
-    foreach (array('translation', 'entity_translation', 'link', 'image', 'text', 'number', 'list', 'field_collection', 'auto_nodetitle', 'auto_entitylabel', 'paragraphs_i18n') as $entity) {
-      module_load_include('inc', 'entity_xliff', 'modules/' . $entity . '.entity_xliff');
+    foreach (_entity_xliff_modules_with_includes() as $module) {
+      module_load_include('inc', 'entity_xliff', 'modules/' . $module . '.entity_xliff');
     }
 
     $loaded = TRUE;
   }
+}
+
+/**
+ * An array of modules on behalf of which we provide hook implementations.
+ */
+function _entity_xliff_modules_with_includes() {
+  return array(
+    'translation',
+    'entity_translation',
+    'link',
+    'image',
+    'text',
+    'number',
+    'list',
+    'field_collection',
+    'auto_nodetitle',
+    'auto_entitylabel',
+    'paragraphs_i18n',
+    'workbench_moderation',
+  );
 }
 
 /**
