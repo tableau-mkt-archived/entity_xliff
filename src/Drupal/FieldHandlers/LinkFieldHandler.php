@@ -25,7 +25,7 @@ class LinkFieldHandler implements FieldHandlerInterface {
    */
   public function setValue(\EntityMetadataWrapper $wrapper, $value) {
     $newValue = $wrapper->value();
-    $newValue['title'] = $value;
+    $newValue['title'] = html_entity_decode($value);
     $wrapper->set($newValue);
   }
 
