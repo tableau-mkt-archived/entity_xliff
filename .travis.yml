@@ -37,7 +37,7 @@ matrix:
       env: BDD=true
     - php: "5.6"
       env: BDD=true
-    - php: "nightly"
+    - php: "7.0"
       env: BDD=false
     - php: "hhvm"
       env: BDD=false
