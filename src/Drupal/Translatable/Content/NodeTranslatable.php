@@ -68,13 +68,28 @@ class NodeTranslatable extends EntityTranslatableBase {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
       // If a translation already exists, use it!
       if (isset($this->tset[$targetLanguage]->nid)) {
-        // Load the target, but run it through field translation preparation as
-        // if it were a new piece of content. This ensures all embedded entities
-        // have some structure for XLIFF content to be set against.
-        $target = $this->drupal->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
-        $sourceNid = $target->tnid;
-        $source = $this->drupal->nodeLoad($sourceNid);
+        // Although a target already exists, we load the source and run it
+        // through field translation preparation as if one didn't exist already.
+        // This ensures all embedded entities have some structure for XLIFF
+        // content to be set against.
+        $actual_target = $this->drupal->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
+        $sourceNid = $actual_target->tnid;
+        $target = $this->drupal->nodeLoad($sourceNid);
+        $source = clone $target;
+        unset($target->nid, $target->vid, $target->tnid);
+
+        // Set properties as though translation_node_prepare set them.
+        $target->language = $targetLanguage;
+        $target->translation_source = $source;
+        $target->title = $source->title;
+
+        // Run through field translation preparation, but be sure to reset the
+        // actual nid/vid/tnid values. This ensures that we never mistakenly
+        // set translations on entities embedded on the source translation.
         $this->drupal->fieldAttachPrepareTranslation('node', $target, $targetLanguage, $source, $source->language);
+        $target->nid = $actual_target->nid;
+        $target->vid = $actual_target->vid;
+        $target->tnid = $actual_target->tnid;
 
         // Do not mark this node as a new revision. This is necessary in
         // cases where this node happens to reference a field collection...
