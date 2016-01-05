@@ -161,6 +161,12 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       'nid' => $targetNid,
       'tnid' => $sourceNid,
       'vid' => 123,
+      'path' => array(
+        'pid' => 1,
+        'source' => 'node/' . $targetNid,
+        'alias' => 'willed-title',
+        'language' => $targetLang,
+      ),
     ));
     $expectedSourceNode = clone $sourceNode;
     $expectedTarget = new \stdClass(); //clone $sourceNode;
