@@ -91,6 +91,9 @@ class NodeTranslatable extends EntityTranslatableBase {
         $target->vid = $actual_target->vid;
         $target->tnid = $actual_target->tnid;
 
+        // Preserve the original target's path alias.
+        $target->path = $actual_target->path;
+
         // Do not mark this node as a new revision. This is necessary in
         // cases where this node happens to reference a field collection...
         $target->revision = FALSE;
