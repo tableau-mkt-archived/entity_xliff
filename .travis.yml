@@ -37,7 +37,7 @@ matrix:
       env: BDD=true
     - php: "5.6"
       env: BDD=true
-    - php: "nightly"
+    - php: "7.0"
       env: BDD=false
     - php: "hhvm"
       env: BDD=false
@@ -51,7 +51,7 @@ install:
   - composer install --prefer-dist
 
   # Install drush.
-  - if [ $BDD = 'true' ] ; then composer global require drush/drush:6.2.0 ; fi
+  - if [ $BDD = 'true' ] ; then composer global require drush/drush:6.x-dev ; fi
   - if [ $BDD = 'true' ] ; then export PATH="$HOME/.composer/vendor/bin:$TRAVIS_BUILD_DIR/vendor/bin:$PATH" ; fi
 
 before_script:

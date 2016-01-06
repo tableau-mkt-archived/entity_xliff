@@ -7,9 +7,10 @@
  */
 
 
-// Create a new language.
+// Create new languages.
 try {
   locale_add_language('fr', 'French', 'Français', LANGUAGE_LTR);
+  locale_add_language('de', 'German', 'Deutsch', LANGUAGE_LTR);
 }
 catch (PDOException $e) {
   echo "Language already installed.\n";

@@ -25,7 +25,7 @@ class FormattedFieldHandler implements FieldHandlerInterface {
    */
   public function setValue(\EntityMetadataWrapper $wrapper, $value) {
     $newValue = $wrapper->value();
-    $newValue['value'] = $value;
+    $newValue['value'] = html_entity_decode($value);
     $wrapper->set($newValue);
   }
 

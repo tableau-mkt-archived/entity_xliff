@@ -46,10 +46,10 @@ class ImageFieldHandler implements FieldHandlerInterface {
     $newValue = $wrapper->value();
 
     if (isset($value['alt'])) {
-      $newValue['alt'] = $value['alt'];
+      $newValue['alt'] = html_entity_decode($value['alt']);
     }
     if (isset($value['title'])) {
-      $newValue['title'] = $value['title'];
+      $newValue['title'] = html_entity_decode($value['title']);
     }
 
     $wrapper->set($newValue);

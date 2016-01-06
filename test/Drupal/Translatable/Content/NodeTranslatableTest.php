@@ -153,6 +153,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $sourceNode = (object) array(
       'nid' => $sourceNid,
       'language' => 'en',
+      'title' => 'Willed title',
     );
     $targetLang = 'de';
     $targetNid = 123;
@@ -160,9 +161,28 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       'nid' => $targetNid,
       'tnid' => $sourceNid,
       'vid' => 123,
+      'path' => array(
+        'pid' => 1,
+        'source' => 'node/' . $targetNid,
+        'alias' => 'willed-title',
+        'language' => $targetLang,
+      ),
     ));
+    $expectedSourceNode = clone $sourceNode;
+    $expectedTarget = new \stdClass(); //clone $sourceNode;
+    $expectedTarget->language = $targetLang;
+    $expectedTarget->title = $expectedSourceNode->title;
+    $expectedTarget->translation_source = (object) array(
+      'language' => $sourceNode->language,
+      'title' => $sourceNode->title,
+      'nid' => $sourceNode->nid,
+    );
+
     $expectedNode = clone $tset[$targetLang];
     $expectedNode->revision = FALSE;
+    $expectedNode->language = $targetLang;
+    $expectedNode->title = $sourceNode->title;
+    $expectedNode->translation_source = $expectedTarget->translation_source;
     $expectedEntity = 'expected entity wrapper';
 
     $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('nodeLoad', 'entityMetadataWrapper', 'saveSession', 'userLoad', 'fieldAttachPrepareTranslation'));
@@ -170,7 +190,15 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       ->method('fieldAttachPrepareTranslation')
       ->with(
         $this->equalTo('node'),
-        $this->equalTo($tset[$targetLang]),
+        $this->callback(function($o) use($expectedTarget) {
+          // PHPUnit seems to run this callback twice? And it gets different
+          // results each time. Here's a workaround.
+          static $result = 'not yet run';
+          if ($result === 'not yet run') {
+            $result = $o == $expectedTarget;
+          }
+          return $result;
+        }),
         $targetLang,
         $this->equalTo($sourceNode),
         $sourceNode->language
@@ -180,7 +208,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       ->withConsecutive(
         array($this->equalTo($targetNid), $this->equalTo(NULL), $this->equalTo(TRUE)),
         array($this->equalTo($sourceNid))
-      )->will($this->onConsecutiveCalls($tset[$targetLang], $sourceNode));
+      )->will($this->onConsecutiveCalls($tset[$targetLang], $expectedSourceNode));
 
     $observerDrupal->expects($this->once())
       ->method('entityMetadataWrapper')

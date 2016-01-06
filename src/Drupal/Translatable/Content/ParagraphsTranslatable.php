@@ -17,7 +17,7 @@ use EntityXliff\Drupal\Utils\DrupalHandler;
 class ParagraphsTranslatable extends EntityTranslatableBase {
 
   /**
-   * Static cached value of the source language for this field collection. It's
+   * Static cached value of the source language for this paragraphs item. It's
    * stored this way due to the expense associated with determining a host's
    * source language.
    *

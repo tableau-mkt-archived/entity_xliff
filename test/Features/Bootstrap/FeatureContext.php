@@ -32,37 +32,49 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
-   * @When I attach a(n) :targetlang translation of this :sourcelang :entity
+   * @When /^I attach(?:| a(?:|n)) (?:|")([^"]+)(?:|") translation(?:|s) of this "([^"]+)" ([^"]+)$/
    */
-  public function iAttachATranslationOfThisEntity($targetLang, $sourceLang, $entity) {
+  public function iAttachATranslationOfThisEntity($targetLangs, $sourceLang, $entity) {
     $baseUrl = $this->getMinkParameter('base_url');
     $path = $this->getMinkParameter('files_path');
     $session = $this->getSession();
     $url = $session->getCurrentUrl();
     $pathPart = $this->entityPathPartMap[$entity];
+    $targetLangs = explode(',', $targetLangs);
+    $files = array();
 
     if (preg_match('/' . preg_quote($pathPart, '/') . '\/(\d+)/', $url, $matches)) {
       $id = $matches[1];
-      $randomFile = mt_rand(0, 10000) . '-' . $targetLang . '.xlf';
 
-      // Load the XLIFF file for this node.
-      $this->getSession()->visit($baseUrl . "/$pathPart/$id/as.xlf?targetLang=$targetLang");
-      $xliff = $session->getPage()->getContent();
+      // Iterate through all provided languages.
+      foreach ($targetLangs as $targetLang) {
+        $targetLang = trim($targetLang);
+        $randomFile = mt_rand(0, 10000) . '-' . $targetLang . '.xlf';
 
-      // "Translate" the file.
-      $translation = str_replace($sourceLang, $targetLang, $xliff);
-      $fullPath = $path . DIRECTORY_SEPARATOR . $randomFile;
+        // Load the XLIFF file for this node.
+        $this->getSession()
+          ->visit($baseUrl . "/$pathPart/$id/as.xlf?targetLang=$targetLang");
+        $xliff = $session->getPage()->getContent();
 
-      // Write the file to the configured path.
-      if (file_put_contents($fullPath, $translation)) {
-        // Go back and attach the file to the expected import field.
-        $session->visit($baseUrl . "/$pathPart/$id/xliff");
-        $page = $session->getPage();
-        $importFileField = $page->find('css', 'input[name="files[import-' . $targetLang . ']"]');
-        $importFileField->attachFile($fullPath);
+        // "Translate" the file.
+        $translation = str_replace($sourceLang, $targetLang, $xliff);
+        $fullPath = $path . DIRECTORY_SEPARATOR . $randomFile;
+
+        // Write the file to the configured path.
+        if (file_put_contents($fullPath, $translation)) {
+          $files[$targetLang] = $fullPath;
+        }
+        else {
+          throw new Exception('Unable to write translation to disk.');
+        }
       }
-      else {
-        throw new Exception('Unable to write translation to disk.');
+
+      // Go back and attach the file(s) to the expected import field(s).
+      $session->visit($baseUrl . "/$pathPart/$id/xliff");
+      foreach ($files as $lang => $path) {
+        $page = $session->getPage();
+        $importFileField = $page->find('css', 'input[name="files[import-' . $lang . ']"]');
+        $importFileField->attachFile($path);
       }
     }
     else {
