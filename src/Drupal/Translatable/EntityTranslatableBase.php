@@ -64,6 +64,12 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   protected $translatables = array();
 
   /**
+   * The source language of the wrapped entity.
+   * @var string
+   */
+  protected $sourceLanguage;
+
+  /**
    * Creates a Translatable from an Entity wrapper.
    *
    * @param \EntityDrupalWrapper $entityWrapper
@@ -118,11 +124,17 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
    * {@inheritdoc}
    */
   public function getSourceLanguage() {
+    // If we've already determined the source language, return it.
+    if ($this->sourceLanguage) {
+      return $this->sourceLanguage;
+    }
+
     $language = $this->entity->language->value();
     if ($language === DrupalHandler::LANGUAGE_NONE || empty($language)) {
       $language = $this->drupal->languageDefault('language');
     }
-    return $language;
+    $this->sourceLanguage = $language;
+    return $this->sourceLanguage;
   }
 
   /**
