@@ -86,6 +86,22 @@ namespace EntityXliff\Drupal\Tests\Translatable {
     }
 
     /**
+     * @test
+     */
+    public function getSourceLanguageCached() {
+      $expectedLanguage = 'en';
+
+      $mockDrupal = $this->getMockHandler();
+      $mockWrapper = $this->getMock('\EntityDrupalWrapper');
+      $translatable = $this->getTranslatableOrNotInstance(TRUE, $mockWrapper, $mockDrupal);
+
+      // Ensure that source language is pulled from a cached value without going
+      // to any value on the provided wrapper.
+      $translatable->setSourceLanguage($expectedLanguage);
+      $this->assertSame($expectedLanguage, $translatable->getSourceLanguage());
+    }
+
+    /**
      * Ensures that EntityTranslatableBase::getData() returns translatable data
      * as expected.
      *
@@ -865,6 +881,14 @@ namespace EntityXliff\Drupal\Tests\Translatable {
      */
     public function setTargetEntities($targetEntities) {
       $this->targetEntities = $targetEntities;
+    }
+
+    /**
+     * Helper method to set the internal source language property for testing.
+     * @param string $sourceLanguage
+     */
+    public function setSourceLanguage($sourceLanguage) {
+      $this->sourceLanguage = $sourceLanguage;
     }
 
     /**
