@@ -1,5 +1,5 @@
 @api
-Feature: Source Content Overwrrite (Regression)
+Feature: Source Content Overrrite (Regression)
   In order to prove that XLIFF imports do not overwrite source content
   Site administrators should be able to
   Import XLIFF translations through the XLIFF portal for existing content without affecting source content
