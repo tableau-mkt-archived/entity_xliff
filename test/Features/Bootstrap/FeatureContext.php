@@ -184,16 +184,8 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     );
     $node = $this->getDriver()->createNode($node);
 
-    // Create and reference related nodes.
-    for ($n = 1; $n <= $n_many; $n++) {
-      $fieldCollectionItem = entity_create('field_collection_item', array('field_name' => 'field_field_collection'));
-      $fieldCollectionItem->setHostEntity('node', $node);
-      $fieldCollectionItem->field_long_text[LANGUAGE_NONE][0] = array(
-        'format' => 'plain_text',
-        'value' => $title . " field collection $n",
-      );
-      $fieldCollectionItem->save();
-    }
+    // Create and reference related field collections.
+    $this->attachSomeFieldCollectionsTo($node, $n_many, $title);
 
     // Resave the original node.
     node_save($node);
@@ -201,6 +193,33 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
 
     // Set internal page on the node.
     $this->getSession()->visit($this->locatePath('/node/' . $node->nid));
+  }
+
+  /**
+   * @Given this :hostentity has :n_many (additional) field collection(s)
+   */
+  public function thisNodeHasSomeNumberOfFieldCollections($hostentity, $n_many) {
+    $session = $this->getSession();
+    $url = $session->getCurrentUrl();
+    $pathPart = $this->entityPathPartMap[$hostentity];
+
+    if (preg_match('/' . preg_quote($pathPart, '/') . '\/(\d+)/', $url, $matches)) {
+      $hostId = $matches[1];
+
+      try {
+        $hostToBeSaved = entity_metadata_wrapper($hostentity, $hostId);
+        $host = $hostToBeSaved->value();
+        $this->attachSomeFieldCollectionsTo($host, $n_many, NULL, $host->language);
+        $hostToBeSaved->set($host);
+        $hostToBeSaved->save();
+      }
+      catch (Exception $e) {
+        throw new Exception('Unable to attach ' . $n_many . ' collections to this ' . $hostentity . ' because ' . $e->getMessage());
+      }
+    }
+    else {
+      throw new Exception('Unable to determine what "this ' . $hostentity . '" is referring to.');
+    }
   }
 
   /**
@@ -260,6 +279,28 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     }
     $paragraph->save();
     return $paragraph;
+  }
+
+  /**
+   * Attaches the given number of field collections to the given node.
+   * @param object $node
+   * @param int $n_many
+   */
+  protected function attachSomeFieldCollectionsTo($node, $n_many, $title = '', $language = LANGUAGE_NONE) {
+    if (empty($title)) {
+      $title = $node->title;
+    }
+
+    // Create and reference related nodes.
+    for ($n = 1; $n <= $n_many; $n++) {
+      $fieldCollectionItem = entity_create('field_collection_item', array('field_name' => 'field_field_collection'));
+      $fieldCollectionItem->setHostEntity('node', $node, $language);
+      $fieldCollectionItem->field_long_text[LANGUAGE_NONE][0] = array(
+        'format' => 'plain_text',
+        'value' => $title . " field collection $n",
+      );
+      $fieldCollectionItem->save();
+    }
   }
 
   /**

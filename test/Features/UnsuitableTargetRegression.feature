@@ -29,6 +29,27 @@ Feature: Unsuitable Translation Target (Regression)
     And I click "Français"
     Then I should see "fr page title"
 
+  Scenario: Field collection cardinality differs between source and target
+    When I click "English"
+    And I click "Edit"
+    And I fill in "English page title field collection 0" for "field_field_collection[en][0][field_long_text][und][0][value]"
+    And I press "Save"
+    And I click "XLIFF"
+    And I attach a "fr" translation of this "English" node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
+    When this node has 2 additional field collections
+    And I click "View"
+    Then I should see "English page title field collection 2"
+    When I click "XLIFF"
+    And I attach a "fr" translation of this "English" node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
+    When I click "View"
+    And I click "Français"
+    Then I should see "fr page title field collection 0"
+    And I should see "fr page title field collection 2"
+
   Scenario: Referenced entity added after initial translation
     Given "page" content:
       | title                    | body                     |
