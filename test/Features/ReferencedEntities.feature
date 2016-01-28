@@ -43,3 +43,4 @@ Feature: Referenced Entity Translation
     And I should see "fr host body text"
     And I should see "fr child page title"
     And I should see "fr child body text"
+    And there should be no corrupt translation sets.

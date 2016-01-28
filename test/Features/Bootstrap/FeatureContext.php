@@ -264,6 +264,36 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
+   * @Then there should be no corrupt translation sets.
+   */
+  public function thereShouldBeNoCorruptTranslationSets() {
+    $installedLanguages = language_list();
+
+    // Check each language for translation set corruption
+    foreach ($installedLanguages as $language => $definition) {
+      // Find cases where there is more than one node per language per tnid.
+      $query = db_query('SELECT COUNT(*) FROM node WHERE language = :lang AND tnid <> 0 GROUP BY tnid HAVING COUNT(*) > 1;', array(
+        ':lang' => $language,
+      ));
+
+      if ($query->rowCount() > 0) {
+        throw new Exception('Found more than one ' . $language . ' node in a translation set.');
+      }
+    }
+
+
+    // As a catch-all, check for any set of nodes in a tnid with more than the
+    // total number of installed languages.
+    $query = db_query('SELECT COUNT(*) FROM {node} WHERE tnid <> 0 GROUP BY tnid HAVING COUNT(*) > :num_langs', array(
+      ':num_langs' => count($installedLanguages),
+    ));
+
+    if ($query->rowCount() > 0) {
+      throw new Exception('Found more than the installed number of languages in a translation set.');
+    }
+  }
+
+  /**
    * Instantiates and saves a Paragraph item and attaches it to the given host.
    * @param string $hostType
    * @param object $host
