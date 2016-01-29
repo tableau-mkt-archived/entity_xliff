@@ -65,7 +65,9 @@ function entity_xliff_set_xliff($wrapper, $targetLanguage, $xliff, $save = TRUE)
   if ($translatable = entity_xliff_get_translatable($wrapper)) {
     $serializer = entity_xliff_get_serializer($translatable->getSourceLanguage());
     drupal_alter('entity_xliff_set_xliff', $xliff, $wrapper, $targetLanguage);
+    _entity_xliff_should_cancel_node_reference_translation_prep(TRUE);
     $data = $serializer->unserialize($translatable, $targetLanguage, $xliff, $save);
+    _entity_xliff_should_cancel_node_reference_translation_prep(FALSE);
   }
 
   return $data;
@@ -149,6 +151,33 @@ function entity_xliff_entity_info_alter(&$entityInfo) {
   }
   if (module_exists('comment')) {
     $entityInfo['comment']['path'] = 'comment/%comment';
+  }
+}
+
+/**
+ * Implements field_attach_prepare_translation_alter().
+ *
+ * Currently used exclusively to undo the work of the node reference module's
+ * field translation preparation. Its opinions do not mesh with our opinions.
+ *
+ * This ensures that the translation sets of nodes referenced via the node
+ * reference module do not become corrupt on translation import.
+ */
+function entity_xliff_field_attach_prepare_translation_alter(&$entity, $context) {
+  $module_exists = module_exists('node_reference');
+  $is_node = $context['entity_type'] === 'node';
+  $should_cancel = _entity_xliff_should_cancel_node_reference_translation_prep();
+
+  // If we should prevent node reference translation prep (and it's relevant).
+  if ($module_exists && $is_node && $should_cancel) {
+    // Then introspect all node reference fields, go through them, and reset the
+    // node reference value to the original/source value.
+    $references = _entity_xliff_find_node_reference_fields($context['source_entity']);
+
+    // For each entity reference field, go back and set the value from source.
+    foreach ($references as $referenceField) {
+      $entity->{$referenceField} = $context['source_entity']->{$referenceField};
+    }
   }
 }
 
@@ -263,4 +292,59 @@ function _entity_xliff_get_translatable_info() {
   $translatables = module_invoke_all('entity_xliff_translatable_info');
   drupal_alter('entity_xliff_translatable_info', $translatables);
   return $translatables;
+}
+
+/**
+ * Global static setter/getter for whether or not we should cancel the Node
+ * Reference module's field translation preparation step. The only context in
+ * which we care to do so is during XLIFF translation import.
+ *
+ * @param bool $set
+ *   If provided, sets whether or not we should cancel.
+ *
+ * @return bool
+ *   TRUE if the Node Reference module should be ignored. FALSE if it should
+ *   continue to behave as designed.
+ */
+function _entity_xliff_should_cancel_node_reference_translation_prep($set = NULL) {
+  $shouldCancel = &drupal_static(__FUNCTION__, FALSE);
+
+  if ($set !== NULL) {
+    $shouldCancel = $set;
+  }
+
+  return $shouldCancel;
+}
+
+/**
+ * Given a node, return a list of its fields that map to a node reference field.
+ *
+ * @param object $node
+ *   The node to introspect.
+ *
+ * @return array
+ *   An array of field names representing node references. If no node reference
+ *   fields are found, an empty array is returned.
+ */
+function _entity_xliff_find_node_reference_fields($node) {
+  $nodeReferenceFields = array();
+
+  $source = entity_metadata_wrapper('node', $node);
+  $type = $source->getBundle();
+
+  foreach ($source->getPropertyInfo() as $field => $info) {
+    $fieldInfo = field_info_instance('node', $field, $type);
+    if (!isset($fieldInfo['display'])) {
+      break;
+    }
+
+    foreach ($fieldInfo['display'] as $displayInfo) {
+      if (isset($displayInfo['module']) && $displayInfo['module'] === 'node_reference') {
+        $nodeReferenceFields[] = $field;
+        break;
+      }
+    }
+  }
+
+  return $nodeReferenceFields;
 }
