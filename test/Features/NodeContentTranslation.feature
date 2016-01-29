@@ -36,6 +36,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I click "Français"
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
+    And there should be no corrupt translation sets.
 
   Scenario: Import collection-based XLIFF through portal
     Given I am viewing a 3 complex "page" content with the title "Complex English page title"
@@ -53,6 +54,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I should see "Complex fr page title field collection 1"
     And I should see "Complex fr page title field collection 2"
     And I should see "Complex fr page title field collection 3"
+    And there should be no corrupt translation sets.
 
   Scenario: Import paragraph-based XLIFF through portal
     Given I am viewing a "page" content with paragraphs and the title "Paragraph English page title"
@@ -68,6 +70,7 @@ Feature: Content Translation of Node and Field Collection Entities
     Then I should see the heading "Paragraph fr page title"
     And I should see "Paragraph fr page title paragraph 1"
     And I should see "Paragraph fr page title paragraph 2"
+    And there should be no corrupt translation sets.
 
   Scenario: No access to XLIFF portal local task without permissions
     Given I am not logged in

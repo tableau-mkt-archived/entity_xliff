@@ -30,3 +30,4 @@ Feature: Alternative Source Languages
     And I click "English"
     Then I should see the heading "en page title"
     And I should see "en page body text."
+    And there should be no corrupt translation sets.
