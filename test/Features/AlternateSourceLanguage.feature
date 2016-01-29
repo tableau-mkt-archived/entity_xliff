@@ -26,8 +26,21 @@ Feature: Alternative Source Languages
     When I attach an "en" translation of this "French" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
+    And there should be no corrupt translation sets.
     When I click "View"
     And I click "English"
     Then I should see the heading "en page title"
     And I should see "en page body text."
+    # Re-import to test the pre-existing/non-initialization flow.
+    When I click "Français"
+    And I click "XLIFF"
+    And I attach an "en" translation of this "French" node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    When I click "View"
+    Then I should see the heading "French page title"
+    And I should see "French page body text."
+    When I click "English"
+    Then I should see the heading "en page title"
+    And I should see "en page body text."
