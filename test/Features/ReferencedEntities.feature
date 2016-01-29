@@ -37,10 +37,27 @@ Feature: Referenced Entity Translation
     When I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
+    And there should be no corrupt translation sets.
     When I click "View"
     And I click "Français"
     Then I should see "fr host page title"
     And I should see "fr host body text"
     And I should see "fr child page title"
     And I should see "fr child body text"
+    # Re-import to test the pre-existing/non-initialization flow.
+    When I click "English"
+    And I click "XLIFF"
+    And I attach a "fr" translation of this "English" node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    When I click "View"
+    Then I should see "English host page title"
+    And I should see "English host body text"
+    And I should see "English child page title"
+    And I should see "English child body text"
+    And I click "Français"
+    Then I should see "fr host page title"
+    And I should see "fr host body text"
+    And I should see "fr child page title"
+    And I should see "fr child body text"
