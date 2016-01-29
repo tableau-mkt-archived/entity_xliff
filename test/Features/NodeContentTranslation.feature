@@ -32,11 +32,25 @@ Feature: Content Translation of Node and Field Collection Entities
     When I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
+    And there should be no corrupt translation sets.
     When I click "View"
     And I click "Français"
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
+    # Re-import to test the pre-existing/non-initialization flow.
+    When I click "English"
+    And I click "XLIFF"
+    And I attach a "fr" translation of this "English" node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    When I click "View"
+    And I click "Français"
+    Then I should see the heading "fr page title"
+    And I should see "fr page body text."
+    When I click "English"
+    Then I should see the heading "English page title"
+    And I should see "English page body text."
 
   Scenario: Import collection-based XLIFF through portal
     Given I am viewing a 3 complex "page" content with the title "Complex English page title"
@@ -62,6 +76,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
+    And there should be no corrupt translation sets.
     When I click "View"
     Then I should not see the heading "Paragraph fr page title"
     And I should not see "Paragraph fr page title paragraph 1"
@@ -70,7 +85,21 @@ Feature: Content Translation of Node and Field Collection Entities
     Then I should see the heading "Paragraph fr page title"
     And I should see "Paragraph fr page title paragraph 1"
     And I should see "Paragraph fr page title paragraph 2"
+    # Re-import to test the pre-existing/non-initialization flow.
+    When I click "English"
+    And I click "XLIFF"
+    And I attach a "fr" translation of this "English" node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    When I click "View"
+    Then I should not see the heading "Paragraph fr page title"
+    And I should not see "Paragraph fr page title paragraph 1"
+    And I should not see "Paragraph fr page title paragraph 2"
+    When I click "Français"
+    Then I should see the heading "Paragraph fr page title"
+    And I should see "Paragraph fr page title paragraph 1"
+    And I should see "Paragraph fr page title paragraph 2"
 
   Scenario: No access to XLIFF portal local task without permissions
     Given I am not logged in
