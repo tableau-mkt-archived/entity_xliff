@@ -18,8 +18,26 @@ Feature: Multiple Language Import (Regression)
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And I should not see the message containing "There was a problem importing"
+    And there should be no corrupt translation sets.
     When I click "View"
     And I click "Français"
+    Then I should see the heading "fr page title"
+    And I should see "fr page body text."
+    When I click "Deutsch"
+    Then I should see the heading "de page title"
+    And I should see "de page body text."
+    # Re-import to test the pre-existing/non-initialization flow.
+    When I click "English"
+    And I click "XLIFF"
+    And I attach fr, de translations of this "English" node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
+    And I should not see the message containing "There was a problem importing"
+    And there should be no corrupt translation sets.
+    When I click "View"
+    Then I should see "English page title"
+    And I should see "English page body text."
+    When I click "Français"
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
     When I click "Deutsch"
