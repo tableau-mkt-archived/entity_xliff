@@ -36,8 +36,8 @@ fi
 # Place this module into the sites/all/modules directory and enable it.
 rsync -aq "`pwd`" "`pwd`/$BUILD_DIR/drupal/sites/all/modules/entity_xliff" --exclude build
 pushd $BUILD_DIR/drupal
-  drush --yes dl composer-8.x-1.1 composer_manager link field_collection paragraphs entityreference entity_translation
-  drush --yes en composer_manager translation link entity_translation field_collection paragraphs_i18n entityreference
+  drush --yes dl composer-8.x-1.1 composer_manager link field_collection paragraphs entityreference entity_translation references
+  drush --yes en composer_manager translation link entity_translation field_collection paragraphs_i18n entityreference node_reference
   drush cc drush
   drush --yes en entity_xliff
   drush cc all

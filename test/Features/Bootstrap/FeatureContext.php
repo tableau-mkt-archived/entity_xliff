@@ -129,9 +129,9 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
-   * @Given this :hostentity references the :title :entity
+   * @Given /^this ([^"]+) references the "([^"]+)" ([^\s"]+)(?: on the ([^"]+) field)?$/
    */
-  public function thisNodeReferencesTheNode($hostentity, $title, $entity) {
+  public function thisEntityReferencesTheEntity($hostentity, $title, $entity, $field = 'field_reference') {
     $session = $this->getSession();
     $url = $session->getCurrentUrl();
     $pathPart = $this->entityPathPartMap[$hostentity];
@@ -142,7 +142,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
       try {
         $entityId = $this->getEntityIdForTitle($entity, $title);
         $host = entity_metadata_wrapper($hostentity, $hostId);
-        $host->field_reference->set($entityId);
+        $host->{$field}->set($entityId);
         $host->save();
       }
       catch (Exception $e) {
@@ -268,6 +268,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
    */
   public function thereShouldBeNoCorruptTranslationSets() {
     $installedLanguages = language_list();
+    $errorMessage = '';
 
     // Check each language for translation set corruption
     foreach ($installedLanguages as $language => $definition) {
@@ -277,7 +278,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
       ));
 
       if ($query->rowCount() > 0) {
-        throw new Exception('Found more than one ' . $language . ' node in a translation set.');
+        $errorMessage .= "Found more than one $language node in a translation set.\n";
       }
     }
 
@@ -289,7 +290,16 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     ));
 
     if ($query->rowCount() > 0) {
-      throw new Exception('Found more than the installed number of languages in a translation set.');
+      $errorMessage .= 'Found more than the installed number of languages in a translation set.';
+    }
+
+    // If we've detected a corrupt translation set, throw the error and clean up.
+    if ($errorMessage) {
+      // Immediately clean up any bad translation sets.
+      db_delete('node')
+        ->where('tnid <> nid')
+        ->execute();
+      throw new Exception($errorMessage);
     }
   }
 
