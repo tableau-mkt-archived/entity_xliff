@@ -105,6 +105,10 @@ class NodeTranslatable extends EntityTranslatableBase {
         unset($target->nid, $target->vid);
         $target->is_new = TRUE;
         $this->translationNodePrepare($target, $this->entity->getIdentifier(), $targetLanguage);
+        
+        // In rare cases, the correct target language will not be applied. So
+        // stamp the correct one here, now.
+        $target->language = $targetLanguage;
       }
 
       $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('node', $target);
