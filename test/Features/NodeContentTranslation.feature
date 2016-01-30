@@ -60,6 +60,7 @@ Feature: Content Translation of Node and Field Collection Entities
     Then I should see the success message containing "Successfully imported"
     When I click "View published"
     Then I should not see the heading "Complex fr page title"
+    And there should be no corrupt translation sets.
     And I should not see "Complex fr page title field collection 1"
     And I should not see "Complex fr page title field collection 2"
     And I should not see "Complex fr page title field collection 3"
@@ -68,7 +69,21 @@ Feature: Content Translation of Node and Field Collection Entities
     And I should see "Complex fr page title field collection 1"
     And I should see "Complex fr page title field collection 2"
     And I should see "Complex fr page title field collection 3"
+    # Re-import to test the pre-existing/non-initialization flow.
+    When I click "English"
+    And I click "XLIFF"
+    And I attach a "fr" translation of this "English" node
+    And I press the "Import" button
+    Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    When I click "View"
+    Then I should not see the heading "Paragraph fr page title"
+    And I should not see "Paragraph fr page title paragraph 1"
+    And I should not see "Paragraph fr page title paragraph 2"
+    When I click "Français"
+    Then I should see the heading "Paragraph fr page title"
+    And I should see "Paragraph fr page title paragraph 1"
+    And I should see "Paragraph fr page title paragraph 2"
 
   Scenario: Import paragraph-based XLIFF through portal
     Given I am viewing a "page" content with paragraphs and the title "Paragraph English page title"
