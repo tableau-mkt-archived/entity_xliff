@@ -73,7 +73,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       ->disableOriginalConstructor()
       ->getMock();
     $mockMediator = $this->getMock('EntityXliff\Drupal\Mediator\FieldMediator');
-    $translatable = new MockNodeTranslatableForConstructor($observerWrapper, $observerDrupal, $mockFactory, $mockMediator, $expectedRawNode);
+    $translatable = new NodeTranslatable($observerWrapper, $observerDrupal, $mockFactory, $mockMediator, $expectedRawNode);
   }
 
   /**
@@ -158,6 +158,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $targetLang = 'de';
     $targetNid = 123;
     $tset = array($targetLang => (object) array(
+      'title' => 'Willed title',
       'nid' => $targetNid,
       'tnid' => $sourceNid,
       'vid' => 123,
@@ -223,6 +224,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $translatable = new MockNodeTranslatable($observerWrapper, $observerDrupal);
     $translatable->setTranslationSet($tset);
     $this->assertEquals($expectedEntity, $translatable->getTargetEntity($targetLang));
+    $this->assertTrue($translatable->tsetEvaluated);
   }
 
   /**
@@ -382,6 +384,8 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
  */
 class MockNodeTranslatable extends NodeTranslatable {
 
+  public $tsetEvaluated = FALSE;
+
   /**
    * Overrides the parent constructor to just perform injection.
    *
@@ -411,40 +415,11 @@ class MockNodeTranslatable extends NodeTranslatable {
     $this->tset = $tset;
   }
 
-}
-
-/**
- * Class MockNodeTranslatableForConstructor
- * @package EntityXliff\Drupal\Tests\Translatable\Content
- *
- * Extension of the NodeTranslatable class that allows us to mock internal
- * methods that are called within the constructor.
- *
- * @see NodeTranslatableTest::constructTranslatableFromNonEnglish
- */
-class MockNodeTranslatableForConstructor extends NodeTranslatable {
-
   /**
-   * @var array
+   * We're unconcerned with the implementation in these cases.
    */
-  protected $expectedRawEntity;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct($wrapper, $handler, $factory, $mediator, $expectedRaw) {
-    $this->expectedRawEntity = $expectedRaw;
-    parent::__construct($wrapper, $handler, $factory, $mediator);
-  }
-
-  /**
-   * Returns the mock raw entity value injected in the constructor.
-   *
-   * @param \EntityDrupalWrapper $wrapper
-   * @return array
-   */
-  public function getRawEntity(\EntityDrupalWrapper $wrapper) {
-    return $this->expectedRawEntity;
+  protected function evaluateTranslationSet() {
+    $this->tsetEvaluated = TRUE;
   }
 
 }

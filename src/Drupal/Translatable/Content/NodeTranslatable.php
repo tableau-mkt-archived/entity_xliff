@@ -33,14 +33,7 @@ class NodeTranslatable extends EntityTranslatableBase {
   public function __construct(\EntityDrupalWrapper $entityWrapper, DrupalHandler $handler = NULL, EntityTranslatableFactory $factory = NULL, FieldMediator $fieldMediator = NULL) {
     parent::__construct($entityWrapper, $handler, $factory, $fieldMediator);
 
-    $this->drupal->staticReset('translation_node_get_translations');
-    $raw = $entityWrapper->raw();
-    if (!isset($raw->tnid) || empty($raw->tnid)) {
-      $this->tset = $this->nodeGetTranslations((int) $entityWrapper->getIdentifier());
-    }
-    else {
-      $this->tset = $this->nodeGetTranslations((int) $raw->tnid);
-    }
+    $this->evaluateTranslationSet();
   }
 
   /**
@@ -66,6 +59,11 @@ class NodeTranslatable extends EntityTranslatableBase {
    */
   public function getTargetEntity($targetLanguage) {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
+      // Always re-evaluate the translation set. It's possible that we may have
+      // saved off a translated version in the set already during this request.
+      // We don't want to keep appending duplicate nodes to the set.
+      $this->evaluateTranslationSet();
+
       // If a translation already exists, use it!
       if (isset($this->tset[$targetLanguage]->nid)) {
         // Although a target already exists, we load the source and run it
@@ -90,6 +88,10 @@ class NodeTranslatable extends EntityTranslatableBase {
         $target->nid = $actual_target->nid;
         $target->vid = $actual_target->vid;
         $target->tnid = $actual_target->tnid;
+
+        // Ensure the target title and language are maintained.
+        $target->language = $targetLanguage;
+        $target->title = $actual_target->title;
 
         // Preserve the original target's path alias.
         $target->path = $actual_target->path;
@@ -133,6 +135,25 @@ class NodeTranslatable extends EntityTranslatableBase {
       $this->entity = $this->drupal->entityMetadataWrapper('node', $source);
       $this->drupal->staticReset('translation_node_get_translations');
       $this->tset = $this->nodeGetTranslations((int) $source->tnid);
+    }
+  }
+
+  /**
+   * Evaluates or re-evaluates the translation set for the wrapped node and
+   * stashes it on the "tset" property.
+   */
+  protected function evaluateTranslationSet() {
+    $this->drupal->staticReset('translation_node_get_translations');
+    $raw = $this->getRawEntity($this->entity);
+
+    // If the tnid is not yet set or doesn't exist, assume we're about to make
+    // a new translation set and this is the source (so, use this nid).
+    if (!isset($raw->tnid) || empty($raw->tnid)) {
+      $this->tset = $this->nodeGetTranslations((int) $this->entity->getIdentifier());
+    }
+    // Otherwise, always pull the translation set from the wrapped node's tnid.
+    else {
+      $this->tset = $this->nodeGetTranslations((int) $raw->tnid);
     }
   }
 
