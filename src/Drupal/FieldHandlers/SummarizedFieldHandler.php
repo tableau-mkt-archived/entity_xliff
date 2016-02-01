@@ -48,10 +48,10 @@ class SummarizedFieldHandler implements FieldHandlerInterface {
     $newValue = $wrapper->value();
 
     if (isset($value['value'])) {
-      $newValue['value'] = html_entity_decode($value['value']);
+      $newValue['value'] = html_entity_decode($value['value'], ENT_QUOTES, 'utf-8');
     }
     if (isset($value['summary'])) {
-      $newValue['summary'] = html_entity_decode($value['summary']);
+      $newValue['summary'] = html_entity_decode($value['summary'], ENT_QUOTES, 'utf-8');
     }
 
     $wrapper->set($newValue);
