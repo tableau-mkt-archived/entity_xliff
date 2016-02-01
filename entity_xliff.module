@@ -6,6 +6,7 @@
  */
 
 use EggsCereal\Serializer;
+use EntityXliff\Drupal\Exceptions\EntityStructureDivergedException;
 use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 
 
@@ -63,10 +64,27 @@ function entity_xliff_set_xliff($wrapper, $targetLanguage, $xliff, $save = TRUE)
   $data = array();
 
   if ($translatable = entity_xliff_get_translatable($wrapper)) {
+    // Start a database transaction in case we have to rollback an import.
+    $transaction = db_transaction();
+
+    // Prepare for XLIFF import.
     $serializer = entity_xliff_get_serializer($translatable->getSourceLanguage());
     drupal_alter('entity_xliff_set_xliff', $xliff, $wrapper, $targetLanguage);
     _entity_xliff_should_cancel_node_reference_translation_prep(TRUE);
-    $data = $serializer->unserialize($translatable, $targetLanguage, $xliff, $save);
+
+    try {
+      $data = $serializer->unserialize($translatable, $targetLanguage, $xliff, $save);
+    }
+    catch (EntityStructureDivergedException $e) {
+      drupal_set_message(t('The structure of %label has changed since the @lang XLIFF was exported. You will need to re-export and try again.', array(
+        '%label' => $wrapper->label(),
+        '@lang' => $targetLanguage,
+      )), 'error');
+      $transaction->rollback();
+      $data = array();
+    }
+
+    // Clean up after XLIFF import.
     _entity_xliff_should_cancel_node_reference_translation_prep(FALSE);
   }
 
