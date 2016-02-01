@@ -22,5 +22,4 @@ Feature: Handling for Encoded HTML Entities
     When I click "View"
     And I click "English"
     Then I should see the heading "en page title"
-    Then print last response
     And I should see "en page body text 'en français.'"
