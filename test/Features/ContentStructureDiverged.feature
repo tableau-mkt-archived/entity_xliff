@@ -16,9 +16,9 @@ Feature: Content structure divergence
     When I click "XLIFF"
     And I attach an outdated translation of this node
     And I press the "Import" button
-    Then I should not see the message containing "Successfully imported"
-    # @todo: Then I should see the error message containing "You will need to re-export and try again."
-    And there should be no corrupt translation sets.
+    Then there should be no corrupt translation sets.
+    And I should not see the message containing "Successfully imported"
+    And I should see the error message containing "You will need to re-export and try again."
     When I click "Edit"
     # Ensures database transaction rollback occurred (the initialization of the
     # node from language neutral to English should be reverted).
