@@ -60,6 +60,10 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
         $translation = str_replace($sourceLang, $targetLang, $xliff);
         $fullPath = $path . DIRECTORY_SEPARATOR . $randomFile;
 
+        // For checking HTML encoded characters.
+        $translation = str_replace('\'', '&amp;#039;', $translation);
+        $translation = str_replace('ç', '&amp;ccedil;', $translation);
+
         // Write the file to the configured path.
         if (file_put_contents($fullPath, $translation)) {
           $files[$targetLang] = $fullPath;
