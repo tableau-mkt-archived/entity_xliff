@@ -8,6 +8,7 @@
 namespace EntityXliff\Drupal\Translatable;
 
 use EggsCereal\Utils\Data;
+use EntityXliff\Drupal\Exceptions\EntityStructureDivergedException;
 use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 use EntityXliff\Drupal\Interfaces\EntityTranslatableInterface;
 use EntityXliff\Drupal\Mediator\EntityMediator;
@@ -334,15 +335,19 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
    * @param array $parents
    * @param $value
    * @param $targetLang
+   * @throws EntityStructureDivergedException
    */
   protected function entitySetNestedValue(\EntityMetadataWrapper $wrapper, array $parents, $value, $targetLang) {
     // Get the field reference.
     $ref = array_shift($parents);
-    if (is_numeric($ref)) {
+    if (is_numeric($ref) && isset($wrapper[$ref])) {
       $field = &$wrapper[$ref]; // @codeCoverageIgnoreStart
     } // @codeCoverageIgnoreEnd
-    else {
+    elseif (isset($wrapper->{$ref})) {
       $field = &$wrapper->{$ref};
+    }
+    else {
+      throw new EntityStructureDivergedException('XLIFF serialized structure has diverged from Drupal content structure: ' . $ref);
     }
 
     // Base case: we are setting a basic field on an entity.

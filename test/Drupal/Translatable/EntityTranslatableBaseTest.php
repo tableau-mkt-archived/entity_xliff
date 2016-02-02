@@ -527,6 +527,27 @@ namespace EntityXliff\Drupal\Tests\Translatable {
     }
 
     /**
+     * Ensures that the expected exception is thrown when attempting to set a
+     * field that no longer exists on the source content.
+     *
+     * @test
+     * @expectedException \EntityXliff\Drupal\Exceptions\EntityStructureDivergedException
+     */
+    public function entitySetNestedValueBaseCaseStaleXliffStructure() {
+      $givenField = 'title';
+      $givenParents = array($givenField);
+      $givenValue = 'Value';
+      $givenTargetLang = 'de';
+
+      $mockEntity = $this->getMockWrapper();
+      $observerWrapper = $this->getMock('\EntityDrupalWrapper');
+      $observerMediator = $this->getMockMediator();
+
+      $translatable = new EntityTranslatableMockForEntitySetNestedValue($mockEntity, NULL, NULL, $observerMediator);
+      $translatable->entitySetNestedValue($observerWrapper, $givenParents, $givenValue, $givenTargetLang);
+    }
+
+    /**
      * Ensures that EntityTranslatableBase::entitySetNestedValue() returns FALSE
      * in the case that the given field is not known to be translated.
      *

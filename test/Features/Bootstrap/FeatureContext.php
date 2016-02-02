@@ -34,7 +34,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   /**
    * @When /^I attach(?:| a(?:|n)) (?:|")([^"]+)(?:|") translation(?:|s) of this "([^"]+)" ([^"]+)$/
    */
-  public function iAttachATranslationOfThisEntity($targetLangs, $sourceLang, $entity) {
+  public function iAttachATranslationOfThisEntity($targetLangs, $sourceLang, $entity, $outdatedField = FALSE) {
     $baseUrl = $this->getMinkParameter('base_url');
     $path = $this->getMinkParameter('files_path');
     $session = $this->getSession();
@@ -64,6 +64,10 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
         $translation = str_replace('\'', '&amp;#039;', $translation);
         $translation = str_replace('ç', '&amp;ccedil;', $translation);
 
+        if ($outdatedField) {
+          $translation = str_replace('="body"', '="old_body"', $translation);
+        }
+
         // Write the file to the configured path.
         if (file_put_contents($fullPath, $translation)) {
           $files[$targetLang] = $fullPath;
@@ -84,6 +88,13 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     else {
       throw new Exception('Unable to determine what "this ' . $entity . '" is referring to.');
     }
+  }
+
+  /**
+   * @When I attach an outdated translation of this :entity
+   */
+  public function iAttachAnOutdatedTranslationOfThisEntity($entity) {
+    $this->iAttachATranslationOfThisEntity('fr, de', 'English', $entity, TRUE);
   }
 
   /**
