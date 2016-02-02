@@ -89,12 +89,17 @@ class NodeTranslatable extends EntityTranslatableBase {
         $target->vid = $actual_target->vid;
         $target->tnid = $actual_target->tnid;
 
-        // Ensure the target title and language are maintained.
-        $target->language = $targetLanguage;
-        $target->title = $actual_target->title;
-
-        // Preserve the original target's path alias.
-        $target->path = $actual_target->path;
+        // Ensure all non-translatable properties are preserved from the actual
+        // target (including path, but potentially other stuff from contrib
+        // like metatags, workbench moderation state, etc).
+        $translatableFields = $this->getTranslatableFields();
+        $this->drupal->entityXliffLoadModuleIncs();
+        $this->drupal->alter('entity_xliff_translatable_fields', $translatableFields, $this->entity);
+        foreach ((array) $actual_target as $property => $propertyValue) {
+          if (array_search($property, $translatableFields) === FALSE) {
+            $target->{$property} = $propertyValue;
+          }
+        }
 
         // Do not mark this node as a new revision. This is necessary in
         // cases where this node happens to reference a field collection...
