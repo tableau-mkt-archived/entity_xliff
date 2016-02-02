@@ -186,7 +186,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $expectedNode->translation_source = $expectedTarget->translation_source;
     $expectedEntity = 'expected entity wrapper';
 
-    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('nodeLoad', 'entityMetadataWrapper', 'saveSession', 'userLoad', 'fieldAttachPrepareTranslation'));
+    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('nodeLoad', 'entityMetadataWrapper', 'saveSession', 'userLoad', 'fieldAttachPrepareTranslation', 'entityXliffLoadModuleIncs', 'alter'));
     $observerDrupal->expects($this->once())
       ->method('fieldAttachPrepareTranslation')
       ->with(
@@ -216,12 +216,23 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       ->with($this->equalTo('node'), $this->equalTo($expectedNode))
       ->willReturn($expectedEntity);
 
+    $observerDrupal->expects($this->once())
+      ->method('entityXliffLoadModuleIncs');
+
     $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('getIdentifier'));
     $observerWrapper->expects($this->any())
       ->method('getIdentifier')
       ->willReturn($targetNid);
 
-    $translatable = new MockNodeTranslatable($observerWrapper, $observerDrupal);
+    $observerDrupal->expects($this->once())
+      ->method('alter')
+      ->with(
+        $this->equalTo('entity_xliff_translatable_fields'),
+        $this->equalTo(array()),
+        $this->equalTo($observerWrapper)
+      );
+
+    $translatable = new MockNodeTranslatableForTargetEntityTranslationExists($observerWrapper, $observerDrupal);
     $translatable->setTranslationSet($tset);
     $this->assertEquals($expectedEntity, $translatable->getTargetEntity($targetLang));
     $this->assertTrue($translatable->tsetEvaluated);
@@ -420,6 +431,25 @@ class MockNodeTranslatable extends NodeTranslatable {
    */
   protected function evaluateTranslationSet() {
     $this->tsetEvaluated = TRUE;
+  }
+
+}
+
+/**
+ * Class MockNodeTranslatableForTargetEntityTranslationExists
+ * @package EntityXliff\Drupal\Tests\Translatable\Content
+ *
+ * Extension of the MockNodeTranslatable class that bypasses the translatable
+ * field getting process.
+ * @see NodeTranslatableTest::getTargetEntityTranslationExists
+ */
+class MockNodeTranslatableForTargetEntityTranslationExists extends MockNodeTranslatable {
+
+  /**
+   * @{inheritdoc}
+   */
+  public function getTranslatableFields() {
+    return array();
   }
 
 }
