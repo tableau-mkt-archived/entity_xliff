@@ -31,6 +31,10 @@ __Paragraphs__: If you use this module with Paragraphs, you will need this patch
 to avoid issues where paragraphs items seem to disappear as you import XLIFFs:
 https://www.drupal.org/node/2621866
 
+__Workbench Moderation__: If you use this module with Workbench Moderation, you
+will need to apply this patch to avoid fatal errors during XLIFF import failures:
+https://www.drupal.org/node/2664018
+
 ## Developing with this module
 @todo
 

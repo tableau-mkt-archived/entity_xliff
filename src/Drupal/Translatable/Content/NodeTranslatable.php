@@ -131,10 +131,9 @@ class NodeTranslatable extends EntityTranslatableBase {
    * translation set.
    */
   public function initializeTranslation() {
-    $nid = (int) $this->entity->getIdentifier();
-    $source = $this->drupal->nodeLoad($nid, NULL, TRUE);
+    $source = $this->getRawEntity($this->entity);
     if ($source->language === DrupalHandler::LANGUAGE_NONE || empty($source->tnid)) {
-      $source->tnid = $nid;
+      $source->tnid = $source->nid;
       $source->language = $this->getSourceLanguage();
       $this->drupal->nodeSave($source);
       $this->entity = $this->drupal->entityMetadataWrapper('node', $source);

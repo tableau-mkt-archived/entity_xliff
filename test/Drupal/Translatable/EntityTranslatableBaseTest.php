@@ -654,9 +654,9 @@ namespace EntityXliff\Drupal\Tests\Translatable {
 
       $observerWrapper = $this->getMock('\EntityMetadataWrapper');
       $observerWrapper->{$givenBaseField} = $this->getMock('\EntityDrupalWrapper', array('getIdentifier', 'type', 'set'));
-      $observerWrapper->{$givenBaseField}->expects($this->exactly(4))
+      $observerWrapper->{$givenBaseField}->expects($this->exactly(5))
         ->method('getIdentifier')
-        ->willReturnOnConsecutiveCalls(FALSE, $expectedIdentifier, $expectedIdentifier, $expectedIdentifier);
+        ->willReturnOnConsecutiveCalls(FALSE, FALSE, $expectedIdentifier, $expectedIdentifier, $expectedIdentifier);
       $observerWrapper->{$givenBaseField}->expects($this->any())
         ->method('type')
         ->willReturn($expectedType);
