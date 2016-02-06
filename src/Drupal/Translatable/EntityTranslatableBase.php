@@ -8,6 +8,7 @@
 namespace EntityXliff\Drupal\Translatable;
 
 use EggsCereal\Utils\Data;
+use EntityXliff\Drupal\Exceptions\EntityDataGoneAwayException;
 use EntityXliff\Drupal\Exceptions\EntityStructureDivergedException;
 use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 use EntityXliff\Drupal\Interfaces\EntityTranslatableInterface;
@@ -397,6 +398,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           if ($translatable = $this->translatableFactory->getTranslatable($field)) {
             $translatable->initializeTranslation();
             $field = $translatable->getTargetEntity($targetLang);
+            $targetId = $field->getIdentifier();
           }
         }
 
@@ -485,6 +487,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
    *
    * @return mixed
    *   The raw entity object.
+   *
+   * @throws EntityDataGoneAwayException
    */
   public function getRawEntity(\EntityDrupalWrapper $wrapper) {
     $raw = $wrapper->raw();
@@ -492,6 +496,12 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       $entities = $this->drupal->entityLoad($wrapper->type(), array((int) $raw));
       $raw = reset($entities);
     }
+
+    // If we still don't have an object to serve back, something is wrong.
+    if (!is_object($raw)) {
+      throw new EntityDataGoneAwayException('Underlying entity lost during processing.');
+    }
+
     return $raw;
   }
 
