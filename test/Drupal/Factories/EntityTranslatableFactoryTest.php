@@ -82,7 +82,7 @@ class EntityTranslatableFactoryTest extends \PHPUnit_Framework_TestCase {
       ),
     );
 
-    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('entityGetInfo', 'alter', 'entityXliffLoadModuleIncs'));
+    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('entityGetInfo', 'alter'));
 
     $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('type', 'getIdentifier'));
     $observerWrapper->expects($this->once())
@@ -91,10 +91,6 @@ class EntityTranslatableFactoryTest extends \PHPUnit_Framework_TestCase {
     $observerWrapper->expects($this->once())
       ->method('getIdentifier')
       ->willReturn($expectedIdentifier);
-
-    // Ensure module INCs are included.
-    $observerDrupal->expects($this->once())
-      ->method('entityXliffLoadModuleIncs');
 
     // Ensure the alter hook is called on the provided, wrapped entity.
     $observerDrupal->expects($this->once())
