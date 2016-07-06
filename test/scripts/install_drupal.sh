@@ -46,6 +46,7 @@ popd
 # Patch field collection module.
 pushd $BUILD_DIR/drupal/sites/all/modules/field_collection
   curl https://www.drupal.org/files/issues/1937866-field_collection-metadata-setter-6.patch | patch -p1
+  curl https://www.drupal.org/files/issues/field_collection-logic-issue-with-fetchHostDetails-2382089-23.patch | patch -p1
 popd
 
 # Patch paragraphs module.
