@@ -2,6 +2,7 @@
 
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Behat\Behat\Context\SnippetAcceptingContext;
+use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
 
@@ -22,6 +23,16 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   );
 
   /**
+   * @var \Drupal\DrupalExtension\Context\DrupalContext
+   */
+  protected $drupalContext;
+
+  /**
+   * @var \Drupal\DrupalExtension\Context\MinkContext
+   */
+  protected $minkContext;
+
+  /**
    * Initializes context.
    *
    * Every scenario gets its own context instance.
@@ -29,6 +40,16 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
    * context constructor through behat.yml.
    */
   public function __construct() {
+  }
+
+  /**
+   * @BeforeScenario
+   */
+  public function gatherContexts(BeforeScenarioScope $scope) {
+    $environment = $scope->getEnvironment();
+
+    $this->drupalContext = $environment->getContext('Drupal\DrupalExtension\Context\DrupalContext');
+    $this->minkContext = $environment->getContext('Drupal\DrupalExtension\Context\MinkContext');
   }
 
   /**
@@ -158,6 +179,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
         $entityId = $this->getEntityIdForTitle($entity, $title);
         $host = entity_metadata_wrapper($hostentity, $hostId);
         $host->{$field}->set($entityId);
+        $host->status = 1; // Force node to be published (Workbench Moderation hack).
         $host->save();
       }
       catch (Exception $e) {

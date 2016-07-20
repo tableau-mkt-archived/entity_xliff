@@ -27,7 +27,7 @@ Feature: Alternative Source Languages
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
-    When I click "View"
+    When I click "View published"
     And I click "English"
     Then I should see the heading "en page title"
     And I should see "en page body text."
@@ -38,7 +38,7 @@ Feature: Alternative Source Languages
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
-    When I click "View"
+    When I click "View published"
     Then I should see the heading "French page title"
     And I should see "French page body text."
     When I click "English"

@@ -38,6 +38,10 @@ variable_set('language_negotiation_language_content', $negotiation);
 // Enable translation for the page content type.
 variable_set('language_content_type_page', TRANSLATION_ENABLED);
 
+// Enable revisions on the page content type.
+variable_set('node_options_page', array('status', 'revision', 'moderation'));
+variable_set('workbench_moderation_default_state_page', 'published');
+
 // Set up Paragraphs bundles.
 paragraphs_bundle_save((object) array('bundle' => 'bundle_1', 'name' => 'Bundle 1', 'locked' => 1));
 paragraphs_bundle_save((object) array('bundle' => 'bundle_2', 'name' => 'Bundle 2', 'locked' => 1));

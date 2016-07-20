@@ -5,7 +5,7 @@ Feature: Unsuitable Translation Target (Regression)
   Import XLIFF translations through the XLIFF portal UI for such content
 
   Background: Set up a translation set with no embedded entities.
-    Given I am logged in as a user with the "administer entity xliff,translate content,bypass node access" permissions
+    Given I am logged in as a user with the "administer entity xliff,translate content,bypass node access,bypass workbench moderation" permissions
     And "page" content:
       | title              | body                    | language | promote |
       | English page title | English page body text. | en       | 1       |
@@ -18,20 +18,20 @@ Feature: Unsuitable Translation Target (Regression)
 
   Scenario: Field Collection values added after initial translation
     When I click "English"
-    And I click "Edit"
+    And I click "New draft"
     And I fill in "English field collection" for "field_field_collection[en][0][field_long_text][und][0][value]"
     And I press "Save"
     And I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
-    When I click "View"
+    When I click "View published"
     And I click "Français"
     Then I should see "fr page title"
 
   Scenario: Field collection cardinality differs between source and target
     When I click "English"
-    And I click "Edit"
+    And I click "New draft"
     And I fill in "English page title field collection 0" for "field_field_collection[en][0][field_long_text][und][0][value]"
     And I press "Save"
     And I click "XLIFF"
@@ -39,13 +39,13 @@ Feature: Unsuitable Translation Target (Regression)
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When this node has 2 additional field collections
-    And I click "View"
+    And I click "View published"
     Then I should see "English page title field collection 2"
     When I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
-    When I click "View"
+    When I click "View published"
     And I click "Français"
     Then I should see "fr page title field collection 0"
     And I should see "fr page title field collection 2"
@@ -61,7 +61,7 @@ Feature: Unsuitable Translation Target (Regression)
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
-    When I click "View"
+    When I click "View published"
     And I click "Français"
     Then I should see "fr page title"
 
@@ -71,6 +71,6 @@ Feature: Unsuitable Translation Target (Regression)
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
-    When I click "View"
+    When I click "View published"
     And I click "Français"
     Then I should see "fr page title"

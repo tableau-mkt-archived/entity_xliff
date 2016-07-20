@@ -23,12 +23,12 @@ Feature: Referenced Entities with empty translation sets
     # Remove the translations from the translation set.
     When I go to the homepage
     And I follow "fr empty tset host page title"
-    And I click "Edit"
+    And I click "New draft"
     And I press "Delete"
     And I press "Delete"
     And I go to the homepage
     And I follow "fr empty tset child page title"
-    And I click "Edit"
+    And I click "New draft"
     And I press "Delete"
     And I press "Delete"
 
