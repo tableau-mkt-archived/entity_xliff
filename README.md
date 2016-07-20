@@ -21,6 +21,12 @@ around importing and exporting XLIFFs.
 More information on [installing and using Composer Manager]() is available on
 GitHub.
 
+You will need to grant the "Administer Entity XLIFF" permission to anyone who
+will be importing or exporting content through this module. If you have
+Workbench Moderation installed, you may also need to grant the "Bypass
+Moderation Restrictions" permission. Note that these permissions are considered
+privileged and should only be granted to those who truly need the access.
+
 ## Gotchas
 
 __Field Collections__: If you use this module with Field Collection, you will
@@ -34,6 +40,10 @@ https://www.drupal.org/node/2621866
 __Workbench Moderation__: If you use this module with Workbench Moderation, you
 will need to apply this patch to avoid fatal errors during XLIFF import failures:
 https://www.drupal.org/node/2664018
+
+You may also need to apply this patch to ensure translations created by this
+module during import inherit the correct moderation state:
+https://www.drupal.org/node/1436260
 
 ## Developing with this module
 @todo

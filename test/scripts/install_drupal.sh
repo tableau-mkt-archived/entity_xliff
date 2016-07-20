@@ -36,8 +36,8 @@ fi
 # Place this module into the sites/all/modules directory and enable it.
 rsync -aq "`pwd`" "`pwd`/$BUILD_DIR/drupal/sites/all/modules/entity_xliff" --exclude build
 pushd $BUILD_DIR/drupal
-  drush --yes dl composer-8.x-1.1 composer_manager link field_collection paragraphs entityreference entity_translation references
-  drush --yes en composer_manager translation link entity_translation field_collection paragraphs_i18n entityreference node_reference
+  drush --yes dl composer-8.x-1.1 composer_manager link field_collection paragraphs entityreference entity_translation references workbench_moderation
+  drush --yes en composer_manager translation link entity_translation field_collection paragraphs_i18n entityreference node_reference workbench_moderation
   drush cc drush
   drush --yes en entity_xliff
   drush cc all
@@ -57,6 +57,12 @@ popd
 # Patch entityreference module.
 pushd $BUILD_DIR/drupal/sites/all/modules/entityreference
   curl https://www.drupal.org/files/issues/entityreference-rendered-entity-is-not-language-aware-1674792-58.patch | patch -p1
+popd
+
+# Patch workbench moderation module.
+pushd $BUILD_DIR/drupal/sites/all/modules/workbench_moderation
+  curl https://www.drupal.org/files/issues/workbench_moderation-transaction_rollback_shutdown_sanity-2664018-2.patch | patch -p1
+  curl https://www.drupal.org/files/issues/1436260-workbench_moderation-states-node_save-74.patch | patch -p1 -R
 popd
 
 # Run a composer install because it may have failed above

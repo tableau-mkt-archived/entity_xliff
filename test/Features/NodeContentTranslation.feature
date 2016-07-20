@@ -33,7 +33,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
-    When I click "View"
+    When I click "View published"
     And I click "Français"
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
@@ -44,7 +44,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
-    When I click "View"
+    When I click "View published"
     And I click "Français"
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
@@ -58,7 +58,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
-    When I click "View"
+    When I click "View published"
     Then I should not see the heading "Complex fr page title"
     And I should not see "Complex fr page title field collection 1"
     And I should not see "Complex fr page title field collection 2"
@@ -77,7 +77,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
-    When I click "View"
+    When I click "View published"
     Then I should not see the heading "Paragraph fr page title"
     And I should not see "Paragraph fr page title paragraph 1"
     And I should not see "Paragraph fr page title paragraph 2"
@@ -92,7 +92,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
-    When I click "View"
+    When I click "View published"
     Then I should not see the heading "Paragraph fr page title"
     And I should not see "Paragraph fr page title paragraph 1"
     And I should not see "Paragraph fr page title paragraph 2"

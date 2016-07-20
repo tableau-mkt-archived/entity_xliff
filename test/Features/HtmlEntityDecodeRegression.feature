@@ -19,7 +19,7 @@ Feature: Handling for Encoded HTML Entities
     And I attach an "en" translation of this "French" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
-    When I click "View"
+    When I click "View published"
     And I click "English"
     Then I should see the heading "en page title"
     And I should see "en page body text 'en français.'"

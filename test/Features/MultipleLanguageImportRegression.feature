@@ -19,7 +19,7 @@ Feature: Multiple Language Import (Regression)
     Then I should see the success message containing "Successfully imported"
     And I should not see the message containing "There was a problem importing"
     And there should be no corrupt translation sets.
-    When I click "View"
+    When I click "View published"
     And I click "Français"
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
@@ -34,7 +34,7 @@ Feature: Multiple Language Import (Regression)
     Then I should see the success message containing "Successfully imported"
     And I should not see the message containing "There was a problem importing"
     And there should be no corrupt translation sets.
-    When I click "View"
+    When I click "View published"
     Then I should see "English page title"
     And I should see "English page body text."
     When I click "Français"

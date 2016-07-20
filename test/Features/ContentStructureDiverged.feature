@@ -19,7 +19,7 @@ Feature: Content structure divergence
     Then there should be no corrupt translation sets.
     And I should not see the message containing "Successfully imported"
     And I should see the error message containing "You will need to re-export and try again."
-    When I click "Edit"
+    When I click "New draft"
     # Ensures database transaction rollback occurred (the initialization of the
     # node from language neutral to English should be reverted).
     Then I should see "Language neutral" in the "#edit-language" element
