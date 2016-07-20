@@ -331,8 +331,6 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     }
 
     // If we've detected a corrupt translation set, throw the error and clean up.
-    //$roles = $this->drupalContext->user->roles;
-    //throw new Exception(print_r(user_role_permissions($roles), TRUE));
     if ($errorMessage) {
       // Immediately clean up any bad translation sets.
       db_delete('node')
