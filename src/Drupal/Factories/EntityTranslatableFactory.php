@@ -112,6 +112,7 @@ class EntityTranslatableFactory {
       $paradigm = $this->getTranslationParadigm($wrapper);
       if (isset($this->classMap[$type][$paradigm])) {
         $translatable = $this->classMap[$type][$paradigm];
+        $this->drupal->entityXliffLoadModuleIncs();
         $this->drupal->alter('entity_xliff_translatable_source', $wrapper, $type);
         $this->translatables[$key] = new $translatable($wrapper);
       }
