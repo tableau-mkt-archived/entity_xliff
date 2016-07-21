@@ -30,6 +30,10 @@ use EntityXliff\Drupal\Factories\EntityTranslatableFactory;
 function entity_xliff_get_xliff($wrapper, $targetLanguage) {
   $xliff = '';
 
+  // Temporary fix to ensure requisite include files are loaded.
+  // Should be removed once #113 is in.
+  _entity_xliff_load_module_incs();
+
   if ($translatable = entity_xliff_get_translatable($wrapper)) {
     $serializer = entity_xliff_get_serializer($translatable->getSourceLanguage());
     $xliff = $serializer->serialize($translatable, $targetLanguage);
