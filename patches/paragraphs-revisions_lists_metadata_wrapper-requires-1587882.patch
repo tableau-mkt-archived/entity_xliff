@@ -1,0 +1,21 @@
+diff --git a/paragraphs.module b/paragraphs.module
+index 47093b6..3f2470c 100644
+--- a/paragraphs.module
++++ b/paragraphs.module
+@@ -1086,15 +1086,9 @@ function paragraphs_field_property_get($entity, array $options, $name, $entity_t
+   $values = array();
+   if (isset($entity->{$name}[$langcode])) {
+     foreach ($entity->{$name}[$langcode] as $delta => $data) {
+-      // Wrappers do not support multiple entity references being revisions or
+-      // not yet saved entities. In the case of a single reference we can return
+-      // the entity object though.
+-      if ($field['cardinality'] == 1) {
++      if ($field['cardinality'] == 1 || isset($data['value'])) {
+         $values[$delta] = paragraphs_field_get_entity($data);
+       }
+-      elseif (isset($data['value'])) {
+-        $values[$delta] = $data['value'];
+-      }
+     }
+   }
+   // For an empty single-valued field, we have to return NULL.
