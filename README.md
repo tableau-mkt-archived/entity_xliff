@@ -53,12 +53,11 @@ You may also need to apply this patch to ensure translations created by this
 module during import inherit the correct moderation state:
 https://www.drupal.org/node/1436260
 
-Using this module with Workbench Moderation _and_ Paragraphs _and_ Field
-Collections? In order to avoid bugs related to exporting data from the wrong
-paragraphs or field collections revisions, you may need to apply this patch to
-the Entity API module as well as corresponding patches for Paragraphs and/or
-Field Collections modules, included in the "patches" folder in this module root:
-https://www.drupal.org/node/1587882
+Using this module with Workbench Moderation _and_ Paragraphs? In order to avoid
+bugs related to exporting data from the wrong paragraphs revisions, you may need
+to apply this patch to the Entity API module as well as corresponding patches
+for Paragraphs and/or Field Collections modules, included in the "patches"
+folder in this module root: https://www.drupal.org/node/1587882
 
 ## Developing with this module
 @todo
