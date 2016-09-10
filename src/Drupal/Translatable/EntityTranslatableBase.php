@@ -428,9 +428,20 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
           if (is_numeric($ref)) {
             // @codeCoverageIgnoreStart
-            $vals = $wrapper->raw();
-            $vals[$ref] = $field->getIdentifier();
-            $wrapper->set($vals);
+            try {
+              $vals = $wrapper->raw();
+              // If Entity API is patched to allow setting raw entities in list
+              // wrappers, then set the raw entity.
+              // @see https://www.drupal.org/node/1587882
+              $vals[$ref] = $field->raw();
+              $wrapper->set($vals);
+            }
+            catch (\Exception $e) {
+              // Otherwise, we have to set the entity identifier alone.
+              $vals = $wrapper->raw();
+              $vals[$ref] = $field->getIdentifier();
+              $wrapper->set($vals);
+            }
           } // @codeCoverageIgnoreEnd
           else {
             $wrapper->{$ref}->set($field->getIdentifier());

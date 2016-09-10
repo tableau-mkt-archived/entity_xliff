@@ -43,6 +43,11 @@ pushd $BUILD_DIR/drupal
   drush cc all
 popd
 
+# Patch entity API module.
+pushd $BUILD_DIR/drupal/sites/all/modules/entity
+  curl https://www.drupal.org/files/1587882.patch | patch -p1
+popd
+
 # Patch field collection module.
 pushd $BUILD_DIR/drupal/sites/all/modules/field_collection
   curl https://www.drupal.org/files/issues/1937866-field_collection-metadata-setter-6.patch | patch -p1
@@ -52,6 +57,7 @@ popd
 # Patch paragraphs module.
 pushd $BUILD_DIR/drupal/sites/all/modules/paragraphs
   curl https://www.drupal.org/files/issues/paragraphs-metadata_wrapper_set_revision-2621866-3.patch | patch -p1
+  cat $WORKING_DIR/patches/paragraphs-revisions_lists_metadata_wrapper-requires-1587882.patch | patch -p1
 popd
 
 # Patch entityreference module.

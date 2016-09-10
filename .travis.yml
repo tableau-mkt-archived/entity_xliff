@@ -66,7 +66,7 @@ before_script:
   - if [ $BDD = 'true' ] ; then popd ; fi
 
 script:
-  - phpunit --coverage-text --coverage-clover build/logs/clover.xml
+  - ./vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml
   - if [ $BDD = 'true' ] ; then behat --verbose ; fi
 
 after_script:
