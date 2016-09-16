@@ -29,13 +29,15 @@ class EntityTranslatableFactoryTest extends \PHPUnit_Framework_TestCase {
       $expectedType => $willedEntityInfo[$expectedType]['entity xliff translatable classes'],
     );
 
+    $fakeFailure = array();
+
     $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('entityGetInfo'));
     $observerDrupal->expects($this->any())
       ->method('entityGetInfo')
       ->willReturn($willedEntityInfo);
 
     $factory = EntityTranslatableFactoryInstance::getInstance($observerDrupal);
-    $this->assertSame($expectedClassMap, $factory->getClassMap());
+    $this->assertSame($fakeFailure, $factory->getClassMap());
   }
 
   /**
