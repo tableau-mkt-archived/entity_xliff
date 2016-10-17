@@ -33,6 +33,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     When I click "View published"
     And I click "Français"
     Then I should see the heading "fr page title"
@@ -44,6 +45,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     When I click "View published"
     And I click "Français"
     Then I should see the heading "fr page title"
@@ -69,6 +71,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I should see "Complex fr page title field collection 2"
     And I should see "Complex fr page title field collection 3"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
 
   Scenario: Import paragraph-based XLIFF through portal
     Given I am viewing a "page" content with paragraphs and the title "Paragraph English page title"
@@ -77,6 +80,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     When I click "View published"
     Then I should not see the heading "Paragraph fr page title"
     And I should not see "Paragraph fr page title paragraph 1"
@@ -92,6 +96,7 @@ Feature: Content Translation of Node and Field Collection Entities
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     When I click "View published"
     Then I should not see the heading "Paragraph fr page title"
     And I should not see "Paragraph fr page title paragraph 1"

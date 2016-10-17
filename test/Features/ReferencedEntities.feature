@@ -38,6 +38,7 @@ Feature: Referenced Entity Translation
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     When I click "View"
     And I click "Français"
     Then I should see "fr host page title"
@@ -51,6 +52,7 @@ Feature: Referenced Entity Translation
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     When I click "View"
     Then I should see "English host page title"
     And I should see "English host body text"

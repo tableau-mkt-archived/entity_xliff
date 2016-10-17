@@ -27,6 +27,7 @@ Feature: Alternative Source Languages
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     When I click "View published"
     And I click "English"
     Then I should see the heading "en page title"
@@ -38,6 +39,7 @@ Feature: Alternative Source Languages
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     When I click "View published"
     Then I should see the heading "French page title"
     And I should see "French page body text."

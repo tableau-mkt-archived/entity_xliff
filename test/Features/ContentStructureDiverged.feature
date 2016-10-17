@@ -17,6 +17,7 @@ Feature: Content structure divergence
     And I attach an outdated translation of this node
     And I press the "Import" button
     Then there should be no corrupt translation sets.
+    And there should be no cross connected paragraphs.
     And I should not see the message containing "Successfully imported"
     And I should see the error message containing "You will need to re-export and try again."
     When I click "New draft"
