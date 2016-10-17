@@ -341,6 +341,18 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   }
 
   /**
+   * @Then there should be no cross connected paragraphs.
+   */
+  public function thereShouldBeNoCrossConnectedParagraphs() {
+    $errorMessage = '';
+    $query = db_query('SELECT field_sections_value FROM {field_data_field_sections} GROUP BY field_sections_value HAVING count(*) > 1;');
+
+    if ($query->rowCount() > 0) {
+      $errorMessage .= 'Found one or more nodes which have cross connected paragraphs. The paragraphs field records should always have unique field_sections_value';
+    }
+  }
+
+  /**
    * Instantiates and saves a Paragraph item and attaches it to the given host.
    * @param string $hostType
    * @param object $host
