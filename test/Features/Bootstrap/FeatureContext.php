@@ -349,7 +349,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     $query = db_query('SELECT field_paragraphs_value as pid FROM {field_data_field_paragraphs};');
     $result = $query->fetchAll();
     foreach ($result as $record){
-      $errorMessage .=  $record->pid;
+      $errorMessage .=  ' | '.$record->pid;
     }
     /*
     if ($query->rowCount() > 0) {
