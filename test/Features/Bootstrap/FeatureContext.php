@@ -347,8 +347,8 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     $errorMessage = '';
     // Test for cross connected paragraphs in the sections field.
     $query = db_query('SELECT field_paragraphs_value as pid FROM {field_data_field_paragraphs};');
-    $query->fetchAll();
-    foreach ($query as $record){
+    $result = $query->fetchAll();
+    foreach ($result as $record){
       $errorMessage .=  $record->pid;
     }
     /*
