@@ -54,11 +54,6 @@ pushd $BUILD_DIR/drupal/sites/all/modules/paragraphs
   curl https://www.drupal.org/files/issues/paragraphs-metadata_wrapper_set_revision-2621866-3.patch | patch -p1
 popd
 
-# Patch entityreference module.
-pushd $BUILD_DIR/drupal/sites/all/modules/entityreference
-  curl https://www.drupal.org/files/issues/entityreference-rendered-entity-is-not-language-aware-1674792-58.patch | patch -p1
-popd
-
 # Patch workbench moderation module.
 pushd $BUILD_DIR/drupal/sites/all/modules/workbench_moderation
   curl https://www.drupal.org/files/issues/workbench_moderation-transaction_rollback_shutdown_sanity-2664018-2.patch | patch -p1
