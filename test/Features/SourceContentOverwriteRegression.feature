@@ -62,6 +62,7 @@ Feature: Source Content Overrrite (Regression)
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
+    And there should be no cross connected paragraphs.
     When I click "View published"
     Then I should see "English page title paragraph 1"
     When I click "XLIFF"
@@ -70,3 +71,4 @@ Feature: Source Content Overrrite (Regression)
     When I click "View published"
     Then I should see "English page title paragraph 1"
     And I should not see "fr page title paragraph 1"
+    And there should be no cross connected paragraphs.
