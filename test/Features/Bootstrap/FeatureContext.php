@@ -346,12 +346,16 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
   public function thereShouldBeNoCrossConnectedParagraphs() {
     $errorMessage = '';
     // Test for cross connected paragraphs in the sections field.
-    $query = db_query('SELECT field_paragraphs_value FROM {field_data_field_paragraphs} GROUP BY field_paragraphs_value HAVING count(*) > 1;');
-
+    $query = db_query('SELECT field_paragraphs_value as pid FROM {field_data_field_paragraphs};');
+    $query->fetchAll();
+    foreach ($query as $record){
+      $errorMessage .=  $record->pid;
+    }
+    /*
     if ($query->rowCount() > 0) {
       $errorMessage .= 'Found one or more nodes which have cross connected paragraphs. The paragraphs field values should always have unique field_paragraphs_value.';
     }
-
+  */
     // If we've detected bad paragraphs field values throw the error.
     if ($errorMessage) {
       throw new Exception($errorMessage);
