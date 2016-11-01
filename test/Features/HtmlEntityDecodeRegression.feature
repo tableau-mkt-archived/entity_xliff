@@ -5,7 +5,7 @@ Feature: Handling for Encoded HTML Entities
   Import and export XLIFF translations that contain HTML encoded entities
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff, bypass node access" permission
+    Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
     And "page" content:
       | title             | body                                 | language | promote |
       | French page title | French page body text 'en français.' | fr       | 1       |

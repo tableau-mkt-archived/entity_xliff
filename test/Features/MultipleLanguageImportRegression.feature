@@ -5,7 +5,7 @@ Feature: Multiple Language Import (Regression)
   Import XLIFF translations for multiple languages through the XLIFF portal
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff, bypass node access" permission
+    Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
 
   Scenario: Import XLIFF through portal
     Given "page" content:
