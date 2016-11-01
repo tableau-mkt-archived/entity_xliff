@@ -5,7 +5,7 @@ Feature: Alternative Source Languages
   Import and export XLIFF translations with language sources other than English
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff" permission
+    Given I am logged in as a user with the "administer entity xliff, bypass node access" permission
     And "page" content:
       | title             | body                   | language | promote |
       | French page title | French page body text. | fr       | 1       |

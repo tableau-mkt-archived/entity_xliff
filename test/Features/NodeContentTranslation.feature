@@ -5,7 +5,7 @@ Feature: Content Translation of Node and Field Collection Entities
   Import and export XLIFF translations through the XLIFF portal UI for a node
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff" permission
+    Given I am logged in as a user with the "administer entity xliff, bypass node access" permission
 
   Scenario: Access XLIFF portal local task
     Given I am viewing a "page" content with the title "English page title"
