@@ -5,7 +5,7 @@ Feature: Content Translation of Node and Field Collection Entities
   Import and export XLIFF translations through the XLIFF portal UI for a node
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
+    Given I am logged in as a user with the "administer entity xliff,translate content,bypass node access,bypass workbench moderation" permission
 
   Scenario: Access XLIFF portal local task
     Given I am viewing a "page" content with the title "English page title"
@@ -24,11 +24,10 @@ Feature: Content Translation of Node and Field Collection Entities
 
   Scenario: Import XLIFF through portal
     Given "page" content:
-    | title              | body                    | promote |
-    | English page title | English page body text. | 1       |
+    | title              | body                    | promote | uid | language |
+    | English page title | English page body text. | 1       | 1   | en       |
     When I am on the homepage
     And follow "English page title"
-    And I click "XLIFF"
     When I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
@@ -38,7 +37,8 @@ Feature: Content Translation of Node and Field Collection Entities
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
     # Re-import to test the pre-existing/non-initialization flow.
-    When I click "English"
+    When I click "Translate"
+    And I click "English page title"
     And I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
@@ -48,10 +48,13 @@ Feature: Content Translation of Node and Field Collection Entities
     And I click "Français"
     Then I should see the heading "fr page title"
     And I should see "fr page body text."
-    When I click "English"
+    When I click "Translate"
+    And I click "English"
     Then I should see the heading "English page title"
     And I should see "English page body text."
 
+
+    # Not supported in combination with Workbench moderation
   Scenario: Import collection-based XLIFF through portal
     Given I am viewing a 3 complex "page" content with the title "Complex English page title"
     When I click "XLIFF"
@@ -63,7 +66,8 @@ Feature: Content Translation of Node and Field Collection Entities
     And I should not see "Complex fr page title field collection 1"
     And I should not see "Complex fr page title field collection 2"
     And I should not see "Complex fr page title field collection 3"
-    When I click "Français"
+    When I click "Translate"
+    When I click "Complex fr page title"
     Then I should see the heading "Complex fr page title"
     And I should see "Complex fr page title field collection 1"
     And I should see "Complex fr page title field collection 2"
@@ -85,8 +89,10 @@ Feature: Content Translation of Node and Field Collection Entities
     Then I should see the heading "Paragraph fr page title"
     And I should see "Paragraph fr page title paragraph 1"
     And I should see "Paragraph fr page title paragraph 2"
+
     # Re-import to test the pre-existing/non-initialization flow.
-    When I click "English"
+    When I click "Translate"
+    And I click "Paragraph English page title"
     And I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button

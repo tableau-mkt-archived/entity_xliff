@@ -51,7 +51,13 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     $this->drupalContext = $environment->getContext('Drupal\DrupalExtension\Context\DrupalContext');
     $this->minkContext = $environment->getContext('Drupal\DrupalExtension\Context\MinkContext');
   }
-
+  /**
+   * @Then I Expect You To Die
+   */
+  public function iExpectYouToDie()
+  {
+    die();
+  }
   /**
    * @When /^I attach(?:| a(?:|n)) (?:|")([^"]+)(?:|") translation(?:|s) of this "([^"]+)" ([^"]+)$/
    */
@@ -214,10 +220,12 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
    */
   public function iAmViewingAComplexNode($n_many, $type, $title) {
     // First, create a node.
+    // The DrupalAPI driver will only correctly set the uid if we pass both uid and Author
     $node = (object) array(
       'title' => $title,
       'type' => $type,
       'uid' => 1,
+      'author' => "admin",
     );
     $node = $this->getDriver()->createNode($node);
 
@@ -273,6 +281,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
         'title' => $title,
         'type' => $type,
         'uid' => 1,
+        'language' => 'en',
       );
       $node = $this->getDriver()->createNode($node);
     }
@@ -354,7 +363,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     foreach ($data as $field => $values) {
       $paragraph->{$field} = $values;
     }
-    $paragraph->save();
+    $paragraph->save(TRUE);
     return $paragraph;
   }
 
@@ -394,3 +403,4 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     return isset($entities[$entityType]) ? (int) key($entities[$entityType]) : 0;
   }
 }
+

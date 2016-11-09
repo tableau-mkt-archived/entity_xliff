@@ -9,7 +9,7 @@ Feature: Source Content Overrrite (Regression)
     And "page" content:
       | title              | body                    | language | promote |
       | English page title | English page body text. | en       | 1       |
-    And I am on the homepage
+    When I am on the homepage
     And follow "English page title"
     And I click "Translate"
     And I click "add translation"
@@ -17,7 +17,10 @@ Feature: Source Content Overrrite (Regression)
     And I press "Save"
 
   Scenario: Import over existing translation set (focus on field collections)
-    When I click "English"
+    When I click "Translate"
+    And I click "English page title"
+    And I click "New draft"
+    And I press "Save"
     And I click "New draft"
     And I fill in "English field collection" for "field_field_collection[en][0][field_long_text][und][0][value]"
     And I press "Save"
@@ -37,8 +40,9 @@ Feature: Source Content Overrrite (Regression)
 
   Scenario: Import over existing translation set (focus on entity references)
     Given "page" content:
-      | title                    | body                     |
-      | English regression child | English child body text. |
+      | title                    | body                     | language | promote |
+      | English page title       | English page body text.  | en       | 1       |
+      | English regression child | English child body text. | en       | 1       |
     When I am on the homepage
     And follow "English page title"
     And this node references the "English regression child" node
@@ -57,16 +61,16 @@ Feature: Source Content Overrrite (Regression)
     And I should not see "fr regression child"
 
   Scenario: Import over existing translation set (focus on paragraphs)
-    Given I am viewing a "page" content with paragraphs and the title "English page title"
+    Given I am viewing a "page" content with paragraphs and the title "English page title paragraphs"
     When I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View published"
-    Then I should see "English page title paragraph 1"
+    Then I should see "English page title paragraphs paragraph 1"
     When I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     When I click "View published"
-    Then I should see "English page title paragraph 1"
-    And I should not see "fr page title paragraph 1"
+    Then I should see "English page title paragraphs paragraph 1"
+    And I should not see "fr page title paragraphs paragraph 1"
