@@ -29,8 +29,6 @@ env:
 
 matrix:
   include:
-    - php: "5.3"
-      env: BDD=true
     - php: "5.4"
       env: BDD=true
     - php: "5.5"
@@ -38,7 +36,7 @@ matrix:
     - php: "5.6"
       env: BDD=true
     - php: "7.0"
-      env: BDD=false
+      env: BDD=true
     - php: "hhvm"
       env: BDD=false
 
