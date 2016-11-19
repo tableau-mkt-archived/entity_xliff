@@ -5,11 +5,12 @@ Feature: Referenced Entity Translation
   Import and export XLIFFs through the portal UI including, entity references
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff" permission
+    Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
     And "page" content:
       | title                    | body                     | promote |
       | English host page title  | English host body text.  | 1       |
       | English child page title | English child body text. | 1       |
+
     When I am on the homepage
     And follow "English host page title"
     Given this node references the "English child page title" node
