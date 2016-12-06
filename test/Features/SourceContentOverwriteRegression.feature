@@ -19,24 +19,20 @@ Feature: Source Content Overrrite (Regression)
   Scenario: Import over existing translation set (focus on field collections)
     When I click "Translate"
     And I click "English page title"
-    And I click "New draft"
-    And I press "Save"
-    And I click "New draft"
-    And I fill in "English field collection" for "field_field_collection[en][0][field_long_text][und][0][value]"
-    And I press "Save"
+    Given this node has 1 field collection
     And I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View published"
-    Then I should see "English field collection"
+    Then I should see "English page title field collection 1"
     When I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View published"
-    Then I should see "English field collection"
-    And I should not see "fr field collection"
+    Then I should see "English page title field collection 1"
+    And I should not see "fr page title field collection 1"
 
   Scenario: Import over existing translation set (focus on entity references)
     Given "page" content:
