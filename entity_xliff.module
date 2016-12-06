@@ -132,7 +132,7 @@ function entity_xliff_menu() {
 
       // Callback to render an entity as an XLIFF file.
       $entityLabel = isset($entityInfo['label']) ? $entityInfo['label'] : 'Entity';
-      $menu[$entityInfo['path'] . '/as.xlf'] = array(
+      $menu[$entityInfo['path'] . '/as-xlf'] = array(
         'title' =>  $entityLabel . ' XLIFF',
         'type' => MENU_CALLBACK,
         'file' => 'entity_xliff.pages.inc',

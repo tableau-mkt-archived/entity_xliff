@@ -80,7 +80,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
 
         // Load the XLIFF file for this node.
         $this->getSession()
-          ->visit($baseUrl . "/$pathPart/$id/as.xlf?targetLang=$targetLang");
+          ->visit($baseUrl . "/$pathPart/$id/as-xlf?targetLang=$targetLang");
         $xliff = $session->getPage()->getContent();
 
         // "Translate" the file.
