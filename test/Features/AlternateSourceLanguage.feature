@@ -26,7 +26,6 @@ Feature: Alternative Source Languages
     When I click "XLIFF"
     When I attach an "en" translation of this "French" node
     And I press the "Import" button
-
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
     When I click "Translate"
