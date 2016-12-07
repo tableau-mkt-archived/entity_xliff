@@ -27,7 +27,7 @@ function entity_xliff_actions($form, &$form_state) {
   $rows = array();
   foreach (language_list() as $langcode => $language) {
     // Generate a link to download / export this entity as XLIFF.
-    $export_link = l('Download', $path . '/as.xlf', array(
+    $export_link = l('Download', $path . '/as-xlf', array(
       'query' => array(
         'targetLang' => $langcode,
       ),
