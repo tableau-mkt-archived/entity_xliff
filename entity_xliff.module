@@ -263,6 +263,13 @@ function entity_xliff_get_field_handlers() {
 }
 
 /**
+ *  Always load the entity_xliff includes to ensure their alters are invoked.
+ */
+function entity_xliff_init() {
+  _entity_xliff_load_module_incs();
+}
+
+/**
  * Loads in includes provided on behalf of existing modules.
  */
 function _entity_xliff_load_module_incs() {
