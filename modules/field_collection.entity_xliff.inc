@@ -28,6 +28,9 @@ if (!function_exists('field_collection_entity_xliff_translatable_fields_alter'))
         $fields[] = $field;
       }
     }
+    // If multiple alters alter this entity there can be gaps in the $fields array that throw warnings.
+    // Reindex the array before returning.
+    $fields = array_values($fields);
   }
 
 }
