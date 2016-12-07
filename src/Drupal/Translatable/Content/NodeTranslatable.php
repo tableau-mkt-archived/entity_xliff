@@ -105,17 +105,29 @@ class NodeTranslatable extends EntityTranslatableBase {
         // cases where this node happens to reference a field collection...
         $target->revision = FALSE;
       }
-      // Otherwise prepare the original for translation.
+      // Otherwise create a new node in the target language
+      // and then prepare it for translation.
+      // The fieldAttachPrepareTranslation step is especially
+      // important for paragraph fields, without it they get
+      // duplicated with new revisions instead of replicated.
       else {
+        // Make sure that the source node has its language set to "en".
         $this->initializeTranslation();
-        $target = $this->getRawEntity($this->entity);
+
+        // Retrieve the source and then clone it so that we are not accidentally
+        // overwriting the version in static cache.
+        $source = $this->getRawEntity($this->entity);
+        $target =  clone $source;
+        // Set the original as the translation source to maintain the translation set.
+        $target->translation_source = $source;
+        // Clear out and/or set all the IDs from the target so it can be a new node.
         unset($target->nid, $target->vid);
         $target->is_new = TRUE;
-        $this->translationNodePrepare($target, $this->entity->getIdentifier(), $targetLanguage);
-        
-        // In rare cases, the correct target language will not be applied. So
-        // stamp the correct one here, now.
         $target->language = $targetLanguage;
+
+        // Run fieldAttachPrepareTranslation to fire translation related alters on
+        // any complex field types (i.e. paragraphs!).
+        $this->drupal->fieldAttachPrepareTranslation('node', $target, $targetLanguage, $source, $source->language);
       }
 
       $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('node', $target);
