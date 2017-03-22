@@ -7,8 +7,8 @@ Feature: Content structure divergence
   Background:
     Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
     And "page" content:
-      | title                    | body                          | language  | promote |
-      | Outdated structure title | Exact contents do not matter. | und       | 1       |
+      | title                    | field_long_text                          | language  | promote |
+      | Outdated structure title | Exact contents do not matter.            | und       | 1       |
     And I am on the homepage
     And I follow "Outdated structure title"
 

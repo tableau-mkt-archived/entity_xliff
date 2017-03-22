@@ -2,9 +2,18 @@ default:
   autoload:
     '': %paths.base%/test/Features/Bootstrap
   suites:
-    default:
+    contentTranslation:
       paths:
-        - %paths.base%/test/Features
+        - %paths.base%/test/Features/contentTranslation
+      contexts:
+        - FeatureContext
+        - Drupal\DrupalExtension\Context\DrupalContext
+        - Drupal\DrupalExtension\Context\MinkContext
+        - Drupal\DrupalExtension\Context\MessageContext
+        - Drupal\DrupalExtension\Context\DrushContext
+    entityTranslation:
+      paths:
+        - %paths.base%/test/Features/entityTranslation
       contexts:
         - FeatureContext
         - Drupal\DrupalExtension\Context\DrupalContext

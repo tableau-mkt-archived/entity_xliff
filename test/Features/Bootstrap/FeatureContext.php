@@ -59,6 +59,31 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     die();
   }
   /**
+   * @Given module :module is enabled
+   *
+   */
+  public function moduleIsEnabled($module)
+  {
+    print module_exists($module) ? 'yes' : 'no';
+
+
+    if(module_exists($module)){
+      module_enable(array($module), TRUE);
+    }
+
+    die;
+  }
+  /**
+   * @Given module :module is disabled
+   *
+   */
+  public function moduleIsDisabled($module)
+  {
+    if(module_exists($module)){
+      module_disable(array($module), TRUE);
+    }
+  }
+  /**
    * @When /^I attach(?:| a(?:|n)) (?:|")([^"]+)(?:|") translation(?:|s) of this "([^"]+)" ([^"]+)$/
    */
   public function iAttachATranslationOfThisEntity($targetLangs, $sourceLang, $entity, $outdatedField = FALSE) {
@@ -92,7 +117,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
         $translation = str_replace('ç', '&amp;ccedil;', $translation);
 
         if ($outdatedField) {
-          $translation = str_replace('="body"', '="old_body"', $translation);
+          $translation = str_replace('="field_long_text"', '="old_field_long_text"', $translation);
         }
 
         // Write the file to the configured path.

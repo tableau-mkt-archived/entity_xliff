@@ -7,10 +7,11 @@ Feature: Multiple Language Import (Regression)
   Background:
     Given I am logged in as a user with the "administer entity xliff,bypass node access,bypass workbench moderation,translate content" permission
 
+    And "page" content:
+      | title              | field_long_text                    | language | promote | status |
+      | English page title | English page body text. | en       | 1       | 1      |
+
   Scenario: Import XLIFF through portal
-    Given "page" content:
-       | title              | body                    | langauge | promote | status |
-       | English page title | English page body text. | en       | 1       | 1      |
     When I am on the homepage
     And follow "English page title"
     And I click "XLIFF"

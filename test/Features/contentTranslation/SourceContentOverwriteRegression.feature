@@ -7,7 +7,7 @@ Feature: Source Content Overrrite (Regression)
   Background: Set up a translation set
     Given I am logged in as a user with the "administer entity xliff,translate content,bypass node access,bypass workbench moderation" permissions
     And "page" content:
-      | title              | body                    | language | promote |
+      | title              | field_long_text                    | language | promote |
       | English page title | English page body text. | en       | 1       |
     When I am on the homepage
     And follow "English page title"
@@ -36,7 +36,7 @@ Feature: Source Content Overrrite (Regression)
 
   Scenario: Import over existing translation set (focus on entity references)
     Given "page" content:
-      | title                    | body                     | language | promote |
+      | title                    | field_long_text                     | language | promote |
       | English page title       | English page body text.  | en       | 1       |
       | English regression child | English child body text. | en       | 1       |
     When I am on the homepage
