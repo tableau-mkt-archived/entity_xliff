@@ -92,7 +92,7 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
         $translation = str_replace('ç', '&amp;ccedil;', $translation);
 
         if ($outdatedField) {
-          $translation = str_replace('="body"', '="old_body"', $translation);
+          $translation = str_replace('="field_long_text"', '="old_field_long_text"', $translation);
         }
 
         // Write the file to the configured path.

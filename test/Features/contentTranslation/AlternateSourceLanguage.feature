@@ -6,8 +6,9 @@ Feature: Alternative Source Languages
 
   Background:
     Given I am logged in as a user with the "administer entity xliff,bypass node access,bypass workbench moderation,translate content" permission
+
     And "page" content:
-      | title             | body                   | language | promote | status |
+      | title             | field_long_text                   | language | promote | status |
       | French page title | French page body text. | fr       | 1       | 1      |
 
     And I am on the homepage

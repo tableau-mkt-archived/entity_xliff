@@ -8,7 +8,7 @@ Feature: Entity Field Translation of Comment Entities
     Given I am logged in as a user with the "administer entity xliff,administer comments" permissions
     And I am viewing an "article" content with the title "English article title"
     And I fill in "subject" with "Test English comment"
-    And I fill in "comment_body[und][0][value]" with "This is an English comment."
+    And I fill in "comment_body[en][0][value]" with "This is an English comment."
     And I press the "Save" button
 
   Scenario: Access XLIFF portal local task

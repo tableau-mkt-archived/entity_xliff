@@ -7,7 +7,7 @@ Feature: Unsuitable Translation Target (Regression)
   Background: Set up a translation set with no embedded entities.
     Given I am logged in as a user with the "administer entity xliff,translate content,bypass node access,bypass workbench moderation" permissions
     And "page" content:
-      | title              | body                    | language | promote |
+      | title              | field_long_text                    | language | promote |
       | English page title | English page body text. | en       | 1       |
     And I am on the homepage
     And follow "English page title"
@@ -52,7 +52,7 @@ Feature: Unsuitable Translation Target (Regression)
 
   Scenario: Referenced entity added after initial translation
     Given "page" content:
-      | title                    | body                     |
+      | title                    | field_long_text                     |
       | English regression child | English child body text. |
     When I am on the homepage
     And follow "English page title"

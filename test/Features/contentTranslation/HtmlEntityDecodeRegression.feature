@@ -7,7 +7,7 @@ Feature: Handling for Encoded HTML Entities
   Background:
     Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
     And "page" content:
-      | title             | body                                 | language | promote |
+      | title             | field_long_text                                 | language | promote |
       | French page title | French page body text 'en français.' | fr       | 1       |
     And I am on the homepage
     And I follow "French page title"

@@ -33,12 +33,17 @@ fi
 # Install Drupal into: project_root/build/drupal
 /usr/bin/env PHP_OPTIONS="-d sendmail_path=`which true`" drush --yes qd --profile=standard --no-server --browser=0 --db-url=mysql://$DB_USER:$DB_PW@$DB_HOST/$DB_NAME $BUILD_DIR --verbose --debug
 
+# To pin a version of drupal, use the --core line as part of drush qd
+# and make the version match on the mv line.
+# --core=drupal-7.50
+#mv $BUILD_DIR/drupal-7.50 $BUILD_DIR/drupal
+
 # Place this module into the sites/all/modules directory and enable it.
 rsync -aq "`pwd`" "`pwd`/$BUILD_DIR/drupal/sites/all/modules/entity_xliff" --exclude build
 # pin entity-7.x-1.7 until this gets fixed: https://www.drupal.org/node/2807275
 pushd $BUILD_DIR/drupal
   drush --yes dl composer-8.x-1.2 composer_manager link entity-7.x-1.7 field_collection paragraphs entityreference entity_translation references workbench_moderation-7.x-1.4
-  drush --yes en composer_manager translation link entity_translation field_collection paragraphs_i18n entityreference node_reference workbench_moderation
+  drush --yes en entity_translation composer_manager translation link  field_collection paragraphs_i18n entityreference node_reference workbench_moderation
   drush cc drush
   drush --yes en entity_xliff
   drush cc all

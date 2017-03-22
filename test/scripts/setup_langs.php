@@ -66,6 +66,9 @@ $etypes['comment'] = 'comment';
 $etypes['taxonomy_term'] = 'taxonomy_term';
 variable_set('entity_translation_entity_types', $etypes);
 
+// Also enable entity translation for the 'tags' vocabulary.
+variable_set('entity_translation_taxonomy', array('tags' => 1));
+
 // Enable entity field translation for article nodes, as well as fields.
 variable_set('language_content_type_article', ENTITY_TRANSLATION_ENABLED);
 make_field_translatable('body');
