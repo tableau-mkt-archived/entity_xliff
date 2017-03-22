@@ -59,31 +59,6 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
     die();
   }
   /**
-   * @Given module :module is enabled
-   *
-   */
-  public function moduleIsEnabled($module)
-  {
-    print module_exists($module) ? 'yes' : 'no';
-
-
-    if(module_exists($module)){
-      module_enable(array($module), TRUE);
-    }
-
-    die;
-  }
-  /**
-   * @Given module :module is disabled
-   *
-   */
-  public function moduleIsDisabled($module)
-  {
-    if(module_exists($module)){
-      module_disable(array($module), TRUE);
-    }
-  }
-  /**
    * @When /^I attach(?:| a(?:|n)) (?:|")([^"]+)(?:|") translation(?:|s) of this "([^"]+)" ([^"]+)$/
    */
   public function iAttachATranslationOfThisEntity($targetLangs, $sourceLang, $entity, $outdatedField = FALSE) {

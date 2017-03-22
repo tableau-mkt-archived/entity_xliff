@@ -41,8 +41,6 @@ fi
 # Place this module into the sites/all/modules directory and enable it.
 rsync -aq "`pwd`" "`pwd`/$BUILD_DIR/drupal/sites/all/modules/entity_xliff" --exclude build
 # pin entity-7.x-1.7 until this gets fixed: https://www.drupal.org/node/2807275
-# Download entity_translation but DO NOT enable it
-# since the first suite of tests is for content translation only.
 pushd $BUILD_DIR/drupal
   drush --yes dl composer-8.x-1.2 composer_manager link entity-7.x-1.7 field_collection paragraphs entityreference entity_translation references workbench_moderation-7.x-1.4
   drush --yes en entity_translation composer_manager translation link  field_collection paragraphs_i18n entityreference node_reference workbench_moderation
