@@ -20,6 +20,8 @@ if (!function_exists('field_collection_entity_xliff_translatable_fields_alter'))
     $needle = 'field_collection_item';
 
     for ($n = 0; $n < count($fields); $n++) {
+      // Other alters are sometimes deleting array elements.
+      $fields = array_values($fields);
       $field = $fields[$n];
       // If this field is translatable and it's a field collection, move it to
       // the back of the translatable list.
@@ -28,6 +30,8 @@ if (!function_exists('field_collection_entity_xliff_translatable_fields_alter'))
         $fields[] = $field;
       }
     }
+    // Reset before returning to be nice to other alters..
+    $fields = array_values($fields);
   }
 
 }
