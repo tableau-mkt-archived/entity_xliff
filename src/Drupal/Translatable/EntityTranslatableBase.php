@@ -451,21 +451,39 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
           if (is_numeric($ref)) {
             // @codeCoverageIgnoreStart
-            $vals = $wrapper->raw();
-            $vals[$ref] = $field->getIdentifier();
-            $wrapper->set($vals);
+            try {
+              $vals = $wrapper->raw();
+              // If Entity API is patched to allow setting raw entities in list
+              // wrappers, then set the raw entity.
+              // @see https://www.drupal.org/node/1587882
+              $vals[$ref] = $field->raw();
+              $wrapper->set($vals);
+            }
+            catch (\Exception $e) {
+              // Otherwise, we have to set the entity identifier alone.
+              $vals = $wrapper->raw();
+              $vals[$ref] = $field->getIdentifier();
+              $wrapper->set($vals);
+            }
           } // @codeCoverageIgnoreEnd
           else {
             $wrapper->{$ref}->set($field->getIdentifier());
           }
 
           // Mark this entity as needing saved.
-          $this->entitiesNeedSave[$targetType . ':' . $targetId] = $field;
+          // Create array ordered by # of parents so we can save them in reverse order.
+          $this->entitiesNeedSave[$targetType . ':' . $targetId] = array(
+            'depth' => $this->entitiesNeedSaveDepth,
+            'wrapper' => $field,
+          );
         }
         elseif (is_a($field, 'EntityListWrapper')) {
           $needsSaveKey = $wrapper->type() . ':' . $wrapper->getIdentifier();
           if (!isset($this->entitiesNeedSave[$needsSaveKey])) {
-            $this->entitiesNeedSave[$needsSaveKey] = $wrapper;
+            $this->entitiesNeedSave[$needsSaveKey] = array(
+              'depth' => $this->entitiesNeedSaveDepth,
+              'wrapper' => $wrapper,
+            );
           }
         }
       }
