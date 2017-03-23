@@ -61,6 +61,13 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   protected $entitiesNeedSave = array();
 
   /**
+   * Depth of recursion for each entity needing to be saved. Ensures that they are saved in the correct
+   * order and that revisions are maintained.
+   * @var int
+   */
+  protected $entitiesNeedSaveDepth = 0;
+
+  /**
    * @var EntityTranslatableInterface[]
    */
   protected $translatables = array();
@@ -177,8 +184,18 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     // Attempt to initialize translation.
     $this->initializeTranslation();
 
+    // The array of entities needing save must be ordered so that entities are saved in the reverse of
+    // their order of reference. The array contains arrays like [depth => n, wrapper => entity].
+    // Must save the deepest entities first, otherwise a node will be saved with paragraphs fields (and
+    // maybe field collection fields) pointing at the wrong revision.
+    // Also, nested paragraphs may point at wrong revisions.
+    usort($this->entitiesNeedSave, function($a, $b) {
+      return $b['depth'] - $a['depth'];
+    });
+
     // Save any entities that need saving (this includes the target entity).
-    foreach ($this->entitiesNeedSave as $key => $wrapper) {
+    foreach ($this->entitiesNeedSave as $key => $value) {
+      $wrapper = $value['wrapper'];
       $translatable = $this->translatableFactory->getTranslatable($wrapper);
       $translatable->initializeTranslation();
       $type = $wrapper->type();
@@ -339,6 +356,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
    * @throws EntityStructureDivergedException
    */
   protected function entitySetNestedValue(\EntityMetadataWrapper $wrapper, array $parents, $value, $targetLang) {
+    $this->entitiesNeedSaveDepth++;
     // Get the field reference.
     $ref = array_shift($parents);
     if (is_numeric($ref) && isset($wrapper[$ref])) {
@@ -367,12 +385,17 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           if ($targetId === FALSE) {
             $translatable = $this->translatableFactory->getTranslatable($wrapper);
             $this->drupal->alter('entity_xliff_presave', $wrapper, $targetType);
+            // This not only saves the node, but also any paragraphs (or other field related entities).
             $translatable->saveWrapper($wrapper, $targetLang);
             $targetId = $wrapper->getIdentifier();
           }
 
           // Mark this entity as needing saved.
-          $this->entitiesNeedSave[$targetType . ':' . $targetId] = $wrapper;
+          // Create array ordered by # of parents so we can save them in reverse order.
+          $this->entitiesNeedSave[$targetType . ':' . $targetId] = array(
+            'depth' => $this->entitiesNeedSaveDepth,
+            'wrapper' => $wrapper,
+          );
         }
 
         return TRUE;
@@ -391,7 +414,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
         // If the entity exists and we already have it in static cache, use it.
         if ($targetId && isset($this->entitiesNeedSave[$needsSaveKey])) {
-          $field = $this->entitiesNeedSave[$needsSaveKey];
+          $field = $this->entitiesNeedSave[$needsSaveKey]['wrapper'];
         }
         else {
           // Otherwise, ensure we're using the translation.
@@ -414,7 +437,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         // Always attempt to pull the entity from static cache.
         $needsSaveKey = $targetType . ':' . $targetId;
         if (isset($this->entitiesNeedSave[$needsSaveKey])) {
-          $field = $this->entitiesNeedSave[$needsSaveKey];
+          $field = $this->entitiesNeedSave[$needsSaveKey]['wrapper'];
         }
       }
 
