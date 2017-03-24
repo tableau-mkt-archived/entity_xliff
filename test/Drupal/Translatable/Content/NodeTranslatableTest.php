@@ -32,7 +32,10 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
   public function constructTranslatableAsYetUntranslated() {
     $expectedNid = 123;
 
-    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('getIdentifier', 'raw'));
+    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array(
+      'getIdentifier',
+      'raw'
+    ));
     $observerWrapper->expects($this->once())
       ->method('getIdentifier')
       ->willReturn((string) $expectedNid);
@@ -155,11 +158,13 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
       'language' => 'en',
       'title' => 'Willed title',
     );
+
     $targetLang = 'de';
     $targetNid = 123;
-    $tset = array($targetLang => (object) array(
-      'title' => 'Willed title',
+    $targetNode = (object) array(
       'nid' => $targetNid,
+      'language' => $targetLang,
+      'title' => 'Willed title',
       'tnid' => $sourceNid,
       'vid' => 123,
       'path' => array(
@@ -168,7 +173,8 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
         'alias' => 'willed-title',
         'language' => $targetLang,
       ),
-    ));
+    );
+    $tset = array($targetLang => $targetNode);
     $expectedSourceNode = clone $sourceNode;
     $expectedTarget = new \stdClass(); //clone $sourceNode;
     $expectedTarget->language = $targetLang;
@@ -186,20 +192,20 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $expectedNode->translation_source = $expectedTarget->translation_source;
     $expectedEntity = 'expected entity wrapper';
 
-    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('nodeLoad', 'entityMetadataWrapper', 'saveSession', 'userLoad', 'fieldAttachPrepareTranslation', 'entityXliffLoadModuleIncs', 'alter'));
+    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array(
+      'nodeLoad',
+      'entityMetadataWrapper',
+      'saveSession',
+      'userLoad',
+      'fieldAttachPrepareTranslation',
+      'entityXliffLoadModuleIncs',
+      'alter'
+    ));
     $observerDrupal->expects($this->once())
       ->method('fieldAttachPrepareTranslation')
       ->with(
         $this->equalTo('node'),
-        $this->callback(function($o) use($expectedTarget) {
-          // PHPUnit seems to run this callback twice? And it gets different
-          // results each time. Here's a workaround.
-          static $result = 'not yet run';
-          if ($result === 'not yet run') {
-            $result = $o == $expectedTarget;
-          }
-          return $result;
-        }),
+        $this->equalTo($expectedTarget),
         $targetLang,
         $this->equalTo($sourceNode),
         $sourceNode->language
@@ -207,29 +213,41 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $observerDrupal->expects($this->exactly(2))
       ->method('nodeLoad')
       ->withConsecutive(
-        array($this->equalTo($targetNid), $this->equalTo(NULL), $this->equalTo(TRUE)),
+        array(
+          $this->equalTo($targetNid),
+          $this->equalTo(NULL),
+          $this->equalTo(TRUE)
+        ),
         array($this->equalTo($sourceNid))
-      )->will($this->onConsecutiveCalls($tset[$targetLang], $expectedSourceNode));
+      )
+      ->will($this->onConsecutiveCalls($tset[$targetLang], $expectedSourceNode));
 
     $observerDrupal->expects($this->once())
       ->method('entityMetadataWrapper')
       ->with($this->equalTo('node'), $this->equalTo($expectedNode))
       ->willReturn($expectedEntity);
 
-    $observerDrupal->expects($this->once())
-      ->method('entityXliffLoadModuleIncs');
-
     $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('getIdentifier'));
     $observerWrapper->expects($this->any())
       ->method('getIdentifier')
       ->willReturn($targetNid);
 
-    $observerDrupal->expects($this->once())
+    $observerDrupal->expects($this->exactly(3))
       ->method('alter')
-      ->with(
-        $this->equalTo('entity_xliff_translatable_fields'),
-        $this->equalTo(array()),
-        $this->equalTo($observerWrapper)
+      ->withconsecutive(
+        array(
+          $this->equalTo('entity_xliff_target_entities'),
+          $this->equalTo($sourceNode),
+        ),
+        array(
+          $this->equalTo('entity_xliff_target_entities'),
+          $this->equalTo($targetNode),
+        ),
+        array(
+          $this->equalTo('entity_xliff_translatable_fields'),
+          $this->equalTo(array()),
+          $this->equalTo($observerWrapper),
+        )
       );
 
     $translatable = new MockNodeTranslatableForTargetEntityTranslationExists($observerWrapper, $observerDrupal);
@@ -248,11 +266,18 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
   public function getTargetEntityNewTranslation() {
     $targetLang = 'de';
     $targetNid = 123;
-    $willedRawNode = (object) array(
+    $sourceNode = (object) array(
       'nid' => $targetNid,
       'vid' => 456,
       'language' => 'en',
       'tnid' => 789,
+    );
+
+    $targetNode = (object) array(
+      'language' => 'de',
+      'tnid' => 789,
+      'translation_source' => $sourceNode,
+      'is_new' => TRUE,
     );
     $expectedEntity = 'expected entity wrapper';
 
@@ -260,15 +285,23 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $observerWrapper->expects($this->any())
       ->method('getIdentifier')
       ->willReturn($targetNid);
-    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array('entityMetadataWrapper', 'translationNodePrepare', 'saveSession', 'userLoad'));
+    $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array(
+      'entityMetadataWrapper',
+      'fieldAttachPrepareTranslation'
+    ));
+    $observerDrupal->expects($this->once())
+      ->method('fieldAttachPrepareTranslation')
+      ->with(
+        $this->equalTo('node'),
+        $this->equalTo($targetNode),
+        $targetLang,
+        $this->equalTo($sourceNode),
+        $sourceNode->language
+      );
     $observerDrupal->expects($this->once())
       ->method('entityMetadataWrapper')
       ->with($this->equalTo('node'))
       ->willReturn($expectedEntity);
-    // Ensure node translation preparation occurs.
-    $observerDrupal->expects($this->once())
-      ->method('translationNodePrepare')
-      ->with($this->equalTo($willedRawNode));
 
     $translatable = $this->getMockBuilder('EntityXliff\Drupal\Tests\Translatable\Content\MockNodeTranslatable')
       ->setMethods(array('getRawEntity'))
@@ -277,7 +310,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $translatable->expects($this->atLeastOnce())
       ->method('getRawEntity')
       ->with($this->equalTo($observerWrapper))
-      ->willReturn($willedRawNode);
+      ->willReturn($sourceNode);
 
     $this->assertEquals($expectedEntity, $translatable->getTargetEntity($targetLang));
   }
@@ -300,7 +333,10 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $expectedNode->language = 'en';
     $expectedNode->tnid = $expectedNid;
 
-    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('raw', 'type'));
+    $observerWrapper = $this->getMock('\EntityDrupalWrapper', array(
+      'raw',
+      'type'
+    ));
     $observerWrapper->expects($this->once())
       ->method('raw')
       ->willReturn((string) $expectedNid);
@@ -401,14 +437,14 @@ class MockNodeTranslatable extends NodeTranslatable {
    * @param \EntityDrupalWrapper $wrapper
    * @param DrupalHandler $handler
    */
-  public function __construct(\EntityDrupalWrapper $wrapper = NULL, DrupalHandler$handler = NULL) {
+  public function __construct(\EntityDrupalWrapper $wrapper = NULL, DrupalHandler $handler = NULL) {
     $this->entity = $wrapper;
     $this->drupal = $handler;
   }
 
   /**
    * Optionally inject specific target entity values.
-   * 
+   *
    * @param array $targetEntities
    */
   public function setTargetEntities(array $targetEntities) {
