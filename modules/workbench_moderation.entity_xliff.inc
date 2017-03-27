@@ -19,7 +19,10 @@ if (!function_exists('workbench_moderation_entity_xliff_translatable_source_alte
       if (workbench_moderation_node_type_moderated($wrapper->getBundle())) {
         // Then wrap the current revision, not the live version.
         $node = workbench_moderation_node_current_load($wrapper->value());
-        $wrapper->set($node);
+        // If this has not been saved yet it will return false, in which case just use the wrapper.
+        if ($node) {
+          $wrapper->set($node);
+        }
       }
     }
   }
