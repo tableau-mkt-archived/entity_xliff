@@ -65,37 +65,47 @@ class NodeTranslatable extends EntityTranslatableBase {
       $this->evaluateTranslationSet();
 
       // If a translation already exists, use it!
+      // $sourceLanguageOriginal = existing translation set source node (or the original source if there is no translation set).
+      // $targetLanguageOriginal = exisiting translation set target (i.e. the node in the target language).
+      // $target = New node (cloned from $sourceLanguageOriginal) used as target of xliff to ensure the complete structure exists.
       if (isset($this->tset[$targetLanguage]->nid)) {
-        // Although a target already exists, we load the source and run it
+
+        // Although an actual target already exists, we load the source and run it
         // through field translation preparation as if one didn't exist already.
         // This ensures all embedded entities have some structure for XLIFF
         // content to be set against.
-        $actual_target = $this->drupal->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
-        $sourceNid = $actual_target->tnid;
-        $target = $this->drupal->nodeLoad($sourceNid);
-        $source = clone $target;
+        $targetLanguageOriginal = $this->drupal->nodeLoad($this->tset[$targetLanguage]->nid, NULL, TRUE);
+        $sourceNid = $targetLanguageOriginal->tnid;
+        $sourceLanguageOriginal = $this->drupal->nodeLoad($sourceNid);
+
+        // Allow for alterations to the node entities
+        // (i.e. workbench moderation to get current revisions).
+        $this->drupal->alter('entity_xliff_target_entities', $sourceLanguageOriginal);
+        $this->drupal->alter('entity_xliff_target_entities', $targetLanguageOriginal);
+        // Retrieve the source and then clone it so that we are not accidentally
+        // overwriting the version in static cache.
+        $target = clone $sourceLanguageOriginal;
         unset($target->nid, $target->vid, $target->tnid);
 
         // Set properties as though translation_node_prepare set them.
         $target->language = $targetLanguage;
-        $target->translation_source = $source;
-        $target->title = $source->title;
+        $target->translation_source = $sourceLanguageOriginal;
+        $target->title = $sourceLanguageOriginal->title;
 
         // Run through field translation preparation, but be sure to reset the
         // actual nid/vid/tnid values. This ensures that we never mistakenly
         // set translations on entities embedded on the source translation.
-        $this->drupal->fieldAttachPrepareTranslation('node', $target, $targetLanguage, $source, $source->language);
-        $target->nid = $actual_target->nid;
-        $target->vid = $actual_target->vid;
-        $target->tnid = $actual_target->tnid;
+        $this->drupal->fieldAttachPrepareTranslation('node', $target, $targetLanguage, $sourceLanguageOriginal, $sourceLanguageOriginal->language);
+        $target->nid = $targetLanguageOriginal->nid;
+        $target->vid = $targetLanguageOriginal->vid;
+        $target->tnid = $targetLanguageOriginal->tnid;
 
         // Ensure all non-translatable properties are preserved from the actual
         // target (including path, but potentially other stuff from contrib
         // like metatags, workbench moderation state, etc).
         $translatableFields = $this->getTranslatableFields();
-        $this->drupal->entityXliffLoadModuleIncs();
         $this->drupal->alter('entity_xliff_translatable_fields', $translatableFields, $this->entity);
-        foreach ((array) $actual_target as $property => $propertyValue) {
+        foreach ((array) $targetLanguageOriginal as $property => $propertyValue) {
           if (array_search($property, $translatableFields) === FALSE) {
             $target->{$property} = $propertyValue;
           }
@@ -105,17 +115,29 @@ class NodeTranslatable extends EntityTranslatableBase {
         // cases where this node happens to reference a field collection...
         $target->revision = FALSE;
       }
-      // Otherwise prepare the original for translation.
+      // Otherwise create a new node in the target language
+      // and then prepare it for translation.
+      // The fieldAttachPrepareTranslation step is especially
+      // important for paragraph fields, without it they get
+      // duplicated with new revisions instead of replicated.
       else {
+        // Make sure that the source node has its language set to "en".
         $this->initializeTranslation();
-        $target = $this->getRawEntity($this->entity);
+
+        // Retrieve the source and then clone it so that we are not accidentally
+        // overwriting the version in static cache.
+        $sourceLanguageOriginal = $this->getRawEntity($this->entity);
+        $target = clone $sourceLanguageOriginal;
+        // Set the original as the translation source to maintain the translation set.
+        $target->translation_source = $sourceLanguageOriginal;
+        // Clear out and/or set all the IDs from the target so it can be a new node.
         unset($target->nid, $target->vid);
         $target->is_new = TRUE;
-        $this->translationNodePrepare($target, $this->entity->getIdentifier(), $targetLanguage);
-        
-        // In rare cases, the correct target language will not be applied. So
-        // stamp the correct one here, now.
         $target->language = $targetLanguage;
+
+        // Run fieldAttachPrepareTranslation to fire translation related alters on
+        // any complex field types (i.e. paragraphs!).
+        $this->drupal->fieldAttachPrepareTranslation('node', $target, $targetLanguage, $sourceLanguageOriginal, $sourceLanguageOriginal->language);
       }
 
       $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('node', $target);

@@ -94,6 +94,26 @@ function entity_xliff_set_xliff($wrapper, $targetLanguage, $xliff, $save = TRUE)
       $transaction->rollback();
       $data = array();
     }
+    catch(\PDOException $e){
+      // Catch any general pdo exceptions (i.e. data too long for field) scoped to the global namespace via \Exception.
+      watchdog_exception('entity xliff', $e);
+      drupal_set_message(t('The @lang XLIFF import for %label failed with a database pdo error. Check logs for entity xliff failures and resolve them.', array(
+        '%label' => $wrapper->label(),
+        '@lang' => $targetLanguage,
+      )), 'error');
+      $transaction->rollback();
+      $data = array();
+    }
+    catch(\Exception $e){
+      // Catch ALL exceptions otherwise the transaction won't roll back and we risk corrupted entitites.
+      watchdog_exception('entity xliff', $e);
+      drupal_set_message(t('The @lang XLIFF import for %label failed. Check logs for entity xliff failures and resolve them.', array(
+        '%label' => $wrapper->label(),
+        '@lang' => $targetLanguage,
+      )), 'error');
+      $transaction->rollback();
+      $data = array();
+    }
 
     // Clean up after XLIFF import.
     _entity_xliff_should_cancel_node_reference_translation_prep(FALSE);

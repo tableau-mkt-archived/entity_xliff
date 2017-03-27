@@ -631,7 +631,8 @@ namespace EntityXliff\Drupal\Tests\Translatable {
 
       $this->assertTrue($translatable->entitySetNestedValue($observerWrapper, $givenParents, $givenValue, $givenTargetLang));
       $needsSave = $translatable->getEntitiesNeedSave();
-      $this->assertSame($observerWrapper, $needsSave[$expectedKey]);
+      // The array from getEntitiesNeedSave is in the form ['type:id' =>['depth' => depth, 'wrapper' => wrapper]].
+      $this->assertSame($observerWrapper, $needsSave[$expectedKey]['wrapper']);
     }
 
     /**
@@ -685,11 +686,19 @@ namespace EntityXliff\Drupal\Tests\Translatable {
         ->willReturn($observerTranslatable);
 
       $translatable = new EntityTranslatableMockForEntitySetNestedValue($mockEntity, $observerHandler, $observerFactory);
-      $translatable->setEntitiesNeedSave(array($expectedKey => $observerWrapper->{$givenBaseField}));
+      // Create the 2 dimensional array needed by setEntitiesNeedSave in the SUT code.
+      $entitiesNeedingSaved = array(
+        $expectedKey => array(
+          'depth' => 1,
+          'wrapper' => $observerWrapper->{$givenBaseField}
+        )
+      );
+      $translatable->setEntitiesNeedSave($entitiesNeedingSaved);
 
       $translatable->entitySetNestedValue($observerWrapper, $givenParents, $givenValue, $givenTargetLang);
       $needsSave = $translatable->getEntitiesNeedSave();
-      $this->assertSame($observerWrapper->{$givenBaseField}, $needsSave[$expectedKey]);
+      // The array from getEntitiesNeedSave is in the form ['type:id' =>['depth' => depth, 'wrapper' => wrapper]].
+      $this->assertSame($observerWrapper->{$givenBaseField}, $needsSave[$expectedKey]['wrapper']);
     }
 
     /**
@@ -1003,10 +1012,18 @@ namespace EntityXliff\Drupal\Tests\Translatable {
       $this->initialized = TRUE;
     }
 
+    /**
+     * This needs to be an array like entitytype:entityid = [depth => n, wrapper => entity]
+     * @param array $entities
+     */
     public function setEntitiesNeedSave(array $entities) {
-      $this->entitiesNeedSave = $entities;
+      $depth = 0;
+      $this->entitiesNeedSave = array();
+      foreach($entities as $entity) {
+        $depth++;
+        $this->entitiesNeedSave['node:123'] = array('depth' => $depth, 'wrapper' => $entity);
+      }
     }
-
   }
 
   /**
