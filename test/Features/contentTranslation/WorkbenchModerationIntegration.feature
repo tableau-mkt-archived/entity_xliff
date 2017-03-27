@@ -7,14 +7,14 @@ Feature: Workbench Moderation Feature
   Background:
     Given I am logged in as a user with the "administer entity xliff,bypass node access,bypass workbench moderation" permission
     And "page" content:
-      | title          | body                               | promote | status |
-      | Published page | This page is in a published state. | 1       | 1      |
+      | title          | field_long_text                               | promote | status |
+      | Published page | This page is in a published state.  | 1       | 1      |
     And I am on the homepage
     And I follow "Published page"
 
   Scenario: Export current revision instead of published revision
     Given I click "New draft"
-    When I fill in "This page is in a draft state." for "Body"
+    When I fill in "This page is in a draft state." for "field_long_text"
     And I select "draft" from "workbench_moderation_state_new"
     And I press "Save"
     Then I should see "Edit draft"
