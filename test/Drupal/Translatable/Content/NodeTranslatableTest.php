@@ -179,11 +179,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $expectedTarget = new \stdClass(); //clone $sourceNode;
     $expectedTarget->language = $targetLang;
     $expectedTarget->title = $expectedSourceNode->title;
-    $expectedTarget->translation_source = (object) array(
-      'language' => $sourceNode->language,
-      'title' => $sourceNode->title,
-      'nid' => $sourceNode->nid,
-    );
+    $expectedTarget->translation_source = $expectedSourceNode;
 
     $expectedNode = clone $tset[$targetLang];
     $expectedNode->revision = FALSE;
@@ -195,20 +191,26 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler', array(
       'nodeLoad',
       'entityMetadataWrapper',
-      'saveSession',
-      'userLoad',
       'fieldAttachPrepareTranslation',
-      'entityXliffLoadModuleIncs',
       'alter'
     ));
     $observerDrupal->expects($this->once())
       ->method('fieldAttachPrepareTranslation')
       ->with(
         $this->equalTo('node'),
-        $this->equalTo($expectedTarget),
+        $this->callback(function($o) use($expectedTarget) {
+          // PHPUnit seems to run this callback twice? And it gets different
+          // results each time. Here's a workaround.
+          // This is different in phpunit 5.x so be careful!
+          static $result = 'not yet run';
+          if ($result === 'not yet run') {
+            $result = $o == $expectedTarget;
+          }
+          return $result;
+        }),
         $targetLang,
-        $this->equalTo($sourceNode),
-        $sourceNode->language
+        $this->equalTo($expectedSourceNode),
+        $expectedSourceNode->language
       );
     $observerDrupal->expects($this->exactly(2))
       ->method('nodeLoad')
