@@ -23,7 +23,7 @@ class IntegerFieldHandler implements FieldHandlerInterface {
   /**
    * {@inheritdoc}
    */
-  public function setValue(\EntityMetadataWrapper $wrapper, $value) {
+  public function setValue(\EntityMetadataWrapper $wrapper, $value, $context = array()) {
     $wrapper->set(intval($value));
   }
 

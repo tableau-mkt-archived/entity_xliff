@@ -404,10 +404,32 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         return FALSE;
       }
     }
-    // Recursive case. We need to go deeper.
     else {
-      // Ensure we're always setting data against the target entity.
-      if (is_a($field, 'EntityDrupalWrapper')) {
+      // The field may be a wrapped structure, which basically means that its values exist as an
+      // associative array. E.g.:
+      // array(
+      //  'title' => 'foo',
+      //  'id' => 'bar',
+      //  ...
+      // )
+      //
+      // At this point, the $value param is the simple string. In order to set the field value properly
+      // we have to pass in context about the field parents and other properties.
+      if (is_a($field, 'EntityStructureWrapper')) {
+        if ($handler = $this->fieldMediator->getInstance($field)) {
+
+          $context['#parents'] = $parents;
+          $context['#target_language'] = $targetLang;
+
+          $handler->setValue($field, $value, $context);
+          return TRUE;
+        }
+        else {
+          return FALSE;
+        }
+      }
+      // Recursive case. We need to go deeper. Ensure we're always setting data against the target entity.
+      elseif (is_a($field, 'EntityDrupalWrapper')) {
         $targetId = $field->getIdentifier();
         $targetType = $field->type();
         $needsSaveKey = $targetType . ':' . $targetId;

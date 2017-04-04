@@ -44,7 +44,13 @@ interface FieldHandlerInterface {
    *   If the value provided by that method is an array, then $value will be an
    *   array, though instead of the #text and #label keys, the translated string
    *   will be provided directly.
+   *
+   * @param array $context
+   *   Contextual information about the $value param, this may include information
+   *   such as the parent structure of the value for cases like structured fields,
+   *   or the targetLanguage of the value. This is an optional parameter and
+   *   defaults to an empty array().
    */
-  public function setValue(\EntityMetadataWrapper $wrapper, $value);
+  public function setValue(\EntityMetadataWrapper $wrapper, $value, $context = array());
 
 }
