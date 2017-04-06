@@ -14,7 +14,7 @@ Feature: Workbench Moderation Feature
 
   Scenario: Export current revision instead of published revision
     Given I click "New draft"
-    When I fill in "This page is in a draft state." for "field_long_text"
+    When I fill in "This page is in a draft state." for "Long Text"
     And I select "draft" from "workbench_moderation_state_new"
     And I press "Save"
     Then I should see "Edit draft"

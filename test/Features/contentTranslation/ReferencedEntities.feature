@@ -42,7 +42,6 @@ Feature: Referenced Entity Translation
     When I click "View"
     And I click "Français"
     Then I should see "fr host page title"
-    Then I Expect You To Die
     And I should see "fr host body text"
     And I should see "fr child page title"
     And I should see "fr child body text"
