@@ -231,153 +231,28 @@ namespace EntityXliff\Drupal\Tests\Translatable\Content {
     }
 
     /**
-     * Tests the getTargetEntity method in the case that the host language does
-     * not match the target, and thus we need to create brand new field collection
-     * item, cloning the wrapped collection.
+     * Tests that the getTargetEntity method returns the wrapped target entity.
      *
      * @test
      */
-    public function getTargetEntityTranslationDoesNotExist() {
+    public function getTargetEntityUncached() {
       $targetLang = 'de';
-      $expectedHostEntityType = 'node';
-      $expectedRawHost = 'Raw host entity object.';
-      $mockWrapper = $this->getMock('\EntityDrupalWrapper');
+      $willedFieldCollection = 'The wrapped field collection.';
+      $expectedTarget = 'The wrapped target field collection.';
 
-      // FieldCollectionTranslatable::getTargetEntity() should attempt to access
-      // the wrapped entity's host entity wrapper. From the host entity wrapper,
-      // the language should be returned (and for testing, should not return the
-      // expected target language), and the host's type should be returned.
-      $observerHost = $this->getMock('\EntityDrupalWrapper', array('type'));
-      $observerHost->expects($this->once())
-        ->method('type')
-        ->willReturn($expectedHostEntityType);
-      $observerHost->language = $this->getMock('\EntityMetadataWrapper', array('value'));
-      $observerHost->language->expects($this->once())
-        ->method('value')
-        ->willReturn('not-' . $targetLang);
-
-      // The FieldCollectionTranslatable's DrupalHandler should be used to:
-      // - Check if the Entity Translation module exists (@todo, still necessary?)
-      // - Wrap two different entities:
-      //   - The host entity (on the first go around),
-      //   - The returned field collection entity (on the second go around).
-      $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler');
-      $observerDrupal->expects($this->exactly(2))
-        ->method('entityMetadataWrapper')
-        ->withConsecutive(array(
-          $this->equalTo($expectedHostEntityType),
-          $this->equalTo($expectedRawHost),
-        ), array(
-          $this->equalTo('field_collection_item')
-        ))
-        ->willReturnOnConsecutiveCalls($observerHost, $this->returnArgument(1));
-
-      // FieldCollectionTranslatable should attempt to access the target entity's
-      // host entity type, and set the host entity.
-      $observerTarget = $this->getMock('\FieldCollectionItemEntity', array(
-        'hostEntityType',
-        'setHostEntity'
-      ));
-      $observerTarget->expects($this->once())
-        ->method('hostEntityType')
-        ->willReturn($expectedHostEntityType);
-      $observerTarget->expects($this->once())
-        ->method('setHostEntity')
-        ->with($this->equalTo($expectedHostEntityType), $this->equalTo($expectedRawHost));
-
-      // We expect that the following properties on the target field collection
-      // will be removed.
-      $observerTarget->item_id = 'should be unset';
-      $observerTarget->revision_id = 'should also be unset';
-
-      // Set up the FieldCollectionTranslatable for testing and return the target.
-      $translatable = new MockFieldCollectionTranslatableForTargetEntityTest($mockWrapper, $observerDrupal);
-      $translatable->setExpectedTarget($observerTarget);
-      $translatable->setExpectedHost($expectedRawHost);
-      $actualTarget = $translatable->getTargetEntity($targetLang);
-
-      // Ensure that EntityTranslatableBase::getRawEntity() was called with the
-      // wrapped entity injected in the constructor.
-      $this->assertEquals($mockWrapper, $translatable->gotRawEntity);
-
-      // Ensure that FieldCollectionTranslatable::getHostEntity() was called with
-      // the target entity wrapper loaded from the prior getRawEntity() call.
-      $this->assertEquals($observerTarget, $translatable->gotHostEntity);
-
-      // Ensure the target entity returned is a FieldCollectionItemEntity.
-      $this->assertInstanceOf('\FieldCollectionItemEntity', $actualTarget);
-
-      // Ensure that the FieldCollectionItemEntity clone process set and unset all
-      // properties as expected.
-      $this->assertFalse(isset($actualTarget->item_id));
-      $this->assertFalse(isset($actualTarget->revision_id));
-      $this->assertEquals(TRUE, $actualTarget->is_new);
-    }
-
-    /**
-     * Tests the getTargetEntity method in the case that the host language does
-     * not match the target, and thus we need to create brand new field collection
-     * item, cloning the wrapped collection.
-     *
-     * @test
-     */
-    public function getTargetEntityTranslationExists() {
-      $targetLang = 'de';
-      $expectedHostEntityType = 'node';
-      $mockWrapper = $this->getMock('\EntityDrupalWrapper');
-
-      // FieldCollectionTranslatable::getTargetEntity() should attempt to access
-      // the wrapped entity's host entity wrapper. From the host entity wrapper,
-      // the language should be returned (and for testing, should return the
-      // expected target language), and the host's type should be returned.
-      $observerHost = $this->getMock('\EntityDrupalWrapper', array('type'));
-      $observerHost->expects($this->once())
-        ->method('type')
-        ->willReturn($expectedHostEntityType);
-      $observerHost->language = $this->getMock('\EntityMetadataWrapper', array('value'));
-      $observerHost->language->expects($this->once())
-        ->method('value')
-        ->willReturn($targetLang);
-
-      // The FieldCollectionTranslatable's DrupalHandler should be used to:
-      // - Check if the Entity Translation module exists (@todo, still necessary?)
-      // - Wrap the field collection entity just prior to return.
-      $observerDrupal = $this->getMock('EntityXliff\Drupal\Utils\DrupalHandler');
+      $observerDrupal = $this->getMockDrupalHandlerForConstructor();
       $observerDrupal->expects($this->once())
         ->method('entityMetadataWrapper')
-        ->with($this->equalTo('field_collection_item'))
-        ->willReturnArgument(1);
+        ->with($this->equalTo('field_collection_item'), $this->equalTo($willedFieldCollection))
+        ->willReturn($expectedTarget);
 
-      // FieldCollectionTranslatable should attempt to set the host entity.
-      $observerTarget = $this->getMock('\FieldCollectionItemEntity', array(
-        'hostEntityType',
-        'setHostEntity'
-      ));
-      $observerTarget->expects($this->once())
-        ->method('setHostEntity')
-        ->with($this->equalTo($expectedHostEntityType), $this->callback(function ($subject) use ($observerTarget) {
-          return get_class($observerTarget) === get_class($subject);
-        }));
+      $observerWrapper = $this->getMock('\EntityDrupalWrapper', array('value'));
+      $observerWrapper->expects($this->once())
+        ->method('value')
+        ->willReturn($willedFieldCollection);
 
-      // Set up the FieldCollectionTranslatable for testing and return the target.
-      $translatable = new MockFieldCollectionTranslatableForTargetEntityTest($mockWrapper, $observerDrupal);
-      $translatable->setExpectedTarget($observerTarget);
-      $translatable->setExpectedHost(FALSE);
-      $translatable->setExpectedParent($observerHost);
-      $actualTarget = $translatable->getTargetEntity($targetLang);
-
-      // Ensure that the host entity is pulled from the wrapped entity injected
-      // in the constructor.
-      $this->assertEquals($mockWrapper, $translatable->gotParentEntity);
-
-      // Ensure the target entity returned is a FieldCollectionItemEntity.
-      $this->assertInstanceOf('\FieldCollectionItemEntity', $actualTarget);
-
-      // Ensure that the FieldCollectionItemEntity clone process set and unset all
-      // properties as expected.
-      $this->assertEquals(TRUE, $actualTarget->default_revision);
-      $this->assertEquals(FALSE, $actualTarget->is_new_revision);
-      $this->assertEquals(FALSE, $actualTarget->is_new);
+      $translatable = new FieldCollectionTranslatable($observerWrapper, $observerDrupal);
+      $this->assertSame($expectedTarget, $translatable->getTargetEntity($targetLang));
     }
 
     /**

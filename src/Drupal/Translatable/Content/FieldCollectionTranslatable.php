@@ -51,7 +51,6 @@ class FieldCollectionTranslatable extends EntityTranslatableBase {
    */
   public function getTargetEntity($targetLanguage) {
     if (!isset($this->targetEntities[$targetLanguage]) || empty($this->targetEntities[$targetLanguage])) {
-      $target = $this->getRawEntity($this->entity);
 
       $target = $this->entity->value();
       $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('field_collection_item', $target);
