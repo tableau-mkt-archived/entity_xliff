@@ -56,6 +56,16 @@ class FeatureContext extends RawDrupalContext implements SnippetAcceptingContext
    */
   public function iExpectYouToDie()
   {
+
+print <<<END
+
+       _.-._
+      ({  `}) *WHAM!*
+        \_/
+ .(     -|-     ),
+`  -----' `-----  '
+
+END;
     die();
   }
   /**
