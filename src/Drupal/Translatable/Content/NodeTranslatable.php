@@ -97,7 +97,6 @@ class NodeTranslatable extends EntityTranslatableBase {
         // set translations on entities embedded on the source translation.
         $this->drupal->fieldAttachPrepareTranslation('node', $target, $targetLanguage, $sourceLanguageOriginal, $sourceLanguageOriginal->language);
         $target->nid = $targetLanguageOriginal->nid;
-        $target->vid = $targetLanguageOriginal->vid;
         $target->tnid = $targetLanguageOriginal->tnid;
 
         // Ensure all non-translatable properties are preserved from the actual
@@ -111,9 +110,9 @@ class NodeTranslatable extends EntityTranslatableBase {
           }
         }
 
-        // Do not mark this node as a new revision. This is necessary in
-        // cases where this node happens to reference a field collection...
-        $target->revision = FALSE;
+        // Always ask for a new revision.
+        $target->revision = TRUE;
+
       }
       // Otherwise create a new node in the target language
       // and then prepare it for translation.
@@ -141,6 +140,7 @@ class NodeTranslatable extends EntityTranslatableBase {
       }
 
       $this->targetEntities[$targetLanguage] = $this->drupal->entityMetadataWrapper('node', $target);
+
     }
 
     return $this->targetEntities[$targetLanguage];
