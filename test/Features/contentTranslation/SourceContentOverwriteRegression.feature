@@ -5,12 +5,16 @@ Feature: Source Content Overrrite (Regression)
   Import XLIFF translations through the XLIFF portal for existing content without affecting source content
 
   Background: Set up a translation set
-    Given I am logged in as a user with the "administer entity xliff,translate content,bypass node access,bypass workbench moderation" permissions
-    And "page" content:
-      | title              | field_long_text                    | language | promote |
-      | English page title | English page body text. | en       | 1       |
-    When I am on the homepage
-    And follow "English page title"
+  Given I am logged in as a user with the "administer entity xliff,bypass node access,bypass workbench moderation,view moderation history,translate content,administer nodes" permission
+
+    And I am on the homepage
+    And I click "Add content"
+    And I click "Basic page"
+    And I fill in "English page title" for "title"
+    And I fill in "English page body text." for "Long Text"
+    And I select "English" from "Language"
+    And I press the "Save" button
+
     And I click "Translate"
     And I click "add translation"
     And I fill in "French page title" for "title"
@@ -23,6 +27,7 @@ Feature: Source Content Overrrite (Regression)
     And I click "XLIFF"
     And I attach a "fr" translation of this "English" node
     And I press the "Import" button
+#Then I Expect You To Die
     Then I should see the success message containing "Successfully imported"
     When I click "View published"
     Then I should see "English page title field collection 1"
@@ -35,12 +40,22 @@ Feature: Source Content Overrrite (Regression)
     And I should not see "fr page title field collection 1"
 
   Scenario: Import over existing translation set (focus on entity references)
-    Given "page" content:
-      | title                    | field_long_text                     | language | promote |
-      | English page title       | English page body text.  | en       | 1       |
-      | English regression child | English child body text. | en       | 1       |
-    When I am on the homepage
-    And follow "English page title"
+
+    Given I am on the homepage
+    And I click "Add content"
+    And I click "Basic page"
+    And I fill in "English regression child" for "title"
+    And I fill in "English child body text." for "Long Text"
+    And I select "English" from "Language"
+    And I press the "Save" button
+    And I am on the homepage
+    And I click "Add content"
+    And I click "Basic page"
+    And I fill in "English page title" for "title"
+    And I fill in "English page body text." for "Long Text"
+    And I select "English" from "Language"
+    And I press the "Save" button
+
     And this node references the "English regression child" node
     When I click "XLIFF"
     And I attach a "fr" translation of this "English" node

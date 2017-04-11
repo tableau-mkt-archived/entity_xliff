@@ -24,8 +24,8 @@ Feature: Content Translation of Node and Field Collection Entities
 
   Scenario: Import XLIFF through portal
     Given "page" content:
-    | title              | field_long_text                    | promote | uid | language |
-    | English page title | English page body text. | 1       | 1   | en       |
+    | title              | field_long_text                    | promote | uid | language | status |
+    | English page title | English page body text. | 1       | 1   | en       | 1                 |
     When I am on the homepage
     And follow "English page title"
     When I attach a "fr" translation of this "English" node

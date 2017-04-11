@@ -7,9 +7,9 @@ Feature: Referenced Entity Translation
   Background:
     Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
     And "page" content:
-      | title                    | field_long_text                     | promote |
-      | English host page title  | English host body text.  | 1       |
-      | English child page title | English child body text. | 1       |
+      | title                    | field_long_text                     | promote | status |
+      | English host page title  | English host body text.  | 1       | 1                 |
+      | English child page title | English child body text. | 1       | 1                 |
 
     When I am on the homepage
     And follow "English host page title"

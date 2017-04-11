@@ -29,6 +29,7 @@ if (!function_exists('workbench_moderation_entity_xliff_translatable_source_alte
           // Then force the curent node to stay draft!
           $current_node->workbench_moderation_state_new = workbench_moderation_state_none();
           $wrapper->set($current_node);
+          // Save happens in calling function.
         }
       }
     }
@@ -90,7 +91,7 @@ if (!function_exists('workbench_moderation_entity_xliff_presave_alter')) {
    */
   function workbench_moderation_entity_xliff_presave_alter(&$wrapper, $type) {
 
-    if ($wrapper->type() === 'node') {
+    if ($wrapper->type() === 'node' && workbench_moderation_node_type_moderated($wrapper->getBundle())) {
 
       $node = $wrapper->value();
       $id = $wrapper->getIdentifier();

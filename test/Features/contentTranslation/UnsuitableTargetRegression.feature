@@ -7,8 +7,8 @@ Feature: Unsuitable Translation Target (Regression)
   Background: Set up a translation set with no embedded entities.
     Given I am logged in as a user with the "administer entity xliff,translate content,bypass node access,bypass workbench moderation" permissions
     And "page" content:
-      | title              | field_long_text                    | language | promote |
-      | English page title | English page body text. | en       | 1       |
+      | title              | field_long_text                    | language | promote |  status |
+      | English page title | English page body text. | en       | 1       | 1                  |
     And I am on the homepage
     And follow "English page title"
     And I click "Translate"
