@@ -5,12 +5,14 @@ Feature: Handling for Encoded HTML Entities
   Import and export XLIFF translations that contain HTML encoded entities
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
-    And "page" content:
-      | title             | field_long_text                                 | language | promote |
-      | French page title | French page body text 'en français.' | fr       | 1       |
+    Given I am logged in as a user with the "administer entity xliff,bypass node access,bypass workbench moderation,view moderation history,translate content" permission
     And I am on the homepage
-    And I follow "French page title"
+    And I click "Add content"
+    And I click "Basic page"
+    And I fill in "French page title" for "title"
+    And I fill in "en page body text 'en français.'" for "Long Text"
+    And I select "French" from "Language"
+    And I press the "Save" button
 
   Scenario: Import XLIFF containing HTML encoded entities through portal
     When I click "XLIFF"

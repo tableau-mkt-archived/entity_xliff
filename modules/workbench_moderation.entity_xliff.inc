@@ -18,13 +18,17 @@ if (!function_exists('workbench_moderation_entity_xliff_translatable_source_alte
       // And this is a source node (i.e. it is not an unsaved target with no ID)
       if (workbench_moderation_node_type_moderated($wrapper->getBundle())) {
         // Then wrap the current revision, not the live version.
-        $node = workbench_moderation_node_current_load($wrapper->value());
-        // If this has not been saved yet it will return false, in which case just use the wrapper.
-        if ($node) {
-          // Force workbench to maintain the current state of the source node.
-          // If status = 1 then, keep it published otherwise keep it in draft.
-          $node->workbench_moderation_state_new = $node->status ? workbench_moderation_state_published() : workbench_moderation_state_none();
-          $wrapper->set($node);
+        $current_node = workbench_moderation_node_current_load($wrapper->value());
+        $published_node = node_load($id);
+        if ($current_node->vid != $published_node->vid) {
+          // There is a published node and a current Draft.
+          // First force the published node to stay published
+          $wrapper->set($published_node);
+          $published_node->workbench_moderation_state_new = workbench_moderation_state_published();
+          $wrapper->save();
+          // Then force the curent node to stay draft!
+          $current_node->workbench_moderation_state_new = workbench_moderation_state_none();
+          $wrapper->set($current_node);
         }
       }
     }
@@ -52,9 +56,6 @@ if (!function_exists('workbench_moderation_entity_xliff_target_entities_alter'))
           // Then use the current node revision, which is not necessarily the published one.
           $current_node = workbench_moderation_node_current_load($node_to_alter);
           if ($current_node) {
-            // Force workbench to maintain the current state of the source node.
-            // If status = 1 then, keep it published otherwise keep it in draft.
-            $current_node->workbench_moderation_state_new = $current_node->status ? workbench_moderation_state_published() : workbench_moderation_state_none();
             $node_to_alter = $current_node;
           }
         }
@@ -90,8 +91,10 @@ if (!function_exists('workbench_moderation_entity_xliff_presave_alter')) {
   function workbench_moderation_entity_xliff_presave_alter(&$wrapper, $type) {
 
     if ($wrapper->type() === 'node') {
+
       $node = $wrapper->value();
-      if ($node->nid) {
+      $id = $wrapper->getIdentifier();
+      if (!empty($id)) {
         $current_node = workbench_moderation_node_current_load($node);
         $published_node = node_load($node->nid);
         if ($current_node->vid != $published_node->vid) {
@@ -102,8 +105,9 @@ if (!function_exists('workbench_moderation_entity_xliff_presave_alter')) {
         }
       }else{
         // This is a brand new target, remove any workbench stuff left from the source.
+        // Force it to follow the default that is set in workbench.
         unset($node->workbench_moderation);
-        unset($node->workbench_moderation_state_new);
+        $node->workbench_moderation_state_new = variable_get('workbench_moderation_default_state_' . $node->type, workbench_moderation_state_none());
       }
 
     }

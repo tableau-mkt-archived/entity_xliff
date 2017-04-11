@@ -5,12 +5,13 @@ Feature: Content structure divergence
   Attempt to import XLIFF translations with outdated field structures and receive useful error messaging
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff,bypass node access" permission
-    And "page" content:
-      | title                    | field_long_text                          | language  | promote |
-      | Outdated structure title | Exact contents do not matter.            | und       | 1       |
+    Given I am logged in as a user with the "administer entity xliff,bypass node access,bypass workbench moderation,view moderation history,translate content" permission
     And I am on the homepage
-    And I follow "Outdated structure title"
+    And I click "Add content"
+    And I click "Basic page"
+    And I fill in "Outdated structure title" for "title"
+    And I fill in "This page is English in a published state." for "Long Text"
+    And I press the "Save" button
 
   Scenario: Attempt to import XLIFF with outdated field structures
     When I click "XLIFF"
@@ -19,6 +20,7 @@ Feature: Content structure divergence
     Then there should be no corrupt translation sets.
     And I should not see the message containing "Successfully imported"
     And I should see the error message containing "You will need to re-export and try again."
+
     When I click "New draft"
     # Ensures database transaction rollback occurred (the initialization of the
     # node from language neutral to English should be reverted).

@@ -5,14 +5,15 @@ Feature: Alternative Source Languages
   Import and export XLIFF translations with language sources other than English
 
   Background:
-    Given I am logged in as a user with the "administer entity xliff,bypass node access,bypass workbench moderation,view moderation history,translate content" permission
-
-    And "page" content:
-      | title             | field_long_text                   | language | promote | status |
-      | French page title | French page body text. | fr       | 1       | 1      |
+    Given I am logged in as a user with the "administer entity xliff,bypass node access,bypass workbench moderation,view moderation history,translate content,administer nodes" permission
 
     And I am on the homepage
-    And I click "French page title"
+    And I click "Add content"
+    And I click "Basic page"
+    And I fill in "French page title" for "title"
+    And I fill in "French page body text." for "Long Text"
+    And I select "French" from "Language"
+    And I press the "Save" button
 
   Scenario: Access and Export French sourced XLIFF through portal
     When I click "XLIFF"
@@ -27,7 +28,6 @@ Feature: Alternative Source Languages
     When I click "XLIFF"
     When I attach an "en" translation of this "French" node
     And I press the "Import" button
-    Then print last response
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
 
@@ -44,6 +44,7 @@ Feature: Alternative Source Languages
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     And there should be no corrupt translation sets.
+    When I click "Translate"
     When I click "View published"
     Then I should see the heading "French page title"
     And I should see "French page body text."
