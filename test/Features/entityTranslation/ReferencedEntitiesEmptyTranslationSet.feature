@@ -7,9 +7,9 @@ Feature: Referenced Entities with empty translation sets
   Background:
     Given I am logged in as a user with the "administer entity xliff,bypass node access" permissions
     And "page" content:
-      | title                               | promote |
-      | English empty tset host page title  | 1       |
-      | English empty tset child page title | 1       |
+      | title                               | promote | status |
+      | English empty tset host page title  | 1       | 1      |
+      | English empty tset child page title | 1       | 1      |
     When I am on the homepage
     And I follow "English empty tset host page title"
     Given this node references the "English empty tset child page title" node

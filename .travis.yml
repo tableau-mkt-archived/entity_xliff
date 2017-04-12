@@ -66,6 +66,7 @@ before_script:
 script:
   - phpunit --coverage-text --coverage-clover build/logs/clover.xml
   - if [ $BDD = 'true' ] ; then behat --suite=contentTranslation --verbose ; fi
+  - if [ $BDD = 'true' ] ; then ./build/drupal drush en entity_translation --y ; fi
   - if [ $BDD = 'true' ] ; then behat --suite=entityTranslation --verbose ; fi
 
 after_script:

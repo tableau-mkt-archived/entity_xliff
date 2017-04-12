@@ -110,7 +110,8 @@ class NodeTranslatable extends EntityTranslatableBase {
           }
         }
 
-        // Always ask for a new revision.
+        // Do not mark this node as a new revision. This is necessary in
+        // cases where this node happens to reference a field collection...
         $target->revision = TRUE;
 
       }
