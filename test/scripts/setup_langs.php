@@ -280,7 +280,7 @@ function add_field_collection_field() {
         'type' => 'field_collection',
         'cardinality' => -1,
         'module' => 'field_collection',
-        'translatable' => TRUE,
+        'translatable' => FALSE,
         'settings' => array(
           'hide_blank_items' => TRUE,
           'path' => '',

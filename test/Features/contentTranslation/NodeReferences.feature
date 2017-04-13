@@ -7,10 +7,10 @@ Feature: Node References
   Background:
     Given I am logged in as a user with the "administer entity xliff" permission
     And "page" content:
-      | title                              | field_long_text                    | promote |
-      | English node host page title       | English node host body text.       | 1       |
-      | English node child page title      | English node child body text.      | 1       |
-      | English node grandchild page title | English node grandchild body text. | 1       |
+      | title                              | field_long_text                    | promote | status |
+      | English node host page title       | English node host body text.       | 1       | 1       |
+      | English node child page title      | English node child body text.      | 1       | 1       |
+      | English node grandchild page title | English node grandchild body text. | 1       | 1       |
     When I am on the homepage
     And follow "English node child page title"
     And this node references the "English node grandchild page title" node on the field_node_reference field

@@ -182,7 +182,7 @@ class NodeTranslatableTest extends \PHPUnit_Framework_TestCase {
     $expectedTarget->translation_source = $expectedSourceNode;
 
     $expectedNode = clone $tset[$targetLang];
-    $expectedNode->revision = FALSE;
+    $expectedNode->revision = TRUE;
     $expectedNode->language = $targetLang;
     $expectedNode->title = $sourceNode->title;
     $expectedNode->translation_source = $expectedTarget->translation_source;

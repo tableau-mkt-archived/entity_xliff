@@ -65,8 +65,11 @@ before_script:
 
 script:
   - phpunit --coverage-text --coverage-clover build/logs/clover.xml
-  - if [ $BDD = 'true' ] ; then behat --suite=contentTranslation --verbose ; fi
   - if [ $BDD = 'true' ] ; then behat --suite=entityTranslation --verbose ; fi
+  # Disable entity_translation to run content translation tests.
+  - if [ $BDD = 'true' ] ; then pushd build/drupal && drush dis entity_translation --y && popd ; fi
+  - if [ $BDD = 'true' ] ; then behat --suite=contentTranslation --verbose ; fi
+
 
 after_script:
   - ./vendor/bin/test-reporter --stdout > build/logs/coverage.json
