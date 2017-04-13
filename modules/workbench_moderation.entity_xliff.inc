@@ -19,14 +19,16 @@ if (!function_exists('workbench_moderation_entity_xliff_translatable_source_alte
       if (workbench_moderation_node_type_moderated($wrapper->getBundle())) {
         // Then wrap the current revision, not the live version.
         $current_node = workbench_moderation_node_current_load($wrapper->value());
-        $published_node = node_load($id);
-        if ($current_node->vid != $published_node->vid) {
-          // There is a published node and a current Draft.
-          // First force the published node to stay published
-          $wrapper->set($published_node);
-          $published_node->workbench_moderation_state_new = workbench_moderation_state_published();
+        $latest_node = node_load($id);
+        // The only case where the latest node revision is NOT the "current" node
+        // is if there is a draft over a published version.
+        // Otherwise the current will always be the most recent regardless of status.
+        if ($current_node->vid !== $latest_node->vid) {
+          // In this situation we have to make sure that the latest revision stays published.
+          $wrapper->set($latest_node);
+          $latest_node->workbench_moderation_state_new = workbench_moderation_state_published();
           $wrapper->save();
-          // Then force the curent node to stay draft!
+          // We also force the curent node to stay draft.
           $current_node->workbench_moderation_state_new = workbench_moderation_state_none();
           $wrapper->set($current_node);
           // Save happens in calling function.
@@ -97,14 +99,18 @@ if (!function_exists('workbench_moderation_entity_xliff_presave_alter')) {
       $id = $wrapper->getIdentifier();
       if (!empty($id)) {
         $current_node = workbench_moderation_node_current_load($node);
-        $published_node = node_load($node->nid);
-        if ($current_node->vid != $published_node->vid) {
+        $latest_node = node_load($node->nid);
+        // The only case where the latest node revision is NOT the "current" node
+        // is if there is a draft over a published version.
+        // Otherwise the current will always be the most recent regardless of status.
+        if ($current_node->vid != $latest_node->vid) {
           // There is a published node and a current Draft.
           $wrapper->save();
-          $wrapper->set($published_node);
+          $wrapper->set($latest_node);
           $node->workbench_moderation_state_new = workbench_moderation_state_none();
         }
-      }else{
+      }
+      else {
         // This is a brand new target, remove any workbench stuff left from the source.
         // Force it to follow the default that is set in workbench.
         unset($node->workbench_moderation);

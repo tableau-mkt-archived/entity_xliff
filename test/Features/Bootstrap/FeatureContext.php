@@ -70,23 +70,6 @@ END;
   }
 
   /**
-   * @Then I want to debug this :node
-   */
-  public function iWantToDebugThisNode($node)
-  {
-    $session = $this->getSession();
-    $url = $session->getCurrentUrl();
-    $pathPart = $this->entityPathPartMap[$node];
-
-    if (preg_match('/' . preg_quote($pathPart, '/') . '\/(\d+)/', $url, $matches)) {
-      $node = node_load($matches[1], NULL, TRUE);
-      // Make a convenient place to stick a breakpoint.
-      $test = $node;
-    }
-
-  }
-
-  /**
    * @When /^I attach(?:| a(?:|n)) (?:|")([^"]+)(?:|") translation(?:|s) of this "([^"]+)" ([^"]+)$/
    */
   public function iAttachATranslationOfThisEntity($targetLangs, $sourceLang, $entity, $outdatedField = FALSE) {

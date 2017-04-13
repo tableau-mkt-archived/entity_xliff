@@ -41,7 +41,7 @@ fi
 # Place this module into the sites/all/modules directory and enable it.
 rsync -aq "`pwd`" "`pwd`/$BUILD_DIR/drupal/sites/all/modules/entity_xliff" --exclude build
 # pin entity-7.x-1.7 until this gets fixed: https://www.drupal.org/node/2807275
-# Pin references-7.x-2.1 since the module is unsupported do to unresolved security issues.
+# Pin references-7.x-2.1 since the module is unsupported due to unresolved security issues.
 pushd $BUILD_DIR/drupal
   drush --yes dl composer-8.x-1.2 composer_manager link entity-7.x-1.7 field_collection paragraphs entityreference entity_translation references-7.x-2.1 workbench_moderation-7.x-1.4
 
