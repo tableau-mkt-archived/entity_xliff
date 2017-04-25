@@ -78,15 +78,11 @@ if (!function_exists('workbench_moderation_entity_xliff_presave_alter')) {
   /**
    * Implements hook_entity_xliff_presave_alter().
    *
-   * I there is a current draft over a published node
+   * If there is a current draft over a published node
    * Workbench_moderation has the unfortunate habit of unpublishing the published node
    * And overwriting the draft.
    *
-   * In that situation this code saves the new target node first and then passes the
-   * Published node forward to be saved by entity_xliff.
-   * It also manages the draft/published state based upon the existing target.
-   *
-   * It is dirty but it works.
+   * In that situation this code grabs the draft node to be saved by entity_xliff.
    *
    * @param wrapper
    *        A wrapper object which may or may not want to be the published revision.
@@ -105,9 +101,9 @@ if (!function_exists('workbench_moderation_entity_xliff_presave_alter')) {
         // Otherwise the current will always be the most recent regardless of status.
         if ($current_node->vid != $latest_node->vid) {
           // There is a published node and a current Draft.
-          $wrapper->save();
-          $wrapper->set($latest_node);
-          $node->workbench_moderation_state_new = workbench_moderation_state_none();
+          // Use the current (i.e. draft) node and keep it draft.
+          $wrapper->set($current_node);
+          $current_node->workbench_moderation_state_new = workbench_moderation_state_none();
         }
       }
       else {
