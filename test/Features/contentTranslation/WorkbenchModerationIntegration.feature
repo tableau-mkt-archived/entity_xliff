@@ -33,15 +33,15 @@ Feature: Workbench Moderation Feature
     # Make a new node to avoid the registered callback that worbench sets.
     # It will only be exectured after the scenario file exits.
     Given I am on the homepage
-    And I click "Add content"
+    When I click "Add content"
     And I click "Basic page"
     And I fill in "English page two" for "title"
     And I fill in "This page is English in a published state." for "Long Text"
     And I select "English" from "Language"
     And I press the "Save" button
     # We now have a published node source, to which we add a draft.
-    Then I click "New draft"
-    When I fill in "This page is English in a NEW draft state." for "Long Text"
+    And I click "New draft"
+    And I fill in "This page is English in a NEW draft state." for "Long Text"
     And I select "draft" from "workbench_moderation_state_new"
     And I press "Save"
     Then I should see "View draft"
@@ -51,17 +51,17 @@ Feature: Workbench Moderation Feature
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     # Make sure that the source node still has both published and draft versions.
-    Then I should see "View draft"
-    Then I should see "view published"
+    And I should see "View draft"
+    And I should see "view published"
     # Switch to French.
-    And I click "Translate"
+    When I click "Translate"
     And I click "fr page two"
     # Make sure the new target has been published (per the default).
     Then I should see "View published"
     And I should not see "View draft"
     # Add a new draft revision on top of the current published one.
-    Then I click "New draft"
-    When I fill in "This page is French in a draft." for "Long Text"
+    When I click "New draft"
+    And I fill in "This page is French in a draft." for "Long Text"
     And I select "draft" from "workbench_moderation_state_new"
     And I press "Save"
     # Import a new copy of the English page.
@@ -72,11 +72,22 @@ Feature: Workbench Moderation Feature
     And I press the "Import" button
     And I click "Translate"
     And I click "fr page two"
-     # Make sure that the target node still has both published and draft versions.
+    # Make sure that the target node still has both published and draft versions.
     Then I should see "View draft"
-    Then I should see "view published"
+    And I should see "view published"
+    # Go back, Jack, do it again.
+    When I click "Translate"
+    And I click "English page two"
+    And I click "XLIFF"
+    And I attach a "fr" translation of this "English" node
+    And I press the "Import" button
+    And I click "Translate"
+    And I click "fr page two"
+    # Make sure that the target node still has both published and draft versions.
+    Then I should see "View draft"
+    And I should see "view published"
 
-  Scenario: Import net new should follow the default moderation state
+  Scenario: Import Net-new should follow the default moderation state
     # Make a new node to avoid the registered callback that worbench sets.
     # It will only be exectured after the scenario file exits.
     Given I am on the homepage
@@ -108,9 +119,10 @@ Feature: Workbench Moderation Feature
     And I press the "Import" button
     And I click "Translate"
     And I click "de page four"
-      # Make sure the new target has NOT been published.
+    # Make sure the new target has NOT been published.
     Then I should see "View draft"
-    Then I should not see "View published"
-    Given I switch page default moderation To published
+    And I should not see "View published"
+    # Reset the page default state.
+    And I switch page default moderation To published
 
 
