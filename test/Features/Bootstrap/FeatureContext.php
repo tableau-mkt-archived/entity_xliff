@@ -70,6 +70,13 @@ END;
   }
 
   /**
+   * @When I switch page default moderation to :state
+   */
+  public function iSwitchPageDefaultModerationto($state) {
+    variable_set('workbench_moderation_default_state_page', $state);
+  }
+
+  /**
    * @When /^I attach(?:| a(?:|n)) (?:|")([^"]+)(?:|") translation(?:|s) of this "([^"]+)" ([^"]+)$/
    */
   public function iAttachATranslationOfThisEntity($targetLangs, $sourceLang, $entity, $outdatedField = FALSE) {
