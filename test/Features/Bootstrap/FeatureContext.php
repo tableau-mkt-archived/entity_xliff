@@ -70,9 +70,9 @@ END;
   }
 
   /**
-   * @When I switch page default moderation To :state
+   * @When I switch page default moderation to :state
    */
-  public function iSwitchPageDefaultModerationTo($state) {
+  public function iSwitchPageDefaultModerationto($state) {
     variable_set('workbench_moderation_default_state_page', $state);
   }
 
