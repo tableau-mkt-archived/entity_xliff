@@ -1,4 +1,5 @@
 language: php
+dist: trusty
 sudo: false
 
 env:
@@ -43,6 +44,7 @@ matrix:
 before_install:
   # Update composer
   - composer self-update
+  - if [ $BDD = 'true' ] ; then phpenv config-add test/travis.php.ini ; fi
 
 install:
   # Install requisite PHP libraries.
