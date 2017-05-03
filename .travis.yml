@@ -44,7 +44,7 @@ matrix:
 before_install:
   # Update composer
   - composer self-update
-  - phpenv config-add test/travis.php.ini
+  - if [ $BDD = 'true' ] ; then phpenv config-add test/travis.php.ini ; fi
 
 install:
   # Install requisite PHP libraries.
