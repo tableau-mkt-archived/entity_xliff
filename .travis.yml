@@ -44,6 +44,7 @@ matrix:
 before_install:
   # Update composer
   - composer self-update
+  - phpenv config-add test/travis.php.ini
 
 install:
   # Install requisite PHP libraries.
