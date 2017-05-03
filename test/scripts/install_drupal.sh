@@ -43,7 +43,7 @@ rsync -aq "`pwd`" "`pwd`/$BUILD_DIR/drupal/sites/all/modules/entity_xliff" --exc
 # pin entity-7.x-1.7 until this gets fixed: https://www.drupal.org/node/2807275
 # Pin references-7.x-2.1 since the module is unsupported due to unresolved security issues.
 pushd $BUILD_DIR/drupal
-  drush --yes dl composer-8.x-1.2 composer_manager link entity-7.x-1.7 field_collection paragraphs entityreference entity_translation-7.x-1.0-beta5 references-7.x-2.1 workbench_moderation-7.x-1.4
+  drush --yes dl composer-8.x-1.2 composer_manager link entity-7.x-1.7 field_collection paragraphs entityreference entity_translation references-7.x-2.1 workbench_moderation-7.x-1.4
 
   drush --yes en composer_manager translation entity_translation link field_collection paragraphs_i18n entityreference node_reference workbench_moderation 
   drush cc drush
