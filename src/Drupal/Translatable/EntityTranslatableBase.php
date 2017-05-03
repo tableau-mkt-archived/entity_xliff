@@ -202,6 +202,10 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       $this->drupal->alter('entity_xliff_presave', $wrapper, $type);
       $translatable->saveWrapper($wrapper, $targetLanguage);
     }
+    // Reinitialize the entitiesNeedSave array in case we have multiple xliff files
+    // to process in the same request.
+    $this->entitiesNeedSave = array();
+
   }
 
   /**
