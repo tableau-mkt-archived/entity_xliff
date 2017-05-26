@@ -173,6 +173,24 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
    * Adds optional parameter $saveData, mostly used internally.
    */
   public function setData(array $data, $targetLanguage, $saveData = TRUE) {
+
+    // Get the actual target entity we are translating into.
+    // Set it as the "root" node (or other entity) in the array of entities
+    // to be translated with a depth of 0 and ensure that it gets translated last.
+
+    $targetEntity = $this->getTargetEntity($targetLanguage);
+    $targetId = $targetEntity->getIdentifier();
+    $targetType = $targetEntity->type();
+    $needsSaveKey = $targetType . ':' . $targetId;
+    if (!isset($this->entitiesNeedSave[$needsSaveKey])) {
+      // Mark this entity as needing saved.
+      // Create array ordered by # of parents so we can save them in reverse order.
+      $this->entitiesNeedSave[$targetType . ':' . $targetId] = [
+        'depth' => 0,
+        'wrapper' => $targetEntity,
+      ];
+    }
+
     // Add translated data.
     $this->addTranslatedDataRecursive($data, array(), $targetLanguage);
 
@@ -189,6 +207,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     // Must save the deepest entities first, otherwise a node will be saved with paragraphs fields (and
     // maybe field collection fields) pointing at the wrong revision.
     // Also, nested paragraphs may point at wrong revisions.
+
     usort($this->entitiesNeedSave, function($a, $b) {
       return $b['depth'] - $a['depth'];
     });
@@ -306,8 +325,10 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           $response = $text;
         }
         else {
-          $response['#label'] = $fieldInfo['label'];
-          $response['#text'] = $text;
+          $response = [
+            '#label' => $fieldInfo['label'],
+            '#text' => $text,
+          ];
         }
       }
     }
@@ -356,7 +377,9 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
    * @throws EntityStructureDivergedException
    */
   protected function entitySetNestedValue(\EntityMetadataWrapper $wrapper, array $parents, $value, $targetLang) {
+
     $this->entitiesNeedSaveDepth++;
+
     // Get the field reference.
     $ref = array_shift($parents);
     if (is_numeric($ref) && isset($wrapper[$ref])) {
@@ -390,12 +413,19 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
             $targetId = $wrapper->getIdentifier();
           }
 
+          $needsSaveKey = $targetType . ':' . $targetId;
+          // If the entity is already in the list then it is OK to update it so each field gets translated
+          // and added, but do not change its depth since we want to maintain the order in which they are first added.
+          if (isset($this->entitiesNeedSave[$needsSaveKey])) {
+            $this->entitiesNeedSaveDepth = $this->entitiesNeedSave[$needsSaveKey]['depth'];
+          }
           // Mark this entity as needing saved.
           // Create array ordered by # of parents so we can save them in reverse order.
-          $this->entitiesNeedSave[$targetType . ':' . $targetId] = array(
+          $this->entitiesNeedSave[$targetType . ':' . $targetId] = [
             'depth' => $this->entitiesNeedSaveDepth,
             'wrapper' => $wrapper,
-          );
+          ];
+
         }
 
         return TRUE;
@@ -451,20 +481,10 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
           if (is_numeric($ref)) {
             // @codeCoverageIgnoreStart
-            try {
-              $vals = $wrapper->raw();
-              // If Entity API is patched to allow setting raw entities in list
-              // wrappers, then set the raw entity.
-              // @see https://www.drupal.org/node/1587882
-              $vals[$ref] = $field->raw();
-              $wrapper->set($vals);
-            }
-            catch (\Exception $e) {
-              // Otherwise, we have to set the entity identifier alone.
-              $vals = $wrapper->raw();
-              $vals[$ref] = $field->getIdentifier();
-              $wrapper->set($vals);
-            }
+            $vals = $wrapper->raw();
+            $test = $field->getIdentifier();
+            $vals[$ref] = $field->getIdentifier();
+            $wrapper->set($vals);
           } // @codeCoverageIgnoreEnd
           else {
             $wrapper->{$ref}->set($field->getIdentifier());
@@ -472,18 +492,27 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
           // Mark this entity as needing saved.
           // Create array ordered by # of parents so we can save them in reverse order.
-          $this->entitiesNeedSave[$targetType . ':' . $targetId] = array(
+          $needsSaveKey = $targetType . ':' . $targetId;
+          // If the entity is already in the list then it is OK to update it so each field gets translated
+          // and added, but do not change its depth since we want to maintain the order in which they are first added.
+          if (isset($this->entitiesNeedSave[$needsSaveKey])) {
+            $this->entitiesNeedSaveDepth = $this->entitiesNeedSave[$needsSaveKey]['depth'];
+          }
+          // Note that in this case we are saving the $field not the $wrapper since the field contains
+          // the referenced entity and the wrapper is its parent (or a list wrapper).
+          $this->entitiesNeedSave[$needsSaveKey] = [
             'depth' => $this->entitiesNeedSaveDepth,
             'wrapper' => $field,
-          );
+          ];
+
         }
         elseif (is_a($field, 'EntityListWrapper')) {
           $needsSaveKey = $wrapper->type() . ':' . $wrapper->getIdentifier();
           if (!isset($this->entitiesNeedSave[$needsSaveKey])) {
-            $this->entitiesNeedSave[$needsSaveKey] = array(
+            $this->entitiesNeedSave[$needsSaveKey] = [
               'depth' => $this->entitiesNeedSaveDepth,
               'wrapper' => $wrapper,
-            );
+            ];
           }
         }
       }
