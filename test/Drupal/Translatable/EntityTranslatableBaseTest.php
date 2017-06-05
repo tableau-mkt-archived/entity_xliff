@@ -1002,6 +1002,10 @@ namespace EntityXliff\Drupal\Tests\Translatable {
     public $translationKey = array();
     public $targetLanguage = '';
 
+    public function getTargetEntity ($targetLanguage){
+      return $this->getTargetEntities();
+    }
+
     public function addTranslatedDataRecursive($translation, array $key = array(), $targetLang) {
       $this->translationData = $translation;
       $this->translationKey = $key;
