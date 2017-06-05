@@ -179,17 +179,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     // to be translated with a depth of 0 and ensure that it gets translated last.
 
     $targetEntity = $this->getTargetEntity($targetLanguage);
-    $targetId = $targetEntity->getIdentifier();
-    $targetType = $targetEntity->type();
-    $needsSaveKey = $targetType . ':' . $targetId;
-    if (!isset($this->entitiesNeedSave[$needsSaveKey])) {
-      // Mark this entity as needing saved.
-      // Create array ordered by # of parents so we can save them in reverse order.
-      $this->entitiesNeedSave[$targetType . ':' . $targetId] = [
-        'depth' => 0,
-        'wrapper' => $targetEntity,
-      ];
-    }
+    $this->setEntitiesNeedsSave($targetEntity);
 
     // Add translated data.
     $this->addTranslatedDataRecursive($data, array(), $targetLanguage);
@@ -325,10 +315,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           $response = $text;
         }
         else {
-          $response = [
-            '#label' => $fieldInfo['label'],
-            '#text' => $text,
-          ];
+          $response['#label'] = $fieldInfo['label'];
+          $response['#text'] = $text;
         }
       }
     }
@@ -401,30 +389,17 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         // If this is an EntityDrupalWrapper, we need to mark the wrapper as needing
         // saved.
         if (is_a($wrapper, 'EntityDrupalWrapper')) {
-          $targetId = $wrapper->getIdentifier();
-          $targetType = $wrapper->type();
+
 
           // If this is a brand new entity, we need to initialize and save it first.
-          if ($targetId === FALSE) {
+          if ($wrapper->getIdentifier() === FALSE) {
             $translatable = $this->translatableFactory->getTranslatable($wrapper);
             $this->drupal->alter('entity_xliff_presave', $wrapper, $targetType);
             // This not only saves the node, but also any paragraphs (or other field related entities).
             $translatable->saveWrapper($wrapper, $targetLang);
-            $targetId = $wrapper->getIdentifier();
           }
 
-          $needsSaveKey = $targetType . ':' . $targetId;
-          // If the entity is already in the list then it is OK to update it so each field gets translated
-          // and added, but do not change its depth since we want to maintain the order in which they are first added.
-          if (isset($this->entitiesNeedSave[$needsSaveKey])) {
-            $this->entitiesNeedSaveDepth = $this->entitiesNeedSave[$needsSaveKey]['depth'];
-          }
-          // Mark this entity as needing saved.
-          // Create array ordered by # of parents so we can save them in reverse order.
-          $this->entitiesNeedSave[$targetType . ':' . $targetId] = [
-            'depth' => $this->entitiesNeedSaveDepth,
-            'wrapper' => $wrapper,
-          ];
+          $this->setEntitiesNeedsSave($wrapper);
 
         }
 
@@ -440,11 +415,10 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       if (is_a($field, 'EntityDrupalWrapper')) {
         $targetId = $field->getIdentifier();
         $targetType = $field->type();
-        $needsSaveKey = $targetType . ':' . $targetId;
 
         // If the entity exists and we already have it in static cache, use it.
-        if ($targetId && isset($this->entitiesNeedSave[$needsSaveKey])) {
-          $field = $this->entitiesNeedSave[$needsSaveKey]['wrapper'];
+        if ($targetId && isset($this->entitiesNeedSave[$targetType . ':' . $targetId])) {
+          $field = $this->entitiesNeedSave[$targetType . ':' . $targetId]['wrapper'];
         }
         else {
           // Otherwise, ensure we're using the translation.
@@ -476,13 +450,10 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       if ($set) {
         // If the child is an entity, we need to set the reference.
         if (is_a($field, 'EntityDrupalWrapper')) {
-          $targetId = $field->getIdentifier();
-          $targetType = $field->type();
 
           if (is_numeric($ref)) {
             // @codeCoverageIgnoreStart
             $vals = $wrapper->raw();
-            $test = $field->getIdentifier();
             $vals[$ref] = $field->getIdentifier();
             $wrapper->set($vals);
           } // @codeCoverageIgnoreEnd
@@ -490,35 +461,41 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
             $wrapper->{$ref}->set($field->getIdentifier());
           }
 
-          // Mark this entity as needing saved.
-          // Create array ordered by # of parents so we can save them in reverse order.
-          $needsSaveKey = $targetType . ':' . $targetId;
-          // If the entity is already in the list then it is OK to update it so each field gets translated
-          // and added, but do not change its depth since we want to maintain the order in which they are first added.
-          if (isset($this->entitiesNeedSave[$needsSaveKey])) {
-            $this->entitiesNeedSaveDepth = $this->entitiesNeedSave[$needsSaveKey]['depth'];
-          }
-          // Note that in this case we are saving the $field not the $wrapper since the field contains
-          // the referenced entity and the wrapper is its parent (or a list wrapper).
-          $this->entitiesNeedSave[$needsSaveKey] = [
-            'depth' => $this->entitiesNeedSaveDepth,
-            'wrapper' => $field,
-          ];
+          $this->setEntitiesNeedsSave($field);
 
         }
+        // This is a list field.
         elseif (is_a($field, 'EntityListWrapper')) {
-          $needsSaveKey = $wrapper->type() . ':' . $wrapper->getIdentifier();
-          if (!isset($this->entitiesNeedSave[$needsSaveKey])) {
-            $this->entitiesNeedSave[$needsSaveKey] = [
-              'depth' => $this->entitiesNeedSaveDepth,
-              'wrapper' => $wrapper,
-            ];
-          }
+          $this->setEntitiesNeedsSave($wrapper);
         }
       }
 
       return $set;
     }
+  }
+
+  /**
+   * Push an entity into the array of entitites needing to be saved.
+   * Use the current depth if it is a new entry.
+   * If the entity is already in the list, it will be "refreshed" but its depth will not change.
+   *
+   * @param $wrapper
+   */
+  protected function setEntitiesNeedsSave($wrapper) {
+    $targetId = $wrapper->getIdentifier();
+    $targetType = $wrapper->type();
+    $needsSaveKey = $targetType . ':' . $targetId;
+    // If the entity is already in the list then it is OK to update it so each field gets translated
+    // and added, but do not change its depth since we want to maintain the order in which they are first added.
+    if (isset($this->entitiesNeedSave[$needsSaveKey])) {
+      $this->entitiesNeedSaveDepth = $this->entitiesNeedSave[$needsSaveKey]['depth'];
+    }
+    // Mark this entity as needing saved.
+    // Create array ordered by # of parents so we can save them in reverse order.
+    $this->entitiesNeedSave[$targetType . ':' . $targetId] = array(
+      'depth' => $this->entitiesNeedSaveDepth,
+      'wrapper' => $wrapper,
+    );
   }
 
   /**
