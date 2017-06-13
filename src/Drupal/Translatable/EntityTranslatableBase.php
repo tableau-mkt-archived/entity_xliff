@@ -417,17 +417,17 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         $targetType = $field->type();
 
         // If the entity exists and we already have it in static cache, use it.
-        if ($targetId && isset($this->entitiesNeedSave[$targetType . ':' . $targetId])) {
-          $field = $this->entitiesNeedSave[$targetType . ':' . $targetId]['wrapper'];
+        if ($this->getEntitiesNeedsSave($field)!== FALSE) {
+          $field = $this->getEntitiesNeedsSave($field);
         }
         else {
-          // Otherwise, ensure we're using the translation.
           if ($translatable = $this->translatableFactory->getTranslatable($field)) {
             $translatable->initializeTranslation();
             $field = $translatable->getTargetEntity($targetLang);
             $targetId = $field->getIdentifier();
           }
         }
+
 
         // If this is a new entity, we need to initialize and save it first.
         if ($targetId === FALSE) {
@@ -438,40 +438,57 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
           $targetId = $field->getIdentifier();
         }
 
-        // Always attempt to pull the entity from static cache.
-        $needsSaveKey = $targetType . ':' . $targetId;
-        if (isset($this->entitiesNeedSave[$needsSaveKey])) {
-          $field = $this->entitiesNeedSave[$needsSaveKey]['wrapper'];
+        if ($this->getEntitiesNeedsSave($field) !== FALSE) {
+          $field = $this->getEntitiesNeedsSave($field);
         }
       }
-
-      // Attempt to set the nested value.
-      $set = $this->entitySetNestedValue($field, $parents, $value, $targetLang);
-      if ($set) {
-        // If the child is an entity, we need to set the reference.
-        if (is_a($field, 'EntityDrupalWrapper')) {
-
-          if (is_numeric($ref)) {
-            // @codeCoverageIgnoreStart
-            $vals = $wrapper->raw();
-            $vals[$ref] = $field->getIdentifier();
-            $wrapper->set($vals);
-          } // @codeCoverageIgnoreEnd
-          else {
-            $wrapper->{$ref}->set($field->getIdentifier());
-          }
-
-          $this->setEntitiesNeedsSave($field);
-
-        }
-        // This is a list field.
-        elseif (is_a($field, 'EntityListWrapper')) {
-          $this->setEntitiesNeedsSave($wrapper);
-        }
-      }
-
-      return $set;
     }
+
+    // Attempt to set the nested value.
+    $set = $this->entitySetNestedValue($field, $parents, $value, $targetLang);
+    if ($set) {
+      // If the child is an entity, we need to set the reference.
+      if (is_a($field, 'EntityDrupalWrapper')) {
+
+        if (is_numeric($ref)) {
+          // @codeCoverageIgnoreStart
+          $vals = $wrapper->raw();
+          $vals[$ref] = $field->getIdentifier();
+          $wrapper->set($vals);
+        } // @codeCoverageIgnoreEnd
+        else {
+          $wrapper->{$ref}->set($field->getIdentifier());
+        }
+
+        $this->setEntitiesNeedsSave($field);
+
+      }
+      // This is a list field.
+      elseif (is_a($field, 'EntityListWrapper')) {
+        $this->setEntitiesNeedsSave($wrapper);
+      }
+    }
+
+    return $set;
+  }
+
+  /**
+   * Pull an entity out of the cache or return FALSE if not found.
+   *
+   * @param $wrapper
+   *
+   * @return bool|null
+   */
+  protected function getEntitiesNeedsSave($wrapper) {
+    $targetId = $wrapper->getIdentifier();
+    $targetType = $wrapper->type();
+    $needsSaveKey = $targetType . ':' . $targetId;
+    // If the entity is already in the list then it is OK to update it so each field gets translated
+    // and added, but do not change its depth since we want to maintain the order in which they are first added.
+    if (isset($this->entitiesNeedSave[$needsSaveKey])) {
+      return $this->entitiesNeedSave[$needsSaveKey]['wrapper'];
+    }
+    return FALSE;
   }
 
   /**
