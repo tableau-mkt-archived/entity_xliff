@@ -188,6 +188,7 @@ END;
     }
   }
 
+
   /**
    * @Given /^this ([^"]+) references the "([^"]+)" ([^\s"]+)(?: on the ([^"]+) field)?$/
    */
@@ -231,6 +232,30 @@ END;
     else {
       throw new Exception('Unable to determine what "this ' . $entity . '" is referring to.');
     }
+  }
+
+  /**
+   * @When I click link :nth with text :text
+   */
+  public function iClickLinkWithText($nth, $text)
+  {
+    $session = $this->getSession();
+    $selectorsHandler = $session->getSelectorsHandler();
+    // Get an array of all links enclosing this specific string.
+    $all = $this->getSession()->getPage()->findAll(
+      'named',
+      array(
+        'link',
+        $selectorsHandler->xpathLiteral($text)
+      )
+    );
+    // The array is 0 based, assume that the humans are 1 based.
+    $element = $all[$nth-1];
+    if (null === $element) {
+      throw new \InvalidArgumentException(sprintf('Cannot find text: "%s"', $text));
+    }
+    $element->click();
+
   }
 
   /**

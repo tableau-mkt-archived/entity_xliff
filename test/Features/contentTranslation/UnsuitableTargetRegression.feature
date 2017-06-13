@@ -76,7 +76,7 @@ Feature: Unsuitable Translation Target (Regression)
     And I press the "Import" button
     Then I should see the success message containing "Successfully imported"
     When I click "View published"
-    And I click "Français"
+    And I click link 2 with text "Français"
     Then I should see "fr page title"
 
   Scenario: Paragraphs added after initial translation

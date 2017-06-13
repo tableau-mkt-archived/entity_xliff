@@ -111,6 +111,9 @@ if (!function_exists('workbench_moderation_entity_xliff_presave_alter')) {
         // Force it to follow the default that is set in workbench.
         unset($node->workbench_moderation);
         $node->workbench_moderation_state_new = variable_get('workbench_moderation_default_state_' . $node->type, workbench_moderation_state_none());
+        // Workbench looks for workbench_moderation_state_current in its own presave_alter.
+        // Since this is a known new node, force it to follow the new default state.
+        $node->workbench_moderation_state_current = $node->workbench_moderation_state_new;
       }
 
     }

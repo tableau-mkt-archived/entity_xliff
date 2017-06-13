@@ -177,9 +177,12 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     // Get the actual target entity we are translating into.
     // Set it as the "root" node (or other entity) in the array of entities
     // to be translated with a depth of 0 and ensure that it gets translated last.
-
     $targetEntity = $this->getTargetEntity($targetLanguage);
-    $this->setEntitiesNeedsSave($targetEntity);
+    // First time here the target node may not exist yet and won't have an ID.
+    // Wait until it gets saved once in entitySetNestedValue().
+    if(!empty($targetEntity->getIdentifier())){
+      $this->setEntitiesNeedsSave($targetEntity);
+    }
 
     // Add translated data.
     $this->addTranslatedDataRecursive($data, array(), $targetLanguage);
@@ -385,24 +388,19 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       // Set the value on the field.
       if ($handler = $this->fieldMediator->getInstance($field)) {
         $handler->setValue($field, $value);
-
         // If this is an EntityDrupalWrapper, we need to mark the wrapper as needing
         // saved.
         if (is_a($wrapper, 'EntityDrupalWrapper')) {
-
-
           // If this is a brand new entity, we need to initialize and save it first.
           if ($wrapper->getIdentifier() === FALSE) {
             $translatable = $this->translatableFactory->getTranslatable($wrapper);
+            $targetType = $wrapper->type();
             $this->drupal->alter('entity_xliff_presave', $wrapper, $targetType);
             // This not only saves the node, but also any paragraphs (or other field related entities).
             $translatable->saveWrapper($wrapper, $targetLang);
           }
-
           $this->setEntitiesNeedsSave($wrapper);
-
         }
-
         return TRUE;
       }
       else {
@@ -417,7 +415,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
         $targetType = $field->type();
 
         // If the entity exists and we already have it in static cache, use it.
-        if ($this->getEntitiesNeedsSave($field)!== FALSE) {
+        if ($this->getEntitiesNeedsSave($field) !== FALSE) {
           $field = $this->getEntitiesNeedsSave($field);
         }
         else {
