@@ -29,22 +29,4 @@ interface FieldHandlerInterface {
    */
   public function getValue(\EntityMetadataWrapper $wrapper);
 
-  /**
-   * Sets a given value on the provided structure or value wrapper (depending on
-   * the type of field).
-   *
-   * @param \EntityMetadataWrapper $wrapper
-   *   The metadata wrapper for a field of this type (e.g. $w->your_field or
-   *   potentially $w->your_field[$delta]).
-   *
-   * @param mixed $value
-   *   The value to be saved. This will be provided in a form very closely
-   *   matching the form provided via FieldHandlerInterface::getValue(). If the
-   *   value provided by that method is scalar, then $value will also be scalar.
-   *   If the value provided by that method is an array, then $value will be an
-   *   array, though instead of the #text and #label keys, the translated string
-   *   will be provided directly.
-   */
-  public function setValue(\EntityMetadataWrapper $wrapper, $value);
-
 }

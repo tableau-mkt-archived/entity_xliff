@@ -107,13 +107,13 @@ if (!function_exists('workbench_moderation_entity_xliff_presave_alter')) {
         }
       }
       else {
-        // This is a brand new target, remove the workbench array left from the source.
+        // This is a brand new target, remove any workbench stuff left from the source.
         // Force it to follow the default that is set in workbench.
         unset($node->workbench_moderation);
-        // Workbench_moderation will think this is not a new node unless we set both the _current AND the _new states.
-        // See workbench_moderation_node_update($node).
-        $node->workbench_moderation_state_current = variable_get('workbench_moderation_default_state_' . $node->type, workbench_moderation_state_none());
         $node->workbench_moderation_state_new = variable_get('workbench_moderation_default_state_' . $node->type, workbench_moderation_state_none());
+        // Workbench looks for workbench_moderation_state_current in its own presave_alter.
+        // Since this is a known new node, force it to follow the new default state.
+        $node->workbench_moderation_state_current = $node->workbench_moderation_state_new;
       }
 
     }

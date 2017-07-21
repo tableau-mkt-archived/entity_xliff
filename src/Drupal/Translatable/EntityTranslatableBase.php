@@ -20,7 +20,7 @@ use EntityXliff\Drupal\Utils\DrupalHandler;
 /**
  * Class EntityTranslatableBase
  */
-abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
+abstract class EntityTranslatableBase implements EntityTranslatableInterface {
 
   /**
    * @var \EntityDrupalWrapper
@@ -61,8 +61,9 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   protected $entitiesNeedSave = array();
 
   /**
-   * Depth of recursion for each entity needing to be saved. Ensures that they are saved in the correct
-   * order and that revisions are maintained.
+   * Depth of recursion for each entity needing to be saved. Ensures that they
+   * are saved in the correct order and that revisions are maintained.
+   *
    * @var int
    */
   protected $entitiesNeedSaveDepth = 0;
@@ -74,6 +75,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
   /**
    * The source language of the wrapped entity.
+   *
    * @var string
    */
   protected $sourceLanguage;
@@ -173,13 +175,29 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
    * Adds optional parameter $saveData, mostly used internally.
    */
   public function setData(array $data, $targetLanguage, $saveData = TRUE) {
-    // Add translated data.
-    $this->addTranslatedDataRecursive($data, array(), $targetLanguage);
 
     // Do not proceed to saving the data if specified.
     if (!$saveData) {
       return;
     }
+    // Get the actual target entity we are translating into.
+    // Set it as the "root" node (or other entity) in the array of entities
+    // to be translated with a depth of 0 and ensure that it gets translated last.
+    $targetEntity = $this->getTargetEntity($targetLanguage);
+    // First time here the target node may not exist yet and won't have an ID.
+    // Create it and add it to the list of entities needing to be saved (after translation).
+    if (empty($targetEntity->getIdentifier())) {
+      $translatable = $this->translatableFactory->getTranslatable($targetEntity);
+      $translatable->initializeTranslation();
+      $fieldType = $targetEntity->type();
+      $this->drupal->alter('entity_xliff_presave', $targetEntity, $fieldType);
+      $translatable->saveWrapper($targetEntity, $targetLanguage);
+    }
+    $this->setEntitiesNeedsSave($targetEntity);
+    // Add translated data passing in the root node as the first wrapper to be unrolled.
+    $this->addTranslatedDataRecursive($data, array(), $targetLanguage, $targetEntity);
+
+
 
     // Attempt to initialize translation.
     $this->initializeTranslation();
@@ -189,7 +207,8 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     // Must save the deepest entities first, otherwise a node will be saved with paragraphs fields (and
     // maybe field collection fields) pointing at the wrong revision.
     // Also, nested paragraphs may point at wrong revisions.
-    usort($this->entitiesNeedSave, function($a, $b) {
+
+    usort($this->entitiesNeedSave, function ($a, $b) {
       return $b['depth'] - $a['depth'];
     });
 
@@ -202,10 +221,6 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
       $this->drupal->alter('entity_xliff_presave', $wrapper, $type);
       $translatable->saveWrapper($wrapper, $targetLanguage);
     }
-    // Reinitialize the entitiesNeedSave array in case we have multiple xliff files
-    // to process in the same request.
-    $this->entitiesNeedSave = array();
-
   }
 
   /**
@@ -218,7 +233,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     if (!$this->isTranslatable()) {
       return $fields;
     }
-
+    $list = $this->entity->getPropertyInfo();
     foreach ($this->entity->getPropertyInfo() as $property => $info) {
       if (isset($info['field']) && $info['field']) {
         $fields[] = $property;
@@ -235,66 +250,182 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
   }
 
   /**
+   * Unroll an array of translation data and find the matching fields in a
+   * supplied wrapper. Depending upon the type of field, either set a value, a
+   * structure, or recurse into lists and entities (unrolling entities to set
+   * their values as needed).
+   *
    * @param $translation
-   * @param array $key
-   * @param string $targetLang
-   */
-  protected function addTranslatedDataRecursive($translation, array $key = array(), $targetLang) {
-    if (isset($translation['#text'])) {
-      $values = array(
-        // Strip out all extraneous keys (like label) for data setting.
-        '#translation' => array('#text' => $translation['#text']),
-      );
-      $this->setItem($key, $values, $targetLang);
-      return;
-    }
-    foreach ($this->drupal->elementChildren($translation) as $item) {
-      $this->addTranslatedDataRecursive($translation[$item], array_merge($key, array($item)), $targetLang);
-    }
-  }
-
-  /**
-   * Updates the values for a specific substructure in the data array.
-   *
-   * The values are either set or updated but never deleted.
-   *
+   *   Array of translated values to be set into the translated content.
    * @param $key
    *   Key pointing to the item the values should be applied.
    *   The key can be either be an array containing the keys of a nested array
    *   hierarchy path or a string with '][' or '|' as delimiter.
-   * @param $values
-   *   Nested array of values to set.
-   * @param string $targetLang
-   *   The target language of the item being set.
+   * @param $targetLang
+   * @param null $parent
+   *   Starts as the outer most node wrapper, and then tracks one "level"
+   *   above the field being handled.
+   * @param null $field
+   *   The field being set in this recursive iteration.
+   *
    */
-  public function setItem($key, $values = array(), $targetLang) {
-    foreach ($values as $index => $value) {
-      // In order to preserve existing values, we can not apply the values array
-      // at once. We need to apply each containing value on its own.
-      // If $value is an array we need to advance the hierarchy level.
-      if (is_array($value)) {
-        $this->setItem(array_merge(Data::ensureArrayKeys($key), array($index)), $value, $targetLang);
-      }
-      // Apply the value.
-      else {
-        // Do not bother setting empty values.
-        $trimmed = trim($value);
-        if (!empty($trimmed)) {
-          // Get the list of relevant array keys via the xliff serializer.
-          $arrayKeys = Data::ensureArrayKeys($key);
-          array_pop($arrayKeys);
+  protected function addTranslatedDataRecursive($translation, array $key = array(), $targetLang, $parent = NULL, $field = NULL) {
 
-          // Set the value via a method inspired by drupal's nested array setter.
-          $this->entitySetNestedValue($this->getTargetEntity($targetLang), $arrayKeys, $trimmed, $targetLang);
+    // TODO: why do we have this? It looks like maybe it handles a format we no longer use?
+    $arrayKeys = Data::ensureArrayKeys($key);
+
+    // The first time in there is no field chosen yet.
+    if (empty($field)) {
+      // Iterate over the items to be translated ignoring any keys that start with #.
+      foreach ($this->drupal->elementChildren($translation) as $item) {
+        // Get the next level of wrapper.
+
+        if (is_numeric($item) && isset($wrapper[$item])) {
+          // This is a list wrapper.
+          $field = &$parent[$item];
         }
+        elseif (isset($parent->{$item})) {
+          // This is an entity or structure.
+          $field = &$parent->{$item};
+        }
+        else {
+          throw new EntityStructureDivergedException('XLIFF serialized structure has diverged from Drupal content structure: ' . $item);
+        }
+        $this->addTranslatedDataRecursive($translation[$item], array_merge($arrayKeys, array($item)), $targetLang, $parent, $field);
       }
     }
+    else {
+      // We have a field so check what kind of wrapper it is and act accordingly.
+      // Note that the "types" of wrappers are not mutually exclusive
+      // (i.e. EntityListWrappers are also EntityStructureWrappers)
+      // so the order in which we test them matters.
+
+      // List.
+      if (is_a($field, 'EntityListWrapper')) {
+        // Iterate over list items.
+        foreach ($field->getIterator() as $item => $fieldItem) {
+          // $item is the current index so we can keep track of the position in the $translation array.
+          // Down a level.
+          $this->addTranslatedDataRecursive($translation[$item], array($item), $targetLang, $field, $fieldItem);
+        }
+        return;
+      }
+
+      // Entity
+      if (is_a($field, 'EntityDrupalWrapper')) {
+
+        // Increment a counter into our cache of entities that need to be saved.
+        $this->entitiesNeedSaveDepth++;
+
+
+
+        // If the entity exists and we already have it in static cache, use it.
+        if ($this->getEntitiesNeedsSave($field) !== FALSE) {
+          $field = $this->getEntitiesNeedsSave($field);
+        }
+        else {
+          if ($translatable = $this->translatableFactory->getTranslatable($field)) {
+            $translatable->initializeTranslation();
+            $field = $translatable->getTargetEntity($targetLang);
+          }
+        }
+
+        // If this is a new entity, we need to initialize and save it first.
+        if ($field->getIdentifier() === FALSE) {
+          $translatable = $this->translatableFactory->getTranslatable($field);
+          $translatable->initializeTranslation();
+          $fieldType = $field->type();
+          $this->drupal->alter('entity_xliff_presave', $field, $fieldType);
+          $translatable->saveWrapper($field, $targetLang);
+        }
+
+        // If we are not yet supposed to save this entity, then add it to the list now.
+        // Do this at the end since we may have gotten a new field in the interim.
+        if ($this->getEntitiesNeedsSave($field) === FALSE) {
+          $this->setEntitiesNeedsSave($field);
+        }
+
+        // Set the reference on the parent wrapper.
+        // $arrayKeys is  always an array, but at this point they should only contain one value.
+        $reference = array_pop($arrayKeys);
+        if (is_numeric($reference)) {
+          // The parent is a list field.
+          $values = $parent->raw();
+          $values[$reference] = $field->getIdentifier();
+          $parent->set($values);
+        }
+        else {
+          // The parent is single cardinality.
+          $parent->{$reference}->set($field->getIdentifier());
+        }
+
+        // Down a level. Do not pass a new field since we need to recurse into the entities values.
+        $this->addTranslatedDataRecursive($translation, array(), $targetLang, $field);
+
+        return;
+      }
+
+      // Structured Field.
+      if (is_a($field, 'EntityStructureWrapper')) {
+        $this->setStructuredFieldValue($field, $translation);
+        return;
+      }
+
+      // Plain value, set it!
+      if (is_a($field, 'EntityValueWrapper')) {
+        $this->setFieldValue($field, $translation);
+        return;
+      }
+    }
+
+
+  }
+
+  /**
+   * @param $field
+   * @param $translation
+   *
+   * @return bool
+   */
+  protected function setFieldValue($field, $translation) {
+    if (!is_array($translation) || !isset($translation['#text'])) {
+      // Something has gone wrong since we should get an array of field "parts" and their values.
+      return FALSE;
+    }
+
+    $new_value = html_entity_decode(trim($translation['#text']), ENT_HTML5, 'utf-8');
+    $field->set($new_value);
+    return TRUE;
+  }
+
+  /**
+   * @param $field
+   * @param $translation
+   *
+   * @return bool
+   */
+  protected function setStructuredFieldValue($field, $translation) {
+    if (!is_array($translation)) {
+      // Something has gone wrong since we should get an array of field "parts" and their values.
+      return FALSE;
+    }
+    // Get the existing values so that anything not set will copy over from the source.
+    // TODO: Should this test against the field info array to make sure the structure element exists?
+    $new_value = $field->value();
+    foreach ($translation as $key => $value) {
+      if(isset($value['#text'])){
+        $new_value[$key] = html_entity_decode(trim($value['#text']), ENT_HTML5, 'utf-8');
+      }
+    }
+    $field->set($new_value);
+    return TRUE;
   }
 
   /**
    * @param \EntityDrupalWrapper $wrapper
    * @param string $field
    * @param int $delta
+   *
    * @return array
    */
   public function getFieldFromEntity(\EntityDrupalWrapper $wrapper, $field, $delta = NULL) {
@@ -317,7 +448,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     }
     // If this is an entity reference, restart the process recursively with the
     // referenced entity as the starting point.
-    elseif(isset($this->entityInfo[$type])) {
+    elseif (isset($this->entityInfo[$type])) {
       $response += $this->getEntityFromEntity($fieldWrapper);
     }
     // If this is a list, call ourselves recursively for each item.
@@ -339,6 +470,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
 
   /**
    * @param \EntityDrupalWrapper $wrapper
+   *
    * @return array
    */
   protected function getEntityFromEntity(\EntityDrupalWrapper $wrapper) {
@@ -352,148 +484,49 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface  {
     }
   }
 
+
   /**
-   * @param \EntityMetadataWrapper $wrapper
-   * @param array $parents
-   * @param $value
-   * @param $targetLang
-   * @throws EntityStructureDivergedException
+   * Pull an entity out of the cache or return FALSE if not found.
+   *
+   * @param $wrapper
+   *
+   * @return bool|null
    */
-  protected function entitySetNestedValue(\EntityMetadataWrapper $wrapper, array $parents, $value, $targetLang) {
-    $this->entitiesNeedSaveDepth++;
-    // Get the field reference.
-    $ref = array_shift($parents);
-    if (is_numeric($ref) && isset($wrapper[$ref])) {
-      $field = &$wrapper[$ref]; // @codeCoverageIgnoreStart
-    } // @codeCoverageIgnoreEnd
-    elseif (isset($wrapper->{$ref})) {
-      $field = &$wrapper->{$ref};
+  protected function getEntitiesNeedsSave($wrapper) {
+    $targetId = $wrapper->getIdentifier();
+    $targetType = $wrapper->type();
+    $needsSaveKey = $targetType . ':' . $targetId;
+    // If the entity is already in the list then it is OK to update it so each field gets translated
+    // and added, but do not change its depth since we want to maintain the order in which they are first added.
+    if (isset($this->entitiesNeedSave[$needsSaveKey])) {
+      return $this->entitiesNeedSave[$needsSaveKey]['wrapper'];
     }
-    else {
-      throw new EntityStructureDivergedException('XLIFF serialized structure has diverged from Drupal content structure: ' . $ref);
+    return FALSE;
+  }
+
+  /**
+   * Push an entity into the array of entitites needing to be saved.
+   * Use the current depth if it is a new entry.
+   * If the entity is already in the list, it will be "refreshed" but its depth
+   * will not change.
+   *
+   * @param $wrapper
+   */
+  protected function setEntitiesNeedsSave($wrapper) {
+    $targetId = $wrapper->getIdentifier();
+    $targetType = $wrapper->type();
+    $needsSaveKey = $targetType . ':' . $targetId;
+    // If the entity is already in the list then it is OK to update it so each field gets translated
+    // and added, but do not change its depth since we want to maintain the order in which they are first added.
+    if (isset($this->entitiesNeedSave[$needsSaveKey])) {
+      $this->entitiesNeedSaveDepth = $this->entitiesNeedSave[$needsSaveKey]['depth'];
     }
-
-    // Base case: we are setting a basic field on an entity.
-    if (count($parents) === 0) {
-      // Set the value on the field.
-      if ($handler = $this->fieldMediator->getInstance($field)) {
-        $handler->setValue($field, $value);
-
-        // If this is an EntityDrupalWrapper, we need to mark the wrapper as needing
-        // saved.
-        if (is_a($wrapper, 'EntityDrupalWrapper')) {
-          $targetId = $wrapper->getIdentifier();
-          $targetType = $wrapper->type();
-
-          // If this is a brand new entity, we need to initialize and save it first.
-          if ($targetId === FALSE) {
-            $translatable = $this->translatableFactory->getTranslatable($wrapper);
-            $this->drupal->alter('entity_xliff_presave', $wrapper, $targetType);
-            // This not only saves the node, but also any paragraphs (or other field related entities).
-            $translatable->saveWrapper($wrapper, $targetLang);
-            $targetId = $wrapper->getIdentifier();
-          }
-
-          // Mark this entity as needing saved.
-          // Create array ordered by # of parents so we can save them in reverse order.
-          $this->entitiesNeedSave[$targetType . ':' . $targetId] = array(
-            'depth' => $this->entitiesNeedSaveDepth,
-            'wrapper' => $wrapper,
-          );
-        }
-
-        return TRUE;
-      }
-      else {
-        return FALSE;
-      }
-    }
-    // Recursive case. We need to go deeper.
-    else {
-      // Ensure we're always setting data against the target entity.
-      if (is_a($field, 'EntityDrupalWrapper')) {
-        $targetId = $field->getIdentifier();
-        $targetType = $field->type();
-        $needsSaveKey = $targetType . ':' . $targetId;
-
-        // If the entity exists and we already have it in static cache, use it.
-        if ($targetId && isset($this->entitiesNeedSave[$needsSaveKey])) {
-          $field = $this->entitiesNeedSave[$needsSaveKey]['wrapper'];
-        }
-        else {
-          // Otherwise, ensure we're using the translation.
-          if ($translatable = $this->translatableFactory->getTranslatable($field)) {
-            $translatable->initializeTranslation();
-            $field = $translatable->getTargetEntity($targetLang);
-            $targetId = $field->getIdentifier();
-          }
-        }
-
-        // If this is a new entity, we need to initialize and save it first.
-        if ($targetId === FALSE) {
-          $translatable = $this->translatableFactory->getTranslatable($field);
-          $translatable->initializeTranslation();
-          $this->drupal->alter('entity_xliff_presave', $field, $targetType);
-          $translatable->saveWrapper($field, $targetLang);
-          $targetId = $field->getIdentifier();
-        }
-
-        // Always attempt to pull the entity from static cache.
-        $needsSaveKey = $targetType . ':' . $targetId;
-        if (isset($this->entitiesNeedSave[$needsSaveKey])) {
-          $field = $this->entitiesNeedSave[$needsSaveKey]['wrapper'];
-        }
-      }
-
-      // Attempt to set the nested value.
-      $set = $this->entitySetNestedValue($field, $parents, $value, $targetLang);
-      if ($set) {
-        // If the child is an entity, we need to set the reference.
-        if (is_a($field, 'EntityDrupalWrapper')) {
-          $targetId = $field->getIdentifier();
-          $targetType = $field->type();
-
-          if (is_numeric($ref)) {
-            // @codeCoverageIgnoreStart
-            try {
-              $vals = $wrapper->raw();
-              // If Entity API is patched to allow setting raw entities in list
-              // wrappers, then set the raw entity.
-              // @see https://www.drupal.org/node/1587882
-              $vals[$ref] = $field->raw();
-              $wrapper->set($vals);
-            }
-            catch (\Exception $e) {
-              // Otherwise, we have to set the entity identifier alone.
-              $vals = $wrapper->raw();
-              $vals[$ref] = $field->getIdentifier();
-              $wrapper->set($vals);
-            }
-          } // @codeCoverageIgnoreEnd
-          else {
-            $wrapper->{$ref}->set($field->getIdentifier());
-          }
-
-          // Mark this entity as needing saved.
-          // Create array ordered by # of parents so we can save them in reverse order.
-          $this->entitiesNeedSave[$targetType . ':' . $targetId] = array(
-            'depth' => $this->entitiesNeedSaveDepth,
-            'wrapper' => $field,
-          );
-        }
-        elseif (is_a($field, 'EntityListWrapper')) {
-          $needsSaveKey = $wrapper->type() . ':' . $wrapper->getIdentifier();
-          if (!isset($this->entitiesNeedSave[$needsSaveKey])) {
-            $this->entitiesNeedSave[$needsSaveKey] = array(
-              'depth' => $this->entitiesNeedSaveDepth,
-              'wrapper' => $wrapper,
-            );
-          }
-        }
-      }
-
-      return $set;
-    }
+    // Mark this entity as needing saved.
+    // Create array ordered by # of parents so we can save them in reverse order.
+    $this->entitiesNeedSave[$targetType . ':' . $targetId] = array(
+      'depth' => $this->entitiesNeedSaveDepth,
+      'wrapper' => $wrapper,
+    );
   }
 
   /**

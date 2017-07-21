@@ -16,17 +16,24 @@ class LinkFieldHandler implements FieldHandlerInterface {
    * {@inheritdoc}
    */
   public function getValue(\EntityMetadataWrapper $wrapper) {
-    $fieldValue = $wrapper->value();
-    return $fieldValue['title'];
-  }
+    $response = array();
 
-  /**
-   * {@inheritdoc}
-   */
-  public function setValue(\EntityMetadataWrapper $wrapper, $value) {
-    $newValue = $wrapper->value();
-    $newValue['title'] = html_entity_decode($value, ENT_QUOTES, 'utf-8');
-    $wrapper->set($newValue);
-  }
+    $field_value = $wrapper->value();
+    // Check for link url.
+    if (isset($field_value['url']) && !empty($field_value['url'])) {
+      $response['url'] = array(
+        '#label' => 'Link URL',
+        '#text' => $field_value['url'],
+      );
+    }
+    // Check for title text.
+    if (isset($field_value['title']) && !empty($field_value['title'])) {
+      $response['title'] = array(
+        '#label' => 'Title text',
+        '#text' => $field_value['title'],
+      );
+    }
 
+    return $response;
+  }
 }
