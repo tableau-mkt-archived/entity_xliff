@@ -1001,11 +1001,15 @@ namespace EntityXliff\Drupal\Tests\Translatable {
     public $translationData = array();
     public $translationKey = array();
     public $targetLanguage = '';
+    public $parent;
+    public $field;
 
-    public function addTranslatedDataRecursive($translation, array $key = array(), $targetLang) {
+    public function addTranslatedDataRecursive($translation, array $key = array(), $targetLang, $parent = NULL, $field = NULL) {
       $this->translationData = $translation;
       $this->translationKey = $key;
       $this->targetLanguage = $targetLang;
+      $this->parent = $parent;
+      $this->field = $field;
     }
 
     public function initializeTranslation() {
@@ -1038,8 +1042,8 @@ namespace EntityXliff\Drupal\Tests\Translatable {
     public $gotValues;
     public $gotTargetLang;
 
-    public function addTranslatedDataRecursive($translation, array $key = array(), $targetLang) {
-      parent::addTranslatedDataRecursive($translation, $key, $targetLang);
+    public function addTranslatedDataRecursive($translation, array $key = array(), $targetLang, $parent = NULL, $field = NULL) {
+      parent::addTranslatedDataRecursive($translation, $key, $targetLang, $parent, $field);
     }
 
     public function setItem($key, $values = array(), $targetLang) {
