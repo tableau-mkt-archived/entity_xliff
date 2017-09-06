@@ -38,8 +38,6 @@ matrix:
       env: BDD=true
     - php: "7.0"
       env: BDD=true
-    - php: "hhvm"
-      env: BDD=false
 
 before_install:
   # Update composer
