@@ -234,7 +234,7 @@ abstract class EntityTranslatableBase implements EntityTranslatableInterface {
       return $fields;
     }
     $list = $this->entity->getPropertyInfo();
-    foreach ($this->entity->getPropertyInfo() as $property => $info) {
+    foreach ($list as $property => $info) {
       if (isset($info['field']) && $info['field']) {
         $fields[] = $property;
       }
