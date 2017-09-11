@@ -16,17 +16,27 @@ class FormattedFieldHandler implements FieldHandlerInterface {
    * {@inheritdoc}
    */
   public function getValue(\EntityMetadataWrapper $wrapper) {
-    $fieldValue = $wrapper->value();
-    return $fieldValue['value'];
-  }
+    $response = array();
 
-  /**
-   * {@inheritdoc}
-   */
-  public function setValue(\EntityMetadataWrapper $wrapper, $value) {
-    $newValue = $wrapper->value();
-    $newValue['value'] = html_entity_decode($value, ENT_QUOTES, 'utf-8');
-    $wrapper->set($newValue);
-  }
+    $value = $wrapper->value();
+    $info = $wrapper->info();
 
+    // Check for value text.
+    if (isset($value['value']) && !empty($value['value'])) {
+      $response['value'] = array(
+        '#label' => $info['label'] . ' (value)',
+        '#text' => $value['value'],
+      );
+    }
+
+    // Check for summary text.
+    if (isset($value['summary']) && !empty($value['summary'])) {
+      $response['summary'] = array(
+        '#label' => $info['label'] . ' (summary)',
+        '#text' => $value['summary'],
+      );
+    }
+
+    return $response;
+  }
 }

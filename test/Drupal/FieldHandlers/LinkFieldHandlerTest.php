@@ -13,7 +13,7 @@ class LinkFieldHandlerTest extends \PHPUnit_Framework_TestCase {
    *
    * @test
    */
-  public function getValue() {
+  public function getValueTitle() {
     $expectedResponse = 'value';
 
     $observerWrapper = $this->getMock('\EntityMetadataWrapper', array('value'));
@@ -22,28 +22,28 @@ class LinkFieldHandlerTest extends \PHPUnit_Framework_TestCase {
       ->willReturn(array('title' => $expectedResponse));
 
     $handler = new LinkFieldHandler();
-    $this->assertEquals($expectedResponse, $handler->getValue($observerWrapper));
+    $value = $handler->getValue($observerWrapper);
+    $this->assertEquals($expectedResponse, $value['title']['#text']);
+    $this->assertEquals('Title text', $value['title']['#label']);
   }
 
   /**
-   * Tests that the link field handler calls $wrapper->set() with the given
-   * value on the "title" key.
-   *
+   * Tests that the link field handler returns the "url" key on the array
+   * returned by $wrapper->value();
    * @test
    */
-  public function setValue() {
-    $mockValue = 'value';
+  public function getValueUrl() {
+    $expectedResponse = 'http://example.com/en-us';
 
-    $observerWrapper = $this->getMock('\EntityMetadataWrapper', array('set', 'value'));
+    $observerWrapper = $this->getMock('\EntityMetadataWrapper', array('value'));
     $observerWrapper->expects($this->once())
       ->method('value')
-      ->willReturn(array('title' => 'not title'));
-    $observerWrapper->expects($this->once())
-      ->method('set')
-      ->with($this->equalTo(array('title' => $mockValue)));
+      ->willReturn(array('url' => $expectedResponse));
 
     $handler = new LinkFieldHandler();
-    $handler->setValue($observerWrapper, $mockValue);
+    $value = $handler->getValue($observerWrapper);
+    $this->assertEquals($expectedResponse, $value['url']['#text']);
+    $this->assertEquals('Link URL', $value['url']['#label']);
   }
 
 }

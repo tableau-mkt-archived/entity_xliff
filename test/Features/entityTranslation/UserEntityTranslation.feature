@@ -32,7 +32,7 @@ Feature: Entity Field Translation of User Entities
     When I click "Download"
     Then the response should contain "<xliff"
     And the response should contain "<source xml:lang=\"en\">English link title</source>"
-    And the response should not contain "http://example.com"
+    And the response should contain "<source xml:lang=\"en\">http://example.com</source>"
 
   Scenario: Import XLIFF through portal
     When I am at "admin/people"

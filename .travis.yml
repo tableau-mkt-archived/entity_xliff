@@ -30,15 +30,13 @@ env:
 
 matrix:
   include:
-    - php: "5.4"
-      env: BDD=true
     - php: "5.5"
       env: BDD=true
     - php: "5.6"
       env: BDD=true
     - php: "7.0"
       env: BDD=true
-    - php: "hhvm"
+    - php: "7.1"
       env: BDD=false
 
 before_install:

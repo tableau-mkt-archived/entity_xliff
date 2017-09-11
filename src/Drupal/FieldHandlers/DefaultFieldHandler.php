@@ -19,12 +19,4 @@ class DefaultFieldHandler implements FieldHandlerInterface {
   public function getValue(\EntityMetadataWrapper $wrapper) {
     return $wrapper->value();
   }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setValue(\EntityMetadataWrapper $wrapper, $value) {
-    $wrapper->set(html_entity_decode($value, ENT_QUOTES, 'utf-8'));
-  }
-
 }

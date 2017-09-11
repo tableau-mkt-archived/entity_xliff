@@ -13,37 +13,48 @@ class FormattedFieldHandlerTest extends \PHPUnit_Framework_TestCase {
    *
    * @test
    */
-  public function getValue() {
-    $expectedResponse = 'value';
+  public function getValueValue() {
+    $expectedValue = 'value';
+    $expectedFieldLabel = 'Field Label';
 
-    $observerWrapper = $this->getMock('\EntityMetadataWrapper', array('value'));
+    $observerWrapper = $this->getMock('\EntityMetadataWrapper', array('value', 'info'));
     $observerWrapper->expects($this->once())
       ->method('value')
-      ->willReturn(array('value' => $expectedResponse));
+      ->willReturn(array('value' => $expectedValue));
+    $observerWrapper->expects($this->once())
+      ->method('info')
+      ->willReturn(array('label' => $expectedFieldLabel));
 
     $handler = new FormattedFieldHandler();
-    $this->assertEquals($expectedResponse, $handler->getValue($observerWrapper));
+    $value = $handler->getValue($observerWrapper);
+    $this->assertEquals($expectedValue, $value['value']['#text']);
+    $this->assertEquals($expectedFieldLabel . ' (value)', $value['value']['#label']);
+    $this->assertNotTrue(isset($value['summary']));
   }
 
   /**
-   * Tests that the formatted text field handler calls $wrapper->set() with the
-   * given value on the "value" key.
+   * Tests that the formatted text field handler returns the "summary" key on the
+   * array returned by $wrapper->value();
    *
    * @test
    */
-  public function setValue() {
-    $mockValue = 'value';
+  public function getValueSummary() {
+    $expectedSummary = 'summary value';
+    $expectedFieldLabel = 'Field Label';
 
-    $observerWrapper = $this->getMock('\EntityMetadataWrapper', array('set', 'value'));
+    $observerWrapper = $this->getMock('\EntityMetadataWrapper', array('value', 'info'));
     $observerWrapper->expects($this->once())
       ->method('value')
-      ->willReturn(array('value' => 'not value'));
+      ->willReturn(array('summary' => $expectedSummary));
     $observerWrapper->expects($this->once())
-      ->method('set')
-      ->with($this->equalTo(array('value' => $mockValue)));
+      ->method('info')
+      ->willReturn(array('label' => $expectedFieldLabel));
 
     $handler = new FormattedFieldHandler();
-    $handler->setValue($observerWrapper, $mockValue);
+    $value = $handler->getValue($observerWrapper);
+    $this->assertEquals($expectedSummary, $value['summary']['#text']);
+    $this->assertEquals($expectedFieldLabel . ' (summary)', $value['summary']['#label']);
+    $this->assertNotTrue(isset($value['value']));
   }
 
 }
